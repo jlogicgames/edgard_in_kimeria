@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -326,7 +327,7 @@ class WallLessonTest {
         for (boolean raised : new boolean[]{false, true}) {
             if (wall(level).isRaised() != raised) wall(level).performAction();
             settle(level, 120);
-            for (float standY : new float[]{256, 256 - 58})
+            for (float standY : new float[]{256, 256 - 77})
                 for (float x = ROOM_X + 24; x <= ROOM_X + 754; x += 4) {
                     if (!raised && x > WALL_X && x < WALL_RIGHT + 24) continue;
                     level.player.position.set(x - 24, standY);
@@ -401,7 +402,7 @@ class WallLessonTest {
     }
 
     private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - HeroBody.RIGHT, 256); settle(level, 2); }
 
     private Level otherRoom(int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);

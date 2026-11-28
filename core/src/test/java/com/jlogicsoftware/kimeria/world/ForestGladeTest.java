@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
@@ -61,7 +62,7 @@ class ForestGladeTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing right. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         h.held.clear();
@@ -283,7 +284,7 @@ class ForestGladeTest {
         float[][] spots = {{3960, BRANCH_TOP}, {3992, BRANCH_TOP}, {4012, BRANCH_TOP}, {(TRUNK_LEFT + TRUNK_RIGHT) / 2, BRANCH_TOP}};
         for (float[] spot : spots) {
             Level level = level();
-            level.player.position.set(spot[0] - 23.5f, spot[1] - 48);
+            level.player.position.set(spot[0] - HeroBody.CENTRE, spot[1] - 48);
             level.player.velocity().setZero();
             assertFalse(everCommitted(level, SECOND * 12), "a hero standing on top at x " + spot[0] + ", y " + spot[1] + " is out of its reach for a whole patrol");
         }
@@ -291,11 +292,11 @@ class ForestGladeTest {
 
     /** The trunk's face cuts its sight at eye height: a hero on the trunk's top, or on the floor before it, is neither seen nor heard from its patrol. */
     @Test void theTrunkHidesAHeroOnItsTopAndOnTheFloorBeforeItFromTheWolfForAWholePatrol() {
-        float[] bodyRights = {(TRUNK_LEFT + TRUNK_RIGHT) / 2 + 5.5f, TRUNK_LEFT - 6};   // on the trunk's top; on the floor at its left face
+        float[] bodyRights = {(TRUNK_LEFT + TRUNK_RIGHT) / 2 + HeroBody.HALF, TRUNK_LEFT - 6};   // on the trunk's top; on the floor at its left face
         for (int spot = 0; spot < bodyRights.length; spot++) {
             Level level = level();
             Wolf w = wolf(level);
-            if (spot == 0) level.player.position.set(bodyRights[0] - 29, BRANCH_TOP - 48);
+            if (spot == 0) level.player.position.set(bodyRights[0] - HeroBody.RIGHT, BRANCH_TOP - 48);
             else place(level, bodyRights[1]);
             level.player.velocity().setZero();
             for (int f = 0; f < SECOND * 12; f++) {
@@ -308,7 +309,7 @@ class ForestGladeTest {
 
     @Test void theFloorBeyondItsReachIsSafeAndTheFloorInItIsNot() {
         Level safe = level();
-        place(safe, 4264 + 29 - 18 + 2);   // the body's left edge at 4266, past the commit box of the wolf at its range end (x 4263)
+        place(safe, 4264 + HeroBody.W + 2);   // the body's left edge at 4266, past the commit box of the wolf at its range end (x 4263)
         assertFalse(everCommitted(safe, SECOND * 12), "x 4264 and on is out of its reach");
         Level inside = level();
         place(inside, 4160 + 11);
@@ -319,7 +320,7 @@ class ForestGladeTest {
 
     @Test void aHeroWhoWaitsOnTheBranchForTheWolfToGiveUpIsNeverStuckAndItTrotsOnItsPatrol() {
         Level level = level();
-        level.player.position.set(3976 - 23.5f, BRANCH_TOP - 48);
+        level.player.position.set(3976 - HeroBody.CENTRE, BRANCH_TOP - 48);
         level.player.velocity().setZero();
         Wolf w = wolf(level);
         boolean bayed = false, gaveUp = false;

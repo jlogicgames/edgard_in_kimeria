@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -466,7 +467,7 @@ class PlatformLessonTest {
     }
 
     private float bodyLeft(Level level) { return level.player.hitboxBounds().x; }
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - HeroBody.RIGHT, 256); settle(level, 2); }
 
     private Level otherRoom(int index) {
         Level level = new Level(assets, game, new Player(assets, game, 0, 0), "forest-0", Rectangle::new);

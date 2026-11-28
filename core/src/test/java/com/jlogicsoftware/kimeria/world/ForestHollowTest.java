@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.TrapWarnings;
@@ -26,7 +27,7 @@ class ForestHollowTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float POCKET_X = 5350, STONE_X = 5316;
     /** The hero's frame x from its middle, and its frame's y on the floor (top 304). */
-    private static final float HERO_MIDDLE = 23.5f, FLOOR_Y = 256;
+    private static final float HERO_MIDDLE = HeroBody.CENTRE, FLOOR_Y = 256;
     private static final int LIMIT = 60 * 25;
     /** The low swarm's period in frames: 80 px there and back at 25 px/s. */
     private static final int LOW_PERIOD = 384;
@@ -108,7 +109,7 @@ class ForestHollowTest {
             Level level = level();
             MosquitoSwarm low = swarms(level).get(0);
             for (int f = 0; f < wait + 3; f++) {
-                level.player.position.set(front - 29, FLOOR_Y);
+                level.player.position.set(front - HeroBody.RIGHT, FLOOR_Y);
                 level.player.velocity().setZero();
                 frame(level);
             }
@@ -139,7 +140,7 @@ class ForestHollowTest {
     }
 
     private void pickUpStone(Level level) {
-        level.player.position.set(STONE_X + 12 - 29, FLOOR_Y);
+        level.player.position.set(STONE_X + 12 - HeroBody.RIGHT, FLOOR_Y);
         for (int f = 0; f < 3; f++) frame(level);
         h.held.add(Input.Keys.W); h.pressed.add(Input.Keys.W); frame(level);
         h.held.clear(); frame(level);

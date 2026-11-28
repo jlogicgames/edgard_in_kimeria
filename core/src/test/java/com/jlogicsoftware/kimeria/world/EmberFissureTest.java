@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -193,7 +194,7 @@ class EmberFissureTest {
         f.jetInto(jet);
         assertEquals(FLOOR - 96f, jet.y, EPS);
         assertEquals(FLOOR, jet.y + jet.height, EPS, "the column stands on the floor line");
-        Rectangle hero = new Rectangle(f.centerX() - 5.5f, FLOOR - 22f, 11f, 22f);
+        Rectangle hero = new Rectangle(f.centerX() - HeroBody.HALF, FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
         assertTrue(f.lethalTo(hero), "a hero standing over the crack is in the column");
         hero.x = f.centerX() + 4f;
         assertFalse(f.lethalTo(hero), "a hero touching the column's side edge but not inside it lives (overlaps is strict)");
@@ -201,7 +202,7 @@ class EmberFissureTest {
         assertFalse(f.lethalTo(hero), "beside the 8 px column is safe while it burns");
         advance(f, 1f); // calm again
         assertFalse(f.jetActive());
-        hero.x = f.centerX() - 5.5f;
+        hero.x = f.centerX() - HeroBody.HALF;
         assertFalse(f.lethalTo(hero), "the crust itself never hurts");
     }
 
@@ -301,10 +302,10 @@ class EmberFissureTest {
             Rectangle b = body(level);
             boolean onLedge = level.player.isOnGround() && b.y + b.height <= LEDGE_TOP + 0.5f && b.x > 1056f;
             if (onLedge) return t;
-            float waitX = 932f;
+            float waitX = 903f;
             if (!go && b.x + b.width >= waitX) go = f.currentPhase() == EmberFissure.Phase.CALM && !f.jetActive() && f.cycleTime() < 0.5f;
             if (go || b.x + b.width < waitX) held.add(Input.Keys.D);
-            if (go && !first && level.player.isOnGround() && b.x + b.width >= 942f) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); first = true; }
+            if (go && !first && level.player.isOnGround() && b.x + b.width >= 913f) { held.add(Input.Keys.J); pressed.add(Input.Keys.J); first = true; }
             else if (first && !second && level.player.isOnGround() && b.y + b.height <= BRANCH_TOP + 0.5f && b.x + b.width >= 1012f) {
                 held.add(Input.Keys.J); pressed.add(Input.Keys.J); second = true;
             } else if (first && !level.player.isOnGround()) held.add(Input.Keys.J); // a full jump: held while airborne, released on landing
@@ -329,9 +330,9 @@ class EmberFissureTest {
 
     @Test void aHeroWaitingOnTheBranchBesideTheColumnLives() {
         EmberFissure f = lone(3.5f, 0f);
-        Rectangle hero = new Rectangle(976f, BRANCH_TOP - 22f, 11f, 22f); // the branch's left end, x 976-987
+        Rectangle hero = new Rectangle(976f, BRANCH_TOP - HeroBody.H, HeroBody.W, HeroBody.H); // the branch's left end, x 976-990
         float column = 100 + EmberFissure.WIDTH / 2f - EmberFissure.JET_WIDTH / 2f;
-        hero.x = column - 11f - 1f;
+        hero.x = column - HeroBody.W - 1f;
         for (int i = 0; i < 60 * 7; i++) { f.update(STEP); assertFalse(f.lethalTo(hero)); }
     }
 

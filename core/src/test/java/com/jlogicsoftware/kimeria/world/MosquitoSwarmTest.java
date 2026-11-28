@@ -1,6 +1,8 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Gdx;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
+import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.math.Rectangle;
@@ -26,14 +28,14 @@ import static org.junit.jupiter.api.Assertions.*;
  *
  * <p>Fixtures: a room 640 wide with its floor at y 320, the hero entering at x 32, a stone at x 96 and one swarm whose 22x18
  * box is authored at (309, 298), 4 to 22 px over the floor. mosquito-test flies x 245..373, mosquito-run x 117..501,
- * mosquito-still holds its place, mosquito-high holds it 24 px up (y 278), mosquito-vertical flies y 250..298 (its bottom
+ * mosquito-still holds its place, mosquito-high holds it 30 px up (y 272), mosquito-vertical flies y 250..298 (its bottom
  * 4 to 52 px up), mosquito-entrance and mosquito-stone (mosquito-test under a falling stone) each break a load rule.
  */
 class MosquitoSwarmTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float FLOOR = 320, SPAWN_X = 309, SPAWN_Y = 298, LEFT_END = 245, RIGHT_END = 373;
     /** The hero's body middle from its entity position, the entity's feet below it, half the body, and the sword's reach. */
-    private static final float HERO_MIDDLE = 23.5f, HERO_FEET = 48, HERO_HALF = 5.5f, SWORD_REACH = 22.5f;
+    private static final float HERO_MIDDLE = HeroBody.CENTRE, HERO_FEET = 48, HERO_HALF = HeroBody.HALF, SWORD_REACH = HeroBody.HALF + 22;
     private static final float STONE_X = 96, TORCH_X = 150, CARRY_SIZE = 12;
     private static final int TORCH_ID = 9001;
     /** The sheet's frames of a dead and a burning mosquito. */
@@ -343,8 +345,8 @@ class MosquitoSwarmTest {
         until(level, () -> s.position.x + MosquitoSwarm.CORE_INSET <= middle + SWORD_REACH + .5f, 60 * 6);
         tap(level, Input.Keys.K);
         until(level, () -> harness.sounds.contains("mosquito_scatter"), 3);   // the blade reaches it
-        int frames = until(level, () -> !alive(level), 48);
-        assertEquals(.68f, frames * STEP, .06f);
+        int frames = until(level, () -> !alive(level), 60);
+        assertEquals(.88f, frames * STEP, .06f);   // D164: the blade reaches 22 px ahead (0.68 s with 17)
         assertFalse(s.isDefeated());
     }
 
@@ -385,7 +387,7 @@ class MosquitoSwarmTest {
     }
 
     private void pickUp(Level level, float objectX) {
-        place(level, objectX + CARRY_SIZE - 29 + HERO_MIDDLE);
+        place(level, objectX + CARRY_SIZE - HeroBody.RIGHT + HERO_MIDDLE);
         frame(level);
         press(Input.Keys.W); frame(level); // Up alone interacts (D126)
         harness.held.clear(); frame(level);
@@ -487,16 +489,16 @@ class MosquitoSwarmTest {
 
     @Test void aRunningJumpClearsAnOncomingSwarmOverAWideWindow() {
         List<Integer> clear = clearingTakeOffs(true, true);
-        assertEquals(.55f, clear.size() / (100 + MosquitoSwarm.SPEED), .02f, "take-offs " + clear);
+        assertEquals(.60f, clear.size() / (Player.MOVE_SPEED + MosquitoSwarm.SPEED), .02f, "take-offs " + clear);
     }
 
     @Test void jumpingAfterASwarmIsNarrowerAndFromStandingItIsNotCleared() {
         List<Integer> after = clearingTakeOffs(false, true), standing = clearingTakeOffs(true, false);
-        assertEquals(.41f, after.size() / (100 - MosquitoSwarm.SPEED), .03f, "after it: " + after);
+        assertEquals(.51f, after.size() / (Player.MOVE_SPEED - MosquitoSwarm.SPEED), .03f, "after it: " + after);
         assertTrue(standing.isEmpty(), "at half the speed a jump on the spot never lets it pass under: " + standing);
     }
 
-    @Test void aSwarm24PxUpPassesOverAStandingHero() {
+    @Test void aSwarm30PxUpPassesOverAStandingHero() {
         Level level = level("mosquito-high");
         place(level, 270);
         harness.held.add(Input.Keys.D);
@@ -565,16 +567,16 @@ class MosquitoSwarmTest {
         List<Rectangle> floors = new ArrayList<>(List.of(GROUND));
         floors.addAll(List.of(extra));
         return MosquitoSwarm.problem(x, y, 22, 18, vertical, neg, pos, floors, floors, ROOM, 8,
-            Map.of("entrance", new Rectangle(50, 298, 11, 22)));
+            Map.of("entrance", new Rectangle(50, 292, HeroBody.W, HeroBody.H)));
     }
 
     @Test void theLoadChecksAcceptALowALevelAndAHighAndAVerticalLine() {
         assertNull(problem(309, 298, false, 4, 4), "low: over it");
         assertNull(problem(309, 302, false, 4, 4), "on the floor line");
-        assertNull(problem(309, 278, false, 4, 4), "24 px up: under it");
+        assertNull(problem(309, 272, false, 4, 4), "30 px up: under it");
         assertNull(problem(309, 270, false, 4, 4));
         assertNull(problem(309, 298, true, 3, 0), "bottom 4 to 52 px up");
-        assertNull(problem(309, 278, true, 1, 0), "always high enough");
+        assertNull(problem(309, 272, true, 1, 0), "always high enough");
     }
 
     @Test void aLineWithNoFreeWayPastFails() {
@@ -584,8 +586,8 @@ class MosquitoSwarmTest {
         Rectangle ceiling = new Rectangle(200, 220, 240, 24);      // 76 px over the floor: no room to jump, no way under
         assertTrue(problem(309, 298, false, 4, 4, ceiling).contains("no way past"));
         assertNull(problem(309, 270, false, 4, 4, ceiling), "the way under needs no headroom");
-        // A vertical swarm that is high for too short a time each cycle: bottom 18 to 28 px up, 4 px of it 24 or more.
-        String brief = problem(309, 274, true, 0, .625f);
+        // A vertical swarm that is high for too short a time each cycle: bottom 24 to 34 px up, 4 px of it 30 or more.
+        String brief = problem(309, 268, true, 0, .625f);
         assertNotNull(brief);
         assertTrue(brief.contains("no way past open"), brief);
     }

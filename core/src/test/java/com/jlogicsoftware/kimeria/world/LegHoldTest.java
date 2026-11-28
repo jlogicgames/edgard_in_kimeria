@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.LegHold;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -22,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class LegHoldTest {
     private static final float STEP = 1f / 60f, FLOOR = 320f, X = 224f, TEETH = X + LegHold.OPEN_INSET;
-    private static final float HERO_W = 11f, HERO_H = 22f;
+    private static final float HERO_W = HeroBody.W, HERO_H = HeroBody.H;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
     private final Rectangle hero = new Rectangle(), view = new Rectangle(0, 0, 640, 368);

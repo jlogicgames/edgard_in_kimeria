@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
@@ -28,7 +29,7 @@ class HoneyFungusTest {
     private static final float FLOOR = 320, FUNGUS_W = 24, FUNGUS_H = 16, CLOUD = 24;
     private static final float HONEY_X = 288, FALSE_X = 480, ZONE = 64, CLOUD_LEFT = FALSE_X, CLOUD_RIGHT = FALSE_X + CLOUD, CLOUD_TOP = FLOOR - CLOUD;
     /** The hero's body box as the game defines it: offset 18 in a 48 px frame, 11 wide, 22 tall, so the body's bottom is the frame's. */
-    private static final float BODY_RIGHT_OFFSET = 29, BODY_W = 11, BODY_H = 22, STAND_Y = 272;
+    private static final float BODY_RIGHT_OFFSET = HeroBody.RIGHT, BODY_W = HeroBody.W, BODY_H = HeroBody.H, STAND_Y = 272;
     private static final float HALF_PIXEL = .5f, TINY = .1f, GLOW_EPS = 1e-4f, MAX_GLOW_STEP = 0.01f;
     private static final int SETTLE_FRAMES = 3, SECONDS_FRAMES = 60, LONG_WAIT_FRAMES = 60 * 6;
     /** forest-0 (room 0 and room 2) and forest-2 (forest-canopy, room 6 since #645) as built: footprint x, zone sides. */
@@ -381,7 +382,7 @@ class HoneyFungusTest {
         assertEquals(SHIPPED_FLOOR, cloud.y + cloud.height, 0f);
         assertTrue(cloud.x - CANOPY_MOB_PATROL_RIGHT >= FungusTrap.CLEARANCE, "the RedMob's patrol is 48 px or more from the cloud");
         assertTrue(CANOPY_VINE_X - (cloud.x + cloud.width) >= FungusTrap.CLEARANCE, "so is the D59 stretch, which starts at the vine");
-        Rectangle entrance = new Rectangle(CANOPY_ENTRANCE_X + 18, 256 + 26, BODY_W, BODY_H);
+        Rectangle entrance = new Rectangle(CANOPY_ENTRANCE_X + HeroBody.LEFT, 256 + HeroBody.TOP, BODY_W, BODY_H);
         assertTrue(cloud.x - (entrance.x + entrance.width) >= FungusTrap.CLEARANCE);
         assertTrue(f.triggerZone().x > CANOPY_MOB_PATROL_RIGHT, "the zone does not reach the RedMob's patrol");
     }

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.KimeriaParticleSystem;
@@ -30,7 +31,7 @@ class SpiderTest {
     private static final float FLOOR = 320, LEFT_END = 256, RIGHT_END = 384, SPAWN_X = 320;
     /** Hero body right edges: inside the pounce box of the spider at its spawn; heard but out of reach; far, unheard. */
     private static final float NEAR = 300, HEARD = 230, FAR = 150;
-    private static final float HERO_HALF = 5.5f, FANG_LEFT = 4;
+    private static final float HERO_HALF = HeroBody.HALF, FANG_LEFT = 4;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -50,7 +51,7 @@ class SpiderTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing right. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         harness.held.clear();
@@ -185,7 +186,7 @@ class SpiderTest {
         Level level = level();
         Spider s = committed(level);
         harness.held.add(Input.Keys.A);
-        settle(level, 60 * 3);
+        settle(level, 60 * 2);   // at 129 px/s, 258 px: still on the fixture's floor (D164)
         harness.held.clear();
         assertTrue(alive(level));
         assertNotEquals(Spider.State.WINDUP, s.state());
@@ -323,7 +324,7 @@ class SpiderTest {
         settle(level, biteFrames - 1);
         assertEquals(Spider.State.BITE, s.state(), "the last update of the bite is next");
         Rectangle fangs = s.fangBoxInto(new Rectangle());
-        level.player.position.set(fangs.x + fangs.width / 2 - 23.5f, FLOOR - 48);   // the hero steps into the fangs right then
+        level.player.position.set(fangs.x + fangs.width / 2 - HeroBody.CENTRE, FLOOR - 48);   // the hero steps into the fangs right then
         level.player.velocity().setZero();
         frame(level);
         assertTrue(alive(level), "due, not landed");
@@ -356,9 +357,9 @@ class SpiderTest {
         for (boolean onTop : new boolean[]{false, true}) {
             Level level = harness.roomOf("spider-wall", 0);   // a low wall x 280..288, 20 tall, between the hero and the spider
             Spider s = spider(level);
-            if (onTop) level.player.position.set(284 + 5.5f - 29, 300 - 48); else place(level, 276);
+            if (onTop) level.player.position.set(284 + HeroBody.HALF - HeroBody.RIGHT, 300 - 48); else place(level, 276);
             for (int f = 0; f < 60 * 6; f++) {
-                if (onTop) { level.player.position.set(284 + 5.5f - 29, 300 - 48); level.player.velocity().setZero(); }
+                if (onTop) { level.player.position.set(284 + HeroBody.HALF - HeroBody.RIGHT, 300 - 48); level.player.velocity().setZero(); }
                 frame(level);
                 assertFalse(s.isCommitted(), "no wind-up at a hero its fangs cannot reach (onTop " + onTop + ", frame " + f + ", " + s.state() + ")");
                 assertTrue(alive(level));
@@ -432,7 +433,7 @@ class SpiderTest {
         Level level = level();
         Spider s = spider(level);
         Rectangle body = s.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - 23.5f, body.y - 48 - 20);
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 48 - 20);
         level.player.velocity().setZero();
         boolean bounced = false;
         for (int f = 0; f < 60 && !s.isDefeated(); f++) { frame(level); bounced |= level.player.velocity.y < 0; }
@@ -483,13 +484,13 @@ class SpiderTest {
     @Test void itHearsAHeroAboveItInACircle() {
         Level level = level();
         Spider s = spider(level);
-        level.player.position.set(SPAWN_X + 12 - 29 + HERO_HALF + 6, FLOOR - 48 - 150);   // straight above, 150 px up
+        level.player.position.set(SPAWN_X + 12 - HeroBody.RIGHT + HERO_HALF + 6, FLOOR - 48 - 150);   // straight above, 150 px up
         level.player.velocity().setZero();
         frame(level);
         assertEquals(Spider.State.CRAWL, s.state(), "150 px away: outside the circle");
         Level other = level();
         Spider t = spider(other);
-        other.player.position.set(SPAWN_X + 12 - 29 + HERO_HALF + 6, FLOOR - 48 - 100);   // 100 px up: no band in the way
+        other.player.position.set(SPAWN_X + 12 - HeroBody.RIGHT + HERO_HALF + 6, FLOOR - 48 - 100);   // 100 px up: no band in the way
         other.player.velocity().setZero();
         frame(other);
         assertEquals(Spider.State.NOTICE, t.state(), "a hero above it is heard");
@@ -517,7 +518,7 @@ class SpiderTest {
     @Test void loadTimeChecksNameTheProblem() {
         Rectangle room = new Rectangle(0, 0, 640, 368);
         java.util.List<Rectangle> floor = java.util.List.of(new Rectangle(0, 320, 640, 48));
-        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 298, 11, 22));
+        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 292, HeroBody.W, HeroBody.H));
         assertNull(Spider.problem(320, 304, 32, 16, 4, 4, floor, room, standing));
         assertNotNull(Spider.problem(96, 304, 32, 16, 1, 1, floor, room, standing), "it could pounce at the entrance");
         assertNotNull(Spider.problem(600, 304, 32, 16, 0, 1, floor, room, Map.of()), "the range leaves the room");
@@ -557,7 +558,7 @@ class SpiderTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor line {@code floor}, still, facing right. */
     private void placeOn(Level level, float right, float floor) {
-        level.player.position.set(right - 29, floor - 48);
+        level.player.position.set(right - HeroBody.RIGHT, floor - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         harness.held.clear();
@@ -787,7 +788,7 @@ class SpiderTest {
         Rectangle room = new Rectangle(0, 0, 640, 368);
         java.util.List<Rectangle> floor = java.util.List.of(new Rectangle(0, 320, 640, 48), new Rectangle(320, 208, 128, 16));
         java.util.List<Rectangle> solids = floor, none = java.util.List.of();
-        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 298, 11, 22));
+        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 292, HeroBody.W, HeroBody.H));
         float[] drop = {384, 208, 448, 208, 448, 320};
         assertNull(Spider.routeProblem(drop, floor, solids, none, none, room, 8, standing));
         assertNotNull(Spider.routeProblem(drop, floor, solids, none, none, room, 8, Map.of("checkpoint", new Rectangle(448, 288, 16, 32))),
@@ -907,7 +908,7 @@ class SpiderTest {
 
     /** Keeps the hero hovering with its body's right edge at {@code right}, {@code up} px over the floor: out of the pounce's reach. */
     private void hover(Level level, float right, float floor, float up) {
-        level.player.position.set(right - 29, floor - 48 - up);
+        level.player.position.set(right - HeroBody.RIGHT, floor - 48 - up);
         level.player.velocity().setZero();
     }
 
@@ -986,7 +987,7 @@ class SpiderTest {
     // ---- #497: the leap may leave the range by up to its reach, over floor ----------------------------------------------
 
     /** Hero body right edges that overlap the pounce box of the spider at a range end by 1 px, so only the overshoot reaches him. */
-    private static final float JUST_PAST_RIGHT = 464, JUST_PAST_LEFT = 211;
+    private static final float JUST_PAST_RIGHT = 467, JUST_PAST_LEFT = 211;
 
     private void assertBitten(Level level, Spider s, float from, float to) {
         until(level, () -> s.state() == Spider.State.WINDUP, 60 * 3);
@@ -1025,7 +1026,7 @@ class SpiderTest {
     @Test void aGapBeyondTheRangeEndStopsTheLeapAndItNeverLeapsInPlaceForEver() {
         Level level = harness.roomOf("spider-edge", 0);   // floor x 0..420 and 452..640: its range ends at position.x 384
         Spider s = spider(level);
-        place(level, 463);   // across the gap, body x 452..463: inside the pounce box of the spider at its end (right edge 454)
+        place(level, 466);   // across the gap, body x 452..466: inside the pounce box of the spider at its end (right edge 454)
         for (int f = 0; f < 60 * 6; f++) {
             frame(level);
             assertFalse(s.isCommitted(), "it never winds up at a hero its fangs cannot reach (frame " + f + ", " + s.state() + ")");

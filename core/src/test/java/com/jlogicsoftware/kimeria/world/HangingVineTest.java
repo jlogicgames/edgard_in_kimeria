@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.Collidable;
 import com.jlogicsoftware.kimeria.entity.items.Actionable;
 import com.jlogicsoftware.kimeria.entity.objects.FallingStone;
@@ -57,7 +58,7 @@ class HangingVineTest {
     /** Puts the hero in the stone's zone but not under its column and runs until the stone lands (the frame it lands is the last). */
     private void landTheStone(Level level) {
         FallingStone stone = stone(level);
-        level.player.position.set(stone.zone().x - 18, 272); // body left = zone left, 32 px left of the stone's column
+        level.player.position.set(stone.zone().x - HeroBody.LEFT, 272); // body left = zone left, 32 px left of the stone's column
         for (int i = 0; i < 600 && !stone.isSpent(); i++) level.update(STEP);
         assertTrue(stone.isSpent(), "the stone must land");
         assertFalse(level.player.isGotHit(), "the hero stood beside the stone's column");

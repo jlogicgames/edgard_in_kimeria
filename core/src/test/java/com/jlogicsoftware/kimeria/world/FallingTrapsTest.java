@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -39,7 +40,7 @@ import static org.junit.jupiter.api.Assertions.*;
 
 /**
  * Position-triggered falling traps (D45, #232) in the fixture {@code falling-traps-test}: one room 640 px wide,
- * floor top y 320, the hero 11 px wide x 22 tall running at 100 px/s. The branch hangs at x 160-192, y 224-240
+ * floor top y 320, the hero 14 px wide x 28 tall running at 129 px/s (D164). The branch hangs at x 160-192, y 224-240
  * (zone x 144-192), the stone starts flush with the room top at x 400-416 (zone x 352-416).
  * Recipe: docs/ROOMS.md "Falling traps".
  */
@@ -47,6 +48,8 @@ class FallingTrapsTest {
     private static final float STEP = 1f / 60f;
     private static final float BRANCH_LEFT = 160, BRANCH_RIGHT = 192, STONE_LEFT = 400, STONE_RIGHT = 416;
     private static final float ZONE_BRANCH_LEFT = 144, ZONE_STONE_LEFT = 352;
+    /** Body left of a hero inside the branch's zone, its right edge 1 px short of the column. */
+    private static final float BESIDE_BRANCH = BRANCH_LEFT - HeroBody.W - 1;
 
     private final java.util.List<String> sounds = new java.util.ArrayList<>();
     /** What each region the traps asked for was cut from. */
@@ -122,8 +125,8 @@ class FallingTrapsTest {
 
     private void frame(Level l) { l.update(STEP); pressed.clear(); }
     private void settle(Level l, int frames) { held.clear(); for (int i = 0; i < frames; i++) frame(l); }
-    /** Puts the hero's body (11 px wide) with its left edge at {@code bodyLeft}, standing on the floor. */
-    private void place(Level l, float bodyLeft) { l.player.position.set(bodyLeft - 18, 272); settle(l, 2); }
+    /** Puts the hero's body with its left edge at {@code bodyLeft}, standing on the floor. */
+    private void place(Level l, float bodyLeft) { l.player.position.set(bodyLeft - HeroBody.LEFT, 272); settle(l, 2); }
     private float bodyLeft(Level l) { return l.player.hitboxBounds().x; }
     private boolean dead(Level l) { return l.player.isGotHit(); }
     private void run(Level l, boolean right, boolean jump) {
@@ -165,10 +168,10 @@ class FallingTrapsTest {
         settle(l, 120);
         assertEquals(FallingTrap.State.ARMED, branch(l).state());
         assertEquals(FallingTrap.State.ARMED, stone(l).state());
-        place(l, ZONE_BRANCH_LEFT - 11 - 1); // body right edge 1 px short of the zone
+        place(l, ZONE_BRANCH_LEFT - HeroBody.W - 1); // body right edge 1 px short of the zone
         settle(l, 2);
         assertEquals(FallingTrap.State.ARMED, branch(l).state());
-        place(l, ZONE_BRANCH_LEFT - 11 + 1); // overlaps by 1 px
+        place(l, ZONE_BRANCH_LEFT - HeroBody.W + 1); // overlaps by 1 px
         assertEquals(FallingTrap.State.WARNING, branch(l).state());
         assertEquals(FallingTrap.State.ARMED, stone(l).state(), "a trap reacts only to its own zone");
     }
@@ -193,7 +196,7 @@ class FallingTrapsTest {
             for (boolean stone : new boolean[]{false, true}) {
                 Level l = level();
                 FallingTrap t = stone ? stone(l) : branch(l);
-                l.player.position.set((stone ? ZONE_STONE_LEFT : ZONE_BRANCH_LEFT - 5) - 18, 272);
+                l.player.position.set((stone ? ZONE_STONE_LEFT : ZONE_BRANCH_LEFT - 5) - HeroBody.LEFT, 272);
                 while (t.state() == FallingTrap.State.ARMED) frame(l); // the frame that arms it counts as 0 elapsed
                 assertEquals(ExpectedWarnings.standard(longer), t.warningTotalSeconds(), 1e-6f);
                 // Exact: the trap adds one 1/60 s step per update (float), so the count is that sum crossing the total.
@@ -207,7 +210,7 @@ class FallingTrapsTest {
     @Test void pausingFreezesTheWarningAndTheFallAndResumingContinuesRatherThanRestarts() {
         Level l = level();
         FallingBranch b = branch(l);
-        place(l, 148);
+        place(l, BESIDE_BRANCH);
         for (int i = 0; i < 20; i++) frame(l);
         float elapsed = b.warningElapsedSeconds();
         assertTrue(elapsed > 0.3f);
@@ -231,7 +234,7 @@ class FallingTrapsTest {
         FallingBranch b = branch(l);
         assertEquals(0, b.frame());
         // Stand outside the column but inside the zone: left of the branch, body right 159.
-        place(l, 148);
+        place(l, BESIDE_BRANCH);
         Set<Integer> early = new HashSet<>(), late = new HashSet<>();
         while (b.state() == FallingTrap.State.WARNING) {
             (b.warningProgress() < 0.5f ? early : late).add(b.frame());
@@ -254,7 +257,7 @@ class FallingTrapsTest {
         FallingBranch b = branch(l);
         NoopBatch batch = new NoopBatch();
         float hungY = b.bodyBounds().y;
-        place(l, 148);
+        place(l, BESIDE_BRANCH);
         while (b.state() == FallingTrap.State.WARNING) {
             batch.record(2);
             b.render(batch);
@@ -296,7 +299,7 @@ class FallingTrapsTest {
     }
 
     @Test void impactKillsOnOverlapOnly() {
-        for (float left : new float[]{148, 160 - 11}) { // body right 159 and 160 (touching the column)
+        for (float left : new float[]{BESIDE_BRANCH, BRANCH_LEFT - HeroBody.W}) { // body right 159 and 160 (touching the column)
             Level l = level();
             place(l, left);
             settle(l, 240);
@@ -313,7 +316,7 @@ class FallingTrapsTest {
 
     @Test void aSpentBranchIsHarmlessSingleShotSceneryAndRetryRearmsIt() {
         Level l = level();
-        place(l, 148);
+        place(l, BESIDE_BRANCH);
         settle(l, 200);
         FallingBranch b = branch(l);
         assertTrue(b.isSpent());
@@ -336,7 +339,7 @@ class FallingTrapsTest {
             setLonger(longer);
             for (int jumpAt = -1; jumpAt < 40; jumpAt++) {
                 Level l = level();
-                place(l, ZONE_BRANCH_LEFT - 11 + 1); // the first pixel inside the zone
+                place(l, ZONE_BRANCH_LEFT - HeroBody.W + 1); // the first pixel inside the zone
                 for (int i = 0; i < 120; i++) {
                     run(l, true, i == jumpAt && l.player.isOnGround());
                     assertFalse(dead(l), "longer=" + longer + " jumpAt=" + jumpAt + " frame " + i);
@@ -349,7 +352,7 @@ class FallingTrapsTest {
     @Test void theBranchHasMarginForANaturalWalkNotJustAnOptimalOne() {
         // Walking right from the zone edge, the hero's body is clear of the column this long before it falls.
         Level l = level();
-        place(l, ZONE_BRANCH_LEFT - 11 + 1);
+        place(l, ZONE_BRANCH_LEFT - HeroBody.W + 1);
         int clearAt = 0;
         while (bodyLeft(l) < BRANCH_RIGHT) { run(l, true, false); clearAt++; }
         float margin = TrapWarnings.DEFAULT_WARNING_SECONDS - clearAt * STEP;
@@ -360,7 +363,7 @@ class FallingTrapsTest {
     @Test void aLandingStoneThrowsDustChipsAndDebrisOnTheFloorLine() {
         Level l = level();
         FallingStone s = stone(l);
-        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        place(l, ZONE_STONE_LEFT - HeroBody.W + 1 + 40);
         assertEquals(0, l.fx().dust().count() + l.fx().grit().count());
         framesUntil(l, s, FallingTrap.State.SPENT, 600);
         var dust = l.fx().dust();
@@ -394,7 +397,7 @@ class FallingTrapsTest {
     @Test void theImpactPlaysStoneImpactOnceAndOnlyAtLanding() {
         Level l = level();
         FallingStone s = stone(l);
-        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        place(l, ZONE_STONE_LEFT - HeroBody.W + 1 + 40);
         sounds.clear();
         framesUntil(l, s, FallingTrap.State.FALLING, 600);
         assertFalse(sounds.contains("stone_impact"), "silent before the landing");
@@ -407,7 +410,7 @@ class FallingTrapsTest {
     @Test void withScreenShakeOffTheLandingDoesNotMoveTheCameraButDustAndDebrisStillShow() {
         shakeDisabled = true;
         Level l = level();
-        place(l, ZONE_STONE_LEFT - 11 + 1 + 40);
+        place(l, ZONE_STONE_LEFT - HeroBody.W + 1 + 40);
         framesUntil(l, stone(l), FallingTrap.State.SPENT, 600);
         assertFalse(l.fx().shake().enabled());
         Rectangle view = new Rectangle(0, 0, 320, 180);
@@ -419,7 +422,7 @@ class FallingTrapsTest {
     @Test void aLandingBranchThrowsDustChipsLeavesAndDebrisOnTheFloorLineWithoutAShake() {
         Level l = level();
         FallingBranch b = branch(l);
-        place(l, 148); // in the zone, left of the column: a miss
+        place(l, BESIDE_BRANCH); // in the zone, left of the column: a miss
         assertEquals(0, l.fx().dust().count() + l.fx().grit().count());
         framesUntil(l, b, FallingTrap.State.SPENT, 600);
         assertFalse(dead(l));
@@ -460,7 +463,7 @@ class FallingTrapsTest {
     }
 
     @Test void theBranchPlaysBranchImpactOnceAndOnlyAtLandingHitOrMiss() {
-        for (float left : new float[]{148, 175}) { // beside the column (a miss), under it (a hit)
+        for (float left : new float[]{BESIDE_BRANCH, 175}) { // beside the column (a miss), under it (a hit)
             Level l = level();
             FallingBranch b = branch(l);
             sounds.clear();
@@ -482,7 +485,7 @@ class FallingTrapsTest {
         FallingStone s = stone(l);
         assertFalse(s.shadowVisible());
         assertFalse(s.stoneVisible());
-        place(l, ZONE_STONE_LEFT - 11 + 1 + 40); // inside the zone, short of the column
+        place(l, ZONE_STONE_LEFT - HeroBody.W + 1 + 40); // inside the zone, short of the column
         float last = 0; int lastFrame = 0;
         Set<Integer> frames = new HashSet<>();
         while (s.state() == FallingTrap.State.WARNING) {
@@ -508,13 +511,13 @@ class FallingTrapsTest {
     }
 
     @Test void aHeroWhoStandsUnderTheShadowDiesAndOneBesideItDoesNot() {
-        for (float left : new float[]{STONE_LEFT - 11 + 1, 405, STONE_RIGHT - 1}) {
+        for (float left : new float[]{STONE_LEFT - HeroBody.W + 1, 405, STONE_RIGHT - 1}) {
             Level l = level();
             place(l, left);
             settle(l, 300);
             assertTrue(dead(l), "under the stone at left=" + left);
         }
-        for (float left : new float[]{STONE_LEFT - 11}) {
+        for (float left : new float[]{STONE_LEFT - HeroBody.W}) {
             Level l = level();
             place(l, left);
             settle(l, 300);
@@ -528,9 +531,9 @@ class FallingTrapsTest {
             setLonger(longer);
             for (int jumpAt = -1; jumpAt < 40; jumpAt += 3) {
                 Level l = level();
-                place(l, ZONE_STONE_LEFT - 11 + 1);
+                place(l, ZONE_STONE_LEFT - HeroBody.W + 1);
                 boolean shadowSeen = false;
-                for (int i = 0; i < 200; i++) {
+                for (int i = 0; i < 150; i++) { // at 129 px/s: past the column, still on the floor
                     run(l, true, i == jumpAt && l.player.isOnGround());
                     shadowSeen |= stone(l).shadowVisible();
                     assertFalse(dead(l), "longer=" + longer + " jumpAt=" + jumpAt + " frame " + i);
@@ -657,7 +660,7 @@ class FallingTrapsTest {
         assertFalse(survivesJumpPressedBefore(1000));
     }
 
-    private static final int EXPECTED_JUMP_WINDOW_LO = 3, EXPECTED_JUMP_WINDOW_HI = 48;
+    private static final int EXPECTED_JUMP_WINDOW_LO = 5, EXPECTED_JUMP_WINDOW_HI = 49; // D164 (3 to 48 before)
 
     // ---- Load-time validation of every room (D45) ----
 

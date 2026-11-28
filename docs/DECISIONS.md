@@ -5426,3 +5426,67 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests and gates:** `WindTest`, `CrownGlintFxTest`, `WindRoomsTest`, `KimeriaParticleSystemTest`,
   `AllocationBudgetTest.windGustsAndCrownGlintsOverWholeGusts`, `tools/wind_spots.py --check` (`validateWindSpots`,
   `test_wind_spots.py`).
+
+## D164. The hero's body is 14×28 and he runs and jumps in proportion ([#705](https://github.com/jlogicgames/edgard_in_kimeria/issues/705), 2026-11-28, amends D79, D98, D151, D154)
+
+- **Status:** The body spec is decided by the author, 2026-11-28 (#702, #705). The code and the trap, monster and boss checks
+  below are built. The shipped rooms are **not yet** re-tuned: several need the author's decisions, listed under "Open" and
+  tracked in [#705](https://github.com/jlogicgames/edgard_in_kimeria/issues/705).
+- **Decision (author):** the hero becomes 40 px tall, so his body grows to **14×28**, centred in the unchanged 48×48 box with
+  its bottom on the floor line (offset 17, 20). Jump, run speed, sword reach and pickup reach grow **in proportion**
+  (`Player.PROPORTION` 1.29). Read as: every length, speed and acceleration of the hero's own movement is ×1.29, so air time
+  and every timer stay. The 16 px tile, the 640×360 screen, the room height and the monsters' own physics do not change.
+
+| Value | Before | Now |
+| --- | --- | --- |
+| Body (offset, size) | (18, 26), 11×22 | (17, 20), 14×28 |
+| Run | 100 px/s | 129 px/s |
+| Gravity | 588 px/s² (9.8 per 60 Hz step) | 758.5 px/s² (12.642) |
+| Jump launch, stomp bounce | 260 px/s | 335.4 px/s |
+| Standing jump at 60 Hz (rise, air time) | 59.67 px, 0.9 s | 76.97 px, 0.9 s |
+| Fastest fall | 300 px/s | 387 px/s |
+| Ladder jump (0.7 of the launch) | 182 px/s | 234.8 px/s |
+| Landing dust from | 140 px/s (a 16 px drop) | 180.6 px/s (about 21 px) |
+| Coyote time | 0.25 s (ends at 147 px/s) | 0.25 s (189.6 px/s) |
+| "At rest" on a one-way platform | under 20 px/s | under 25.8 px/s (`GravityBody.restingSpeed`) |
+| Sword box past the body (ahead, behind, above) | 17, 9, 14 px | 22, 12, 18 px |
+| Pickup reach | 3 px | 4 px |
+| Camera rise slack (D154) | 24 px | 30.96 px, so a jump from the floor still does not scroll |
+| Camera dead zone (three body widths) | 33 px | 42 px |
+| Wolf "he stands" fall speed | 25 px/s | 32.25 px/s |
+
+- **Not scaled:** ladder climb speed (70 px/s; the author named jump and run), placement gap (2 px), every timer, the fireball's
+  height over the floor (9 to 19 px; its offset from the body's top changed from 3 to 9 px) and thrown objects.
+- **Code that follows the hero:** `FallingTrap.HERO_BODY_*` and `FallingPlatform` read `Player`; the Boss's stomp uses the
+  shared bounce; the wolf predicts his jump with **his** gravity, not its own; a fall longer than a one-way platform is thick
+  (19 px in a 0.05 s frame at the new fall speed, 16 px platforms) still lands on it (`CollideBody.fellThrough`). The frame is
+  still drawn at (x − 8, y − 16): `FRAME_PIVOT_X` is 32, half a pixel right of the D79 art's axis (31.5), so the art stays on
+  whole pixels. Until the new art ([#706](https://github.com/jlogicgames/edgard_in_kimeria/issues/706)) the figure is drawn
+  smaller than the body and the blade is drawn 5 px short of its reach.
+- **Tool copies:** `check_tiled_links.py` (`HERO_BOX`), `parallax_mock.py` (figure 14 px wide at +17, 129 px/s, apex 77).
+- **Changed checks and thresholds, with the measured values:**
+  - Swarm load check `UNDER_CLEARANCE` 24 → **30** px (2 px over the body, as before); the `mosquito-high` fixture holds its
+    swarm 30 px up. A jump over an oncoming swarm: window 0.55 → **0.60 s**; jumping after one: 0.41 → **0.51 s**. A hero who
+    stands swinging at it dies **0.88 s** after the blade reaches it (0.68; the blade reaches 5 px farther).
+  - Boss: the safe offset from a rock's shadow 14 → **16** px (15 px is where a 16 px rock and a 14 px body part). Scripted
+    fights 28.18 / 3.78 / 11.18 → **27.12 / 3.37 / 10.90 s**.
+  - Falling branch jump window, frames before impact: 3..48 → **5..49**.
+  - Parallax: `rise-reeds` stand 2 px lower (top 128 → **130**): at 128 one box position in 15 rooms hid 85.02 % of the 14 px
+    figure (limit 85 %, unchanged); at 130 it is 84.8 %.
+  - The leg-hold's first-meeting pocket in `forest-entry` moves from x 478 to **476** (17 px clear of the litter; 15 px at 478).
+- **Open, for the author** ([#705](https://github.com/jlogicgames/edgard_in_kimeria/issues/705); the tests that pin these still
+  fail, none was loosened). Measured on this build with scripted heroes:
+  - **New shortcuts** (a probe over each room's static geometry, no lifts or ladders, old against new physics): the 96 px chasm
+    of `forest-0-stone` (x 3616-3712) is jumped without the thrown-stone lesson; the 144 px pits of `forest-0-traps`
+    (x 4032-4176) and `forest-1-traps` (x 1024-1168) are jumped without their falling support (a coyote jump). In
+    `forest-1-lever` a leap off the lever ledge passes the raised ladder (it stayed 48 px short); the sweep never landed on the
+    exit ledge.
+  - **Tutorial hints** are fully visible 0.50 to 0.63 s before their object is reached (0.9 s is required, `HintLeadTest`).
+  - **Wolf (D115):** a hero who runs from the commit is no longer bitten without the assist (he gains 97 px in the 0.75 s of
+    wind-up and lunge, against 75).
+  - **Deadfall (D88):** stopping up to **0.50 s** after the trip is safe (0.68; the check asks 0.65), the log is at body height
+    from 0.141 to 0.365 s (0.16 to 0.34), and the caught log hangs less than 13 px over the head.
+  - **Thorn vine (D46):** a blind walk's safe window in the fixture is **0.95 s** of each 4.5 s (1.0 is required).
+  - **Density (D105):** at 1.5 s a beat minimum, `forest-1-escalators` (1.42) and `forest-entry` (1.32) fall under it;
+    `forest-walls` and `forest-canopy` would at the same mastered route run 1.29 times faster (1.43, 1.47).
+  - **Rooms:** the scripted routes, beat times, pockets and retry costs of the room cards are measured at the old physics.

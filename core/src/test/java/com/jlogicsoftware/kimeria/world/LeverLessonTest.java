@@ -284,7 +284,7 @@ class LeverLessonTest {
         HintGeometry geometry = new HintGeometry();
         Vector2 zoneAnchor = new Vector2(), contextAnchor = new Vector2();
         int both = 0;
-        for (float x = 24; x < 544; x += 4) for (float y : new float[]{272, 272 - 58}) { // floor, top of a jump
+        for (float x = 24; x < 544; x += 4) for (float y : new float[]{272, 272 - 77}) { // floor, top of a jump
             level.player.position.set(x, y);
             for (int i = 0; i < 3; i++) frame(level);
             String zone = level.player.zoneHint(), context = level.player.contextHint();

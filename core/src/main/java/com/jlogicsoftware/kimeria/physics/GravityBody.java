@@ -10,6 +10,8 @@ public interface GravityBody {
      * reference step; every other frame time (a browser at 120 or 144 Hz, uneven frames) gives the same arc (D98).
      */
     static final float REFERENCE_STEP = 1f / 60f;
+    /** The vertical speed (px/s) under which a body counts as resting, unless it says otherwise. */
+    static final float RESTING_SPEED = 20f;
 
     Vector2 position();
 
@@ -30,6 +32,11 @@ public interface GravityBody {
 
     default float jumpForce() {
         return 260f;
+    }
+
+    /** Below this vertical speed (px/s) a body counts as resting, for the one-way platform catch-up margin. */
+    default float restingSpeed() {
+        return RESTING_SPEED;
     }
 
     /**

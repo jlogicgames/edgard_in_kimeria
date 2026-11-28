@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
@@ -51,7 +52,7 @@ class BeetleTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing right. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         harness.held.clear();
@@ -269,7 +270,7 @@ class BeetleTest {
         harness.held.clear(); frame(level);
         assertNotNull(level.player.carriedObject(), "picked up the stone");
         place(level, 190);
-        level.player.position.x = 190 - 29;
+        level.player.position.x = 190 - HeroBody.RIGHT;
         until(level, () -> b.getState() == Beetle.State.CHASE, 60 * 3);
         settle(level, 30);
         harness.held.add(Input.Keys.L); harness.pressed.add(Input.Keys.L); frame(level); harness.held.clear();
@@ -318,7 +319,7 @@ class BeetleTest {
         Level level = level();
         Beetle b = beetle(level);
         Rectangle body = b.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - 23.5f, body.y - 48 - 20);  // feet 20 px above its top, over its middle
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 48 - 20);  // feet 20 px above its top, over its middle
         level.player.velocity().setZero();
         until(level, b::isRemoved, 60);
         assertFalse(alive(level), "a stomp before it commits bursts it under the hero");
@@ -328,7 +329,7 @@ class BeetleTest {
         Level level = level();
         Beetle b = committed(level);
         Rectangle body = b.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - 23.5f, body.y - 48 - 12);
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 48 - 12);
         level.player.velocity().setZero();
         until(level, () -> level.player.velocity.y < 0, 30);
         assertTrue(b.isCommitted(), "a stomp does not kill a committed beetle");
@@ -400,7 +401,7 @@ class BeetleTest {
         Beetle b = body(level);
         harness.sounds.clear();
         Rectangle body = b.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - 23.5f, body.y - 48 - 20);
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 48 - 20);
         level.player.velocity().setZero();
         boolean bounced = false;
         for (int f = 0; f < 60 && !b.isRemoved(); f++) { frame(level); bounced |= level.player.velocity.y < 0; }
@@ -707,7 +708,7 @@ class BeetleTest {
     @Test void loadTimeChecksNameTheProblem() {
         Rectangle room = new Rectangle(0, 0, 640, 368);
         java.util.List<Rectangle> floor = java.util.List.of(new Rectangle(0, 320, 640, 48));
-        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 298, 11, 22));
+        Map<String, Rectangle> standing = Map.of("entrance", new Rectangle(50, 292, HeroBody.W, HeroBody.H));
         assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, standing));
         assertNotNull(Beetle.problem(96, 304, 24, 16, 1, 1, floor, room, standing), "a burst could cover the entrance");
         assertNotNull(Beetle.problem(20, 304, 24, 16, 0, 1, floor, room, Map.of()), "the blast leaves the room");
@@ -715,15 +716,15 @@ class BeetleTest {
             new Rectangle(316, 320, 324, 48)), room, Map.of()), "a gap in its floor");
         assertNotNull(Beetle.problem(320, 304, 24, 16, Float.NaN, 4, floor, room, Map.of()), "a broken range");
         // D149: the sweep is the dome's, centres 268..396. At 20 px up it reaches 31.2 px past an end, not the box's 40.
-        for (float[] x : new float[][]{{268 - 32 - 11, 268 - 30 - 11}, {396 + 32, 396 + 30}}) {
-            assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[0], 278, 11, 22))),
+        for (float[] x : new float[][]{{268 - 32 - HeroBody.W, 268 - 30 - HeroBody.W}, {396 + 32, 396 + 30}}) {
+            assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[0], 272, HeroBody.W, HeroBody.H))),
                 "a place in a corner of the swept bounds is clear of every dome: x " + x[0]);
-            assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[1], 278, 11, 22))),
+            assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(x[1], 272, HeroBody.W, HeroBody.H))),
                 "a place inside the last dome: x " + x[1]);
         }
-        assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 267, 11, 22))),
+        assertNotNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 261, HeroBody.W, HeroBody.H))),
             "between the range ends the sweep is 32 px high");
-        assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 266, 11, 22))));
+        assertNull(Beetle.problem(320, 304, 24, 16, 4, 4, floor, room, Map.of("checkpoint", new Rectangle(330, 260, HeroBody.W, HeroBody.H))));
         IllegalArgumentException entrance = assertThrows(IllegalArgumentException.class, () -> harness.roomOf("beetle-entrance", 0));
         assertTrue(entrance.getMessage().contains("entrance"), entrance.getMessage());
         IllegalArgumentException gap = assertThrows(IllegalArgumentException.class, () -> harness.roomOf("beetle-gap", 0));

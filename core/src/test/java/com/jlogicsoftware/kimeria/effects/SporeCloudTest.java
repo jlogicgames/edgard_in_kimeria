@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.effects;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -21,7 +22,7 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class SporeCloudTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float FLOOR = 320, WIDTH = 24, HEIGHT = 16, ZONE = 64, HERO_W = 11, HERO_H = 22, EDGE_EPS = 1e-3f;
+    private static final float FLOOR = 320, WIDTH = 24, HEIGHT = 16, ZONE = 64, HERO_W = HeroBody.W, HERO_H = HeroBody.H, EDGE_EPS = 1e-3f;
     private static final float FALSE_X = 480;
     private static final int FRAMES_LIMIT = 600, MUSHROOMS = 40;
     private static final float[][] LIMES = {{0.373f, 0.627f, 0.165f}, {0.651f, 0.878f, 0.290f}, {0.902f, 0.949f, 0.416f}};

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -13,7 +14,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class WallContactTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     /** forest-walls' first wall (x 912-928, top y 192, floor y 304): the hero's body centre just left of its face, feet at y 214. */
-    private static final float BODY_CENTRE_X = 906, FEET_Y = 214;
+    private static final float BODY_CENTRE_X = 912 - HeroBody.HALF - .5f, FEET_Y = 214;
     private static final int FRAMES = 18;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
 
@@ -22,7 +23,7 @@ class WallContactTest {
 
     private Level airborneBesideTheWall() {
         Level level = h.room("forest-2", "forest-walls");
-        level.player.position.set(BODY_CENTRE_X - 23.5f, FEET_Y - 48);
+        level.player.position.set(BODY_CENTRE_X - HeroBody.CENTRE, FEET_Y - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         h.held.clear(); h.pressed.clear();

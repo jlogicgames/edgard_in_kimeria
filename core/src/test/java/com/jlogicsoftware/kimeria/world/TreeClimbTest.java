@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -181,7 +182,7 @@ class TreeClimbTest {
         for (Decor trunk : trunks) {
             assertTrue(trunk.kind().startsWith("trunk"), trunk.kind());
             assertFalse(trunk.brushes() || trunk.isStill(), "a trunk neither brushes nor follows the look-alike's rules");
-            trunk.notice(new Rectangle(trunk.getX(), trunk.getY() + 100, 11, 22), 100f); // a hero body inside the trunk, moving
+            trunk.notice(new Rectangle(trunk.getX(), trunk.getY() + 100, HeroBody.W, HeroBody.H), 100f); // a hero body inside the trunk, moving
             assertFalse(trunk.playing(), "a trunk never reacts to the hero");
             assertEquals(FLOOR, trunk.getY() + trunk.getHeight(), 0.01f, "a trunk stands on the floor");
             assertTrue(level.collisionBlocks.stream().noneMatch(b -> b.getX() == trunk.getX() && b.getY() == trunk.getY()), "a trunk is not solid");

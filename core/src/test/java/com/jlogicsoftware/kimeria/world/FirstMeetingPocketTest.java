@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.entity.Actor;
 import com.jlogicsoftware.kimeria.entity.Entity;
@@ -190,7 +191,7 @@ class FirstMeetingPocketTest {
      * the map's object: {@code {reach, clear}}; the band is the cloud (fungus), the swept log (deadfall) or the blast (stump, root).
      */
     private float[] tripAndStandMeasure(Level level, Entity trap, float pocketX) {
-        float bodyLeft = pocketX - 5.5f, bodyRight = pocketX + 5.5f, triggerLeft, triggerRight, bandLeft, bandRight;
+        float bodyLeft = pocketX - HeroBody.HALF, bodyRight = pocketX + HeroBody.HALF, triggerLeft, triggerRight, bandLeft, bandRight;
         if (trap instanceof FalseHoneyFungus f) {
             Rectangle zone = f.triggerZone(), band = f.cloudBounds();
             triggerLeft = zone.x; triggerRight = zone.x + zone.width; bandLeft = band.x; bandRight = band.x + band.width;
@@ -293,7 +294,7 @@ class FirstMeetingPocketTest {
     /** Behind the cover (x 112-144) inside the YellowMob's range: it wakes, runs at him and is stopped by the cover (D105). */
     @Test void forestEntryTheYellowMob() { pocket("forest-2", "forest-entry", "yellowmob", YellowMob.class, 100, "RUN"); }
     /** D128: the leg-hold's pocket is on the floor after the stair, in the zone and 16 px clear of the teeth; it rattles, snaps empty and shuts (#561). */
-    @Test void forestEntryTheLegHold() { tripAndStand("forest-2", "forest-entry", LegHold.class, 478); pocket("forest-2", "forest-entry", "leg-hold", LegHold.class, 478, "SNAP"); }
+    @Test void forestEntryTheLegHold() { tripAndStand("forest-2", "forest-entry", LegHold.class, 476); pocket("forest-2", "forest-entry", "leg-hold", LegHold.class, 476, "SNAP"); }
     /** In the trigger zone (from x 1608), 26 px short of the cloud: it swells and bursts in front of him and is spent (D105). */
     @Test void forestCanopyTheFalseFungus() { tripAndStand("forest-2", "forest-canopy", FalseHoneyFungus.class, 1640); pocket("forest-2", "forest-canopy", "false-honey-fungus", FalseHoneyFungus.class, 1640, "BURST"); }
     /** 20 px short of the tip's sweep: the vine is seen swinging at him and back, never reaching (D46). */

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
@@ -268,7 +269,7 @@ class Forest1ClimbTest {
         Spider s = spider(l);
         Escalator lift = l.escalators.get(0);
         while (lift.getY() < LIFT_BOTTOM - 1) l.update(STEP);   // the lift at its lowest: put the hero on it
-        l.player.position.set(LIFT_X + 16 - 23.5f, lift.getY() - 48);
+        l.player.position.set(LIFT_X + 16 - HeroBody.CENTRE, lift.getY() - 48);
         l.player.velocity.setZero();
         held.clear(); pressed.clear();
         int frames = 0;

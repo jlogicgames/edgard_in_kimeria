@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -494,7 +495,7 @@ class BossCombatTest {
 
     @Test void throneWakeAndPursuitNeverReseatAndRetryRestoresFullBossWithElixir() {
         encounter();
-        level.player.position.x = boss.getX() + 16 - 23.5f - Boss.WAKE_DISTANCE - 1;
+        level.player.position.x = boss.getX() + 16 - HeroBody.CENTRE - Boss.WAKE_DISTANCE - 1;
         frames(1); assertFalse(boss.awakened());
         level.player.position.x += 3;
         frames(2); assertTrue(boss.awakened());

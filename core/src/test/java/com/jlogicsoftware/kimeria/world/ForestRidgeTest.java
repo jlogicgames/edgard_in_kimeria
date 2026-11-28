@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -110,7 +111,7 @@ class ForestRidgeTest {
         Wolf w = wolf(level);
         boolean reached = false;
         for (int f = 0; f < SECOND * 20 && !level.player.isGotHit(); f++) {
-            level.player.position.set(6384 - 23.5f, ForestRidgeRoute.MOUND_TOP - 48);
+            level.player.position.set(6384 - HeroBody.CENTRE, ForestRidgeRoute.MOUND_TOP - 48);
             level.player.velocity().setZero();
             level.player.setOnGround(true);
             level.update(STEP);

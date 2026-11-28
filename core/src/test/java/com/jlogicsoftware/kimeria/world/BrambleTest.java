@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
@@ -146,10 +147,10 @@ class BrambleTest {
     @Test void aStandingHeroIsHitOnlyWhereTheThornsAreNow() {
         Level level = room(LANE_ROOM);
         Bramble b = bramble(level);
-        Rectangle standingIn = new Rectangle(LANE_ROOT_X + 40, LANE_FLOOR - 22, 11, 22);
-        Rectangle atClump = new Rectangle(LANE_ROOT_X + 4, LANE_FLOOR - 22, 11, 22);
-        Rectangle beyond = new Rectangle(LANE_ROOT_X + REACH + 0.5f, LANE_FLOOR - 22, 11, 22);
-        Rectangle overTheTips = new Rectangle(LANE_ROOT_X + 40, LANE_FLOOR - 18 - 22 - 0.5f, 11, 22);
+        Rectangle standingIn = new Rectangle(LANE_ROOT_X + 40, LANE_FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
+        Rectangle atClump = new Rectangle(LANE_ROOT_X + 4, LANE_FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
+        Rectangle beyond = new Rectangle(LANE_ROOT_X + REACH + 0.5f, LANE_FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
+        Rectangle overTheTips = new Rectangle(LANE_ROOT_X + 40, LANE_FLOOR - 18 - HeroBody.H - 0.5f, HeroBody.W, HeroBody.H);
         for (float t = 0f; t < 4f; t += 0.05f) {
             Bramble.Phase p = b.currentPhase();
             assertFalse(b.lethalTo(beyond), "never beyond the reach");

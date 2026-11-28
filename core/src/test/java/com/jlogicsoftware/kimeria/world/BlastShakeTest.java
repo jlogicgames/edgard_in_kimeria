@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
 import com.jlogicsoftware.kimeria.entity.items.Bomb;
 import com.jlogicsoftware.kimeria.entity.objects.ExplosiveTrap;
@@ -36,7 +37,7 @@ class BlastShakeTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         harness.held.clear();
     }

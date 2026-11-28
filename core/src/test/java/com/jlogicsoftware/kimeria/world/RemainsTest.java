@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
@@ -221,7 +222,7 @@ class RemainsTest {
             Level level = harness.roomOf(c.map(), 0);
             Remains body = body(c, level);
             var box = body.remainsInto(new com.badlogic.gdx.math.Rectangle());
-            level.player.position.set(box.x - 29 + 2, box.y + box.height - 48);   // the hero's body just touching it
+            level.player.position.set(box.x - HeroBody.RIGHT + 2, box.y + box.height - 48);   // the hero's body just touching it
             float max = 0;
             for (int f = 0; f < ROCK_FRAMES; f++) { frames(level, 1); max = Math.max(max, Math.abs((float) c.reaction().applyAsDouble(body))); }
             assertTrue(max > 0, "it reacts to the hero passing");
@@ -274,7 +275,7 @@ class RemainsTest {
     @Test void aSpiderKilledOnAWallOrAThreadLiesOnTheFloorBelow() {
         Level climb = harness.roomOf("spider-climb", 0);
         Spider climber = (Spider) spider(climb);
-        climb.player.position.set(430 - 29, 224 - 48);
+        climb.player.position.set(430 - HeroBody.RIGHT, 224 - 48);
         for (int f = 0; f < 60 * 4 && !climber.onWall(); f++) frames(climb, 1);
         assertTrue(climber.onWall(), "it climbs towards the hero on the ledge");
         frames(climb, 20);
@@ -284,12 +285,12 @@ class RemainsTest {
         assertEquals(320, climber.floorY(), .5f);
         Level drop = harness.roomOf("spider-drop", 0);
         Spider dropper = (Spider) spider(drop);
-        drop.player.position.set(480 - 29, 320 - 48);
+        drop.player.position.set(480 - HeroBody.RIGHT, 320 - 48);
         for (int f = 0; f < 60 * 4 && dropper.state() != Spider.State.SET; f++) {
-            if (f == 0) drop.player.position.set(460 - 29, 320 - 48);
+            if (f == 0) drop.player.position.set(460 - HeroBody.RIGHT, 320 - 48);
             frames(drop, 1);
         }
-        drop.player.position.set(480 - 29, 320 - 48);
+        drop.player.position.set(480 - HeroBody.RIGHT, 320 - 48);
         for (int f = 0; f < 60 * 2 && dropper.state() != Spider.State.HANG; f++) frames(drop, 1);
         assertEquals(Spider.State.HANG, dropper.state());
         dropper.collidedWithActor(true);
@@ -373,7 +374,7 @@ class RemainsTest {
             Remains body = body(c, level);
             Rectangle box = body.remainsInto(new Rectangle());
             // The hero's feet just above the body, falling onto it.
-            level.player.position.set(box.x + box.width / 2 - 23.5f, box.y - 48 - 1);
+            level.player.position.set(box.x + box.width / 2 - HeroBody.CENTRE, box.y - 48 - 1);
             level.player.velocity.set(0, 120);
             for (int f = 0; f < ROCK_FRAMES && body.isRemains(); f++) frames(level, 1);
             assertTrue(((Enemy<?>) body).isRemoved(), name + ": the stomp crumbles it");
@@ -384,7 +385,7 @@ class RemainsTest {
     @Test void aRedMobKilledMidWhipLeavesNoLiveAttack() {
         Level level = harness.roomOf("redmob-test", 0);
         RedMob mob = first(level, RedMob.class);
-        level.player.position.set(mob.attackBounds().x - 23.5f, level.player.position.y);
+        level.player.position.set(mob.attackBounds().x - HeroBody.CENTRE, level.player.position.y);
         for (int f = 0; f < 60 && !mob.isAttackActive(); f++) {
             frames(level, 1);
             if (mob.getState() == RedMob.State.ATTACK) level.player.position.set(32, level.player.position.y);

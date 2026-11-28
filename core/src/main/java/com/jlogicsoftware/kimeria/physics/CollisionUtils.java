@@ -77,7 +77,7 @@ public final class CollisionUtils {
         // worth early, snapping the actor sharply upward onto the surface
         // from a few pixels above it -- visible as a one-frame camera/sprite
         // jump right on touchdown.
-        boolean atRest = Math.abs(actor.velocity().y) < 20f;
+        boolean atRest = Math.abs(actor.velocity().y) < actor.restingSpeed();
         float catchUpMargin = (block.isPlatform() && atRest) ? 24f : 0f;
 
         return fixedY < blockY + blockHeight

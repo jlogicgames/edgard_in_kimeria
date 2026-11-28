@@ -33,7 +33,7 @@ SKINS = ('', 'log', 'branch')
 PLATFORM_SKINS = ('', 'branch')  # StaticPlatform.Skin (#349, D80)
 VINE_HALF_WIDTH = 4.0
 PUFFBALL_CLOUD, PUFFBALL_INSET = 24.0, 2.0
-HERO_BOX = (11.0, 22.0, 18.0, 26.0)  # Player hitbox offset and size
+HERO_BOX = (14.0, 28.0, 17.0, 20.0)  # Player hitbox (D164): width, height, offset x, offset y
 
 
 def rhythm_number(o, key, default, errors):
@@ -377,7 +377,7 @@ def leghold_problems(root, spawn, o):
 
 
 def hive_standing(root, spawn, o):
-    """standing_places with the hero body box as Level uses it (offset 18, 26; 11 x 22)."""
+    """standing_places with the hero body box as Level uses it (HERO_BODY)."""
     out = []
     for name, area in standing_places(root, spawn, o):
         if name == 'entrance':
@@ -898,7 +898,7 @@ def check_ladder_clearance(spawn):
 # FallingBranch / FallingStone (D45, #232): mirrors core/.../world/FallingTrapLayout.java for maps.
 FALLING_ZONE = ('zoneX', 'zoneY', 'zoneWidth', 'zoneHeight')
 FALLING_JAVA = ROOT / 'core' / 'src' / 'main' / 'java' / 'com' / 'jlogicsoftware' / 'kimeria' / 'entity' / 'objects' / 'FallingStone.java'
-HERO_BODY = (18, 26, 11, 22)  # Player hitbox: offset x, offset y, width, height
+HERO_BODY = (HERO_BOX[2], HERO_BOX[3], HERO_BOX[0], HERO_BOX[1])  # the same, as offset x, offset y, width, height
 GRAVITY, MIN_FLIGHT = 900.0, 0.3  # FallingTrap.GRAVITY / MIN_FLIGHT_SECONDS
 LIP_TOP = 'lipTop'  # FallingTrapLayout.LIP_TOP (#360): the world y of the stone lip's top edge
 FALLING_PROPERTIES = (*FALLING_ZONE, 'skin', LIP_TOP)  # FallingTrapLayout.PROPERTIES: any other key fails (a misspelling)

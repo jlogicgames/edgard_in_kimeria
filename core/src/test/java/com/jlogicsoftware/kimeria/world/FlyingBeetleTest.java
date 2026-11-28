@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.effects.ScreenShake;
@@ -36,7 +37,7 @@ class FlyingBeetleTest {
     /** Hero middles: under the left end's commit reach, and heard there but out of it. */
     private static final float UNDER = 230, HEARD_ONLY = 180, SHOOTER = 205;
     /** The hero's body middle from its entity position, and the entity's feet below it. */
-    private static final float HERO_MIDDLE = 23.5f, HERO_FEET = 48;
+    private static final float HERO_MIDDLE = HeroBody.CENTRE, HERO_FEET = 48;
     /** Frames from the commit to the burst: the warning, the dive and the one frame the burst is due. */
     private static final int LONG_LIMIT = 60 * 8;
 
@@ -269,10 +270,10 @@ class FlyingBeetleTest {
         Level level = level();
         FlyingBeetle b = committed(level);
         until(level, () -> b.state() == FlyingBeetle.State.DIVE, LONG_LIMIT);
-        level.collisionBlocks.add(CollisionBlock.platform(180, 296, 140, 8));
+        level.collisionBlocks.add(CollisionBlock.platform(180, 280, 140, 8)); // over the standing hero's head (292, D164)
         float[] lowest = {0};
         until(level, () -> { if (!b.isRemoved()) lowest[0] = Math.max(lowest[0], b.centreY()); return b.isRemoved(); }, 60);
-        assertTrue(lowest[0] < 296, "it never passes through: " + lowest[0]);
+        assertTrue(lowest[0] < 280, "it never passes through: " + lowest[0]);
         assertTrue(alive(level), "cut at the platform, the burst does not reach the hero under it");
         assertTrue(harness.sounds.contains("beetle_pop"), "seen and heard");
     }
@@ -328,7 +329,7 @@ class FlyingBeetleTest {
     }
 
     private void pickUp(Level level, float objectX) {
-        place(level, objectX + CARRY_SIZE - 29 + HERO_MIDDLE);
+        place(level, objectX + CARRY_SIZE - HeroBody.RIGHT + HERO_MIDDLE);
         frame(level);
         press(Input.Keys.W); frame(level); // Up alone interacts (D126)
         harness.held.clear(); frame(level);
@@ -687,32 +688,32 @@ class FlyingBeetleTest {
         float x = 200, floor = 320, low = floor - BeetleFx.BODY_CENTRE_ABOVE_FLOOR;
         assertTrue(reaches(x + 39, floor - 22, 22, x, low, floor), "a standing hero 39 px out");
         assertFalse(reaches(x + 41, floor - 22, 22, x, low, floor), "41 px out");
-        assertTrue(reaches(x - 5.5f, floor - 40, 9, x, low, floor), "31 px up over the middle");
-        assertFalse(reaches(x - 5.5f, floor - 44, 11, x, low, floor), "33 px up");
+        assertTrue(reaches(x - HeroBody.HALF, floor - 40, 9, x, low, floor), "31 px up over the middle");
+        assertFalse(reaches(x - HeroBody.HALF, floor - 44, 11, x, low, floor), "33 px up");
         assertFalse(reaches(x + 30, floor - 40, 12, x, low, floor), "the old box's upper corner, ahead");
         assertFalse(reaches(x - 41, floor - 40, 12, x, low, floor), "and behind");
         assertTrue(reaches(x - 36, floor - 24, 12, x, low, floor), "inside the curve on the other side");
-        assertFalse(reaches(x - 5.5f, floor, 22, x, low, floor), "nothing under the surface");
+        assertFalse(reaches(x - HeroBody.HALF, floor, 22, x, low, floor), "nothing under the surface");
         float middle = 200, open = middle + BeetleFx.BLAST_AIR_HALF_HEIGHT;
         assertTrue(reaches(x + 39, middle - 5, 10, x, middle, open), "in the air, 39 px out");
         assertFalse(reaches(x + 41, middle - 5, 10, x, middle, open));
-        assertTrue(reaches(x - 5.5f, middle - 33, 10, x, middle, open), "23 px over the middle");
-        assertFalse(reaches(x - 5.5f, middle - 35, 10, x, middle, open), "25 px over it");
-        assertTrue(reaches(x - 5.5f, middle + 23, 10, x, middle, open), "23 px under it");
+        assertTrue(reaches(x - HeroBody.HALF, middle - 33, 10, x, middle, open), "23 px over the middle");
+        assertFalse(reaches(x - HeroBody.HALF, middle - 35, 10, x, middle, open), "25 px over it");
+        assertTrue(reaches(x - HeroBody.HALF, middle + 23, 10, x, middle, open), "23 px under it");
         assertFalse(reaches(x + 30, middle - 30, 12, x, middle, open), "the old box's corner in the air");
     }
 
     /** Whether the blast reaches a hero-wide rect with its left edge at {@code left}. */
     private static boolean reaches(float left, float top, float height, float x, float middle, float bottom) {
-        return FlyingBeetle.reaches(new Rectangle(left, top, 11, height), x, middle, bottom);
+        return FlyingBeetle.reaches(new Rectangle(left, top, HeroBody.W, height), x, middle, bottom);
     }
 
     @Test void theSwordCatchesItsOwnerEvenWhereTheShapeJustMisses() {
         Level level = level();
         FlyingBeetle b = beetle(level);
-        // Its body 36 px over the floor, the hero's near side 28 px from its middle: the tip of a sword's reach.
-        place(level, b.centreX() - 28 - 5.5f);
-        b.position.y += FLOOR - 36 - b.floorY();
+        // Its body 42 px over the floor, the hero's near side 28 px from its middle: the top corner of a sword's reach.
+        place(level, b.centreX() - 28 - HeroBody.HALF);
+        b.position.y += FLOOR - 42 - b.floorY();
         Rectangle hero = level.player.hitboxBoundsInto(new Rectangle());
         assertFalse(FlyingBeetle.reaches(hero, b.centreX(), b.centreY(), b.centreY() + BeetleFx.BLAST_AIR_HALF_HEIGHT),
             "outside the oval: " + hero + " from " + b.centreX() + ", " + b.centreY());

@@ -63,14 +63,36 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** The Entity box: position and size, the spawn and room geometry and every hitbox are measured in it (D79). */
     private static final int BOX_SIZE = 48;
     /**
+     * The body (D164, #705): 14x28, centred in the box, its bottom on the box bottom, the floor line (world Y grows down).
+     * The only copy in Java: the load checks read it from here, and the Python tools mirror it.
+     */
+    public static final float BODY_WIDTH = 14, BODY_HEIGHT = 28;
+    public static final float BODY_OFFSET_X = (BOX_SIZE - BODY_WIDTH) / 2, BODY_OFFSET_Y = BOX_SIZE - BODY_HEIGHT;
+    /**
+     * D164: the hero grew in proportion. Every length, speed and acceleration of his own movement is its value before #705
+     * times this, so each time (air time, coyote) stays and each distance (jump rise and length, reach) grows with him.
+     */
+    public static final float PROPORTION = 1.29f;
+    /** The ordinary jump's launch speed, px/s up, and the bounce a stomp gives: a rise of about 77 px at 60 Hz. */
+    public static final float JUMP_SPEED = 260f * PROPORTION;
+    /** The hero's gravity per reference step, px/s: 758.5 px/s². Monsters keep {@code GravityBody}'s. */
+    private static final float GRAVITY_PER_STEP = 9.8f * PROPORTION;
+    /** The fastest the hero falls, px/s. */
+    private static final float MAX_FALL_SPEED = 300f * PROPORTION;
+    /** Below this vertical speed (px/s) the hero counts as resting on a one-way platform (CollisionUtils' catch-up margin). */
+    private static final float HERO_RESTING_SPEED = 20f * PROPORTION;
+    /**
      * The drawn frame (#343, D79): 64x64, feet on its bottom row, body centre on x {@link #FRAME_PIVOT_X}. It is drawn at
      * {@code (position.x + pivotX() - FRAME_PIVOT_X, position.y + BOX_SIZE - FRAME_SIZE)} = (x - 8, y - 16): world Y grows
-     * down, so the frame's top is 16 px above the box and its bottom is the hitbox bottom, the floor line.
+     * down, so the frame's top is 16 px above the box and its bottom is the hitbox bottom, the floor line. The D79 art has
+     * its axis on pixel column 31 (31.5), half a pixel left of the 14 px body's centre; the frame stays on whole pixels
+     * (D164).
      */
     public static final int FRAME_SIZE = SpriteSheets.HERO_RIGHT.width();
-    public static final float FRAME_PIVOT_X = 31.5f;
-    private static final float PICKUP_REACH = 3, PLACEMENT_GAP = 2;
-    private static final float FIREBALL_SPAWN_OFFSET_Y = 3;
+    public static final float FRAME_PIVOT_X = 32f;
+    private static final float PICKUP_REACH = 4, PLACEMENT_GAP = 2;
+    /** From the body's top down to a fireball's: it flies where it flew before D164, 9 to 19 px above the floor. */
+    private static final float FIREBALL_SPAWN_OFFSET_Y = BODY_HEIGHT - 19;
     private static final float HINT_PLAYER_OFFSET_Y = -6, HINT_TARGET_OFFSET_Y = 24, HINT_ZONE_HEIGHT_FRACTION = .45f;
     private static final float CAMERA_TARGET_TOLERANCE = .001f;
     private static final float MAX_PHYSICS_FRAME_SECONDS = .05f;
@@ -103,18 +125,19 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private static final float PIXEL_CENTRE = .5f;
 
     private static final float STEP_TIME = 0.1f;
-    private static final float MOVE_SPEED = 100f;
+    public static final float MOVE_SPEED = 100f * PROPORTION;
     /** Quicksand scales the hero's run and jump speed by this factor. */
     private static final float QUICKSAND_SPEED_FACTOR = 0.1f;
     /**
-     * Downward speed (px/s, gravity adds 588 px/s², 9.8 per 60 Hz step) at which touching the floor counts as a landing that kicks up dust:
-     * 140 is about 0.24 s of falling, a 16 px drop. Walking off a ledge keeps the coyote flag until the speed passes 147,
-     * so a few pixels never puff. Nothing slows a fall (D121), so touching a wall in the air changes nothing here.
+     * Downward speed (px/s, the hero's gravity adds 758.5 px/s²) at which touching the floor counts as a landing that kicks up
+     * dust: 180.6 is about 0.24 s of falling, a drop of about 21 px (D164; 140 and 16 px before it). Walking off a ledge keeps
+     * the coyote flag until the speed passes 189.6, so a few pixels never puff. Nothing slows a fall (D121), so touching a wall
+     * in the air changes nothing here.
      */
-    public static final float LANDING_MIN_FALL_SPEED = 140f;
+    public static final float LANDING_MIN_FALL_SPEED = 140f * PROPORTION;
     /**
      * Coyote time: after walking off a ledge the hero may still jump until he has fallen this long (the fall speed
-     * passes 147 px/s). It is the 15 frames of the 60 Hz build at every frame rate; at 120 Hz it was half (D98).
+     * passes 189.6 px/s). It is the 15 frames of the 60 Hz build at every frame rate; at 120 Hz it was half (D98).
      */
     static final float COYOTE_SECONDS = .25f;
     /** The landing scuff plays at this fraction of the sound volume. */
@@ -198,8 +221,13 @@ public class Player extends Actor<Player.State> implements CollideBody {
     /** Counts the swings as they start, so a target the blade stays on reacts once to each ({@link #swingNumber}). */
     private int swingNumber;
     private final Rectangle attackHitbox = new Rectangle(), remainsScratch = new Rectangle(), swordProbe = new Rectangle();
-    /** The sword's reach, authored for the right-facing sprite: 17px past the body in front, 9px behind it. */
-    private static final Hitbox SWORD_HITBOX = Hitbox.rect(9, 12, 37, 36);
+    /**
+     * The sword's reach, authored for the right-facing sprite (D164): 22 px past the body in front, 12 px behind it and
+     * 18 px above it, down to the floor line. The D79 art's blade still ends 17 px ahead of the old body until #706.
+     */
+    private static final float SWORD_AHEAD = 22, SWORD_BEHIND = 12, SWORD_ABOVE = 18;
+    private static final Hitbox SWORD_HITBOX = Hitbox.rect(BODY_OFFSET_X - SWORD_BEHIND, BODY_OFFSET_Y - SWORD_ABOVE,
+        SWORD_BEHIND + BODY_WIDTH + SWORD_AHEAD, SWORD_ABOVE + BODY_HEIGHT);
 
     private boolean isGotHit = false;
     private float previousFeetY;
@@ -241,7 +269,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
         startingPosition.set(x, y);
         viewHalfWidth = game.logicalResolution().x / 2f;
         viewHeight = game.logicalResolution().y;
-        hitbox = Hitbox.rect(18, 26, 11, 22);
+        hitbox = Hitbox.rect(BODY_OFFSET_X, BODY_OFFSET_Y, BODY_WIDTH, BODY_HEIGHT);
         loadAnimations(assets);
         thread = new SilverThread(assets);
         setState(State.IDLE);
@@ -1391,6 +1419,28 @@ public class Player extends Actor<Player.State> implements CollideBody {
     @Override
     public void collidedWithActor(boolean gotHit) {
         die(true);
+    }
+
+    // -- The hero's own physics (D164) --
+
+    @Override
+    public float gravityAcceleration() {
+        return GRAVITY_PER_STEP;
+    }
+
+    @Override
+    public float jumpForce() {
+        return JUMP_SPEED;
+    }
+
+    @Override
+    public float terminalVelocity() {
+        return MAX_FALL_SPEED;
+    }
+
+    @Override
+    public float restingSpeed() {
+        return HERO_RESTING_SPEED;
     }
 
     // -- CollideBody / GravityBody plumbing --

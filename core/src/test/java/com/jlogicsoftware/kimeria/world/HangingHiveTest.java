@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -192,7 +193,7 @@ class HangingHiveTest {
     @Test void theBandNeverPassesTheSolidAndTheHiveItselfNeverHurts() {
         HangingHive h = lone(4f, 0f, 232f, FLOOR);
         Rectangle band = new Rectangle(), hiveBody = h.bodyInto(new Rectangle());
-        Rectangle beside = new Rectangle(h.centerX() + HangingHive.BAND_WIDTH / 2f, FLOOR - 22f, 11f, 22f);
+        Rectangle beside = new Rectangle(h.centerX() + HangingHive.BAND_WIDTH / 2f, FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
         for (int i = 0; i < 60 * 9; i++) {
             h.update(STEP);
             if (h.bandActive()) {
@@ -348,7 +349,7 @@ class HangingHiveTest {
 
     /** Picks up the stone, walks to {@code from} (body right edge) and throws it. */
     private void throwStoneFrom(Level level, float from) {
-        level.player.position.set(108 - 29, 272);
+        level.player.position.set(108 - HeroBody.RIGHT, 272);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         held.clear(); frame(level); held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
@@ -397,7 +398,7 @@ class HangingHiveTest {
     @Test void aFireballFromTheLedgeKnocksTheHiveDownAndIsSpent() {
         Level level = room(LEDGE_ROOM);
         HangingHive h = hive(level);
-        level.player.position.set(1500 - 29, 160);
+        level.player.position.set(1500 - HeroBody.RIGHT, 160);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         settle(level, 20);

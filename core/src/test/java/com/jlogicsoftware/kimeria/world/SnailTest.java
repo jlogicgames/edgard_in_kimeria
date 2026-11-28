@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Snail;
@@ -48,7 +49,7 @@ class SnailTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing {@code right ? right : left}. */
     private void place(Level level, float right, boolean facingRight) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         level.player.facingRight = facingRight;
         harness.held.clear();
@@ -58,7 +59,7 @@ class SnailTest {
 
     /** Holds the hero with its feet {@code lift} px above the floor, still: a jump's height, frame after frame. */
     private void hold(Level level, float right, float lift) {
-        level.player.position.set(right - 29, FLOOR - 48 - lift);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48 - lift);
         level.player.velocity().setZero();
     }
 
@@ -426,7 +427,7 @@ class SnailTest {
         int frames = until(level, () -> s.facingRight, 60);
         assertEquals(Snail.TURN_SECONDS, (frames + 1) * STEP, STEP * 1.5f, "it turns after 0.4 s");
         place(level, FAR_BEHIND);
-        level.player.position.x = 61 - 29;   // far to its left, behind it now and out of its sight
+        level.player.position.x = 61 - HeroBody.RIGHT;   // far to its left, behind it now and out of its sight
         int lost = until(level, () -> s.state() == Snail.State.CRAWL, 180);
         assertEquals(Snail.LOSE_SECONDS, lost * STEP, STEP * 1.5f, "it loses him after 1.5 s");
     }
@@ -451,7 +452,7 @@ class SnailTest {
         Level level = level();
         Snail s = snail(level);
         Rectangle body = s.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - 23.5f, body.y - 48 - 20);
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 48 - 20);
         level.player.velocity().setZero();
         boolean bounced = false;
         for (int f = 0; f < 60 && !s.isDefeated(); f++) { frame(level); bounced |= level.player.velocity.y < 0; }

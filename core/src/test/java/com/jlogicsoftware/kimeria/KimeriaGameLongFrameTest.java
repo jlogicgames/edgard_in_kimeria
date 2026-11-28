@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -24,7 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class KimeriaGameLongFrameTest {
     private static final float FRAME = HeadlessLevelHarness.STEP, LONGEST_WORLD_STEP = .05f;
     /** The hero's box: its body centre and its feet, from the top left corner. */
-    private static final float BODY_CENTRE_X = 23.5f, FEET = 48f;
+    private static final float BODY_CENTRE_X = HeroBody.CENTRE, FEET = 48f;
     private static final float SETTLE_SECONDS = 1.5f, RIDE_SECONDS = 1f, TOLERANCE = 3f;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();

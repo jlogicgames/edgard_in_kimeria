@@ -25,8 +25,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class JumpFrameRateTest {
     private static final float ROOM_X = 4320, START_X = ROOM_X + 32, FLOOR = 304, LIFT_X = ROOM_X + 96, LIFT_RIGHT = ROOM_X + 128;
     private static final float A_X = ROOM_X + 128, A_END = ROOM_X + 240, LEDGE_TOP = 192;
-    /** The apex of a standing jump at 60 Hz, measured before and after D98: feet rise this many px. */
-    private static final float DESIGNED_APEX = 59.67f;
+    /** The apex of a standing jump at 60 Hz: feet rise this many px (59.67 before and after D98; ×1.29 since D164). */
+    private static final float DESIGNED_APEX = 76.97f;
     /** The air time of that jump at 60 Hz, from the press to the landing frame (54 frames). */
     private static final float DESIGNED_AIR_SECONDS = 0.9f;
     /** The first quicksand pit of the test map {@code tiles/practice-test.tmx} (the shipped Forest has none since #486). */
@@ -110,7 +110,7 @@ class JumpFrameRateTest {
         assertTrue(max - min <= APEX_TOLERANCE, "apex differs by frame rate:\n" + report);
     }
 
-    @Test void theDesignedSixtyHertzJumpHeightIsUnchanged() {
+    @Test void theDesignedSixtyHertzJumpHeightHolds() {
         assertEquals(DESIGNED_APEX, standingApex(RATES[1]), 0.05f);
     }
 
