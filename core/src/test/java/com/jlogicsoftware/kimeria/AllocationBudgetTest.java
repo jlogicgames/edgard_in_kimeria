@@ -182,7 +182,7 @@ class AllocationBudgetTest {
     static final double FOREST_2_ROOM_1_CEILING = 1250;
     /** Measured 816.0 B/frame in 3 isolated runs and 1,128.0 in the full suite (#303; the ceiling follows the full-suite run; before: 1,960.0 to 1,960.6; step 3: 1,992.0; step 1: 2,651.3 to 2,656.8; step 0: 3,583.2 to 3,587.8); five torches, the boss room. An earlier run of this scene moved by more than 200 B with JIT state (1,512 to 1,712 against 1,960), so the ceiling keeps about 10 % over the full-suite measurement. */
     static final double FOREST_2_ROOM_2_CEILING = 1250;
-    /** Measured 704.0 to 912.0 B/frame in 3 isolated runs and 824.0 to 902.1 in the full suite (#303; before: 1,991.9 to 1,992.6): the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. */
+    /** Measured 704.0 to 912.0 B/frame in 3 isolated runs and 824.0 to 902.1 in the full suite (#303; before: 1,991.9 to 1,992.6): the boss room plus an empowered spray through {@code Level.blood} every 60 frames, so blood adds nothing measurable to FOREST_2_ROOM_2_CEILING's scene. From #331 the room index of these scenarios had slid to forest-canopy; found by name again, the boss room measured 464.0 to 464.1 (blood) and 464.1 to 466.9 (mob kill blood) in 3 isolated runs (2026-11-27). */
     static final double FOREST_2_ROOM_2_BLOOD_CEILING = 1250;
     /** Measured 568.0 to 568.5 B/frame in isolated runs and 481.8 in the full class run (2026-11-18, #472): the whole room, its objects and its 24 fireflies together. Ceiling = highest isolated run + about 10 %. */
     static final double FOREST_2_FIREFLIES_CEILING = 625;
@@ -322,6 +322,13 @@ class AllocationBudgetTest {
         assertWithinBudget("one empowered blood spray", BLOOD_EMPOWERED_SPRAY_CEILING, blood(true));
     }
 
+    /** forest-2's boss room, by name so a room inserted before it cannot move these scenarios elsewhere; fails without a boss. */
+    private Level bossRoom() {
+        Level level = harness.room("forest-2", "forest-boss");
+        assertNotNull(level.boss(), "the boss room holds the boss: without it the boss bar draws nothing");
+        return level;
+    }
+
     private double room(String map, int index) {
         Level level = harness.roomOf(map, index);
         Rectangle view = new Rectangle(level.currentRoomBounds());
@@ -335,7 +342,7 @@ class AllocationBudgetTest {
 
     /** The boss room with an empowered spray every {@link #BURST_CYCLE_FRAMES} frames through {@code Level.blood}: the level path, not just the system. */
     @Test void forest2Room3WithBlood() {
-        Level level = harness.roomOf("forest-2", 6);
+        Level level = bossRoom();
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.blood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR, true);
@@ -346,7 +353,7 @@ class AllocationBudgetTest {
 
     /** A sword kill sprays a light burst through {@code Level.mobBlood} every {@link #BURST_CYCLE_FRAMES} frames in the boss room (the level path of #319). */
     @Test void forest2Room3WithMobKillBlood() {
-        Level level = harness.roomOf("forest-2", 6);
+        Level level = bossRoom();
         Rectangle view = new Rectangle(level.currentRoomBounds());
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) level.mobBlood(BLOOD_X, BLOOD_Y, 1, BLOOD_FLOOR);
@@ -687,7 +694,7 @@ class AllocationBudgetTest {
 
     /** The camera shake query as {@code KimeriaGame.render} makes it every frame: a reused view rectangle, the offset read at once. A shake is re-armed every 10 frames so the sine path runs. */
     @Test void cameraShakeQuery() {
-        Level level = harness.roomOf("forest-2", 6);
+        Level level = bossRoom();
         Rectangle view = new Rectangle();
         Rectangle room = level.currentRoomBounds();
         float[] sum = new float[1];
@@ -1048,8 +1055,8 @@ class AllocationBudgetTest {
     private static final float SWARM_X = 309, SWARM_Y = 298, SWARM_BACK_TILES = 12, SWARM_ON_TILES = 12;
 
     /**
-     * Mosquito swarms in turn through the real {@code Level} of mosquito-run.tmx (#645, D151): each flies, its fourteen
-     * mosquitoes circling and flickering, tested against the hero's body and the camera view (the whine's test) every frame; the
+     * Mosquito swarms in turn through the real {@code Level} of mosquito-run.tmx (#645, D151): each flies, its twenty-eight
+     * mosquitoes wandering and flickering, tested against the hero's body every frame; the
      * blade reaches it at frame {@value #SWARM_SWING_FRAME} of the cycle, so it scatters and gathers; at frame
      * {@value #SWARM_KILL_FRAME} it is killed, odd ones by fire, and its mosquitoes drop and fade. {@code update} and
      * {@code render} of the swarm every frame. Swarms are built before the probe.
@@ -1066,8 +1073,8 @@ class AllocationBudgetTest {
             swarms[k].setPlayer(level.player);
             swarms[k].setLevel(level);
         }
-        Rectangle hero = new Rectangle(), shape = new Rectangle();
-        int[] scattered = new int[1], seen = new int[1], falling = new int[1], touched = new int[1];
+        Rectangle hero = new Rectangle();
+        int[] scattered = new int[1], falling = new int[1], touched = new int[1];
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             int k = i / SWARM_CYCLE_FRAMES, f = i % SWARM_CYCLE_FRAMES;
             MosquitoSwarm s = swarms[k];
@@ -1077,13 +1084,11 @@ class AllocationBudgetTest {
                 s.update(STEP);
                 s.render(batch);
                 if (s.hitboxOverlaps(level.player.hitboxBoundsInto(hero))) touched[0]++;
-                if (level.inCameraView(s.shapeInto(shape))) seen[0]++;
                 if (s.scatterAmount() > 0) scattered[0]++;
                 if (s.deadSeconds() > 0) falling[0]++;
             }
         });
         assertTrue(scattered[0] > cycles * 20, "the scatter and the gather must be measured: " + scattered[0] + " frames");
-        assertTrue(seen[0] > 0, "the view test must be measured");
         assertTrue(falling[0] > cycles * 20, "the death must be measured: " + falling[0] + " frames");
         assertFalse(level.player.isGotHit(), "the hero stands clear");
         assertWithinBudget("mosquito swarm flight, scatter, gather and death", MOSQUITO_SWARM_CEILING, bytes);
@@ -1559,7 +1564,7 @@ class AllocationBudgetTest {
         };
         harness.font = font;
         BossHud hud = new BossHud(harness.assets(), harness.game(), new Matrix4(), 640, 360);
-        Level level = harness.roomOf("forest-2", 6);
+        Level level = bossRoom();
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true));
         font.dispose();
         assertWithinBudget("BossHud.render", BOSS_HUD_CEILING, bytes);
@@ -2134,7 +2139,7 @@ class AllocationBudgetTest {
     /** The coin count, the FPS counter and the fireball stock of {@code Hud.render} with the boss bar, each frame. */
     @Test void hudCoinCountAndFps() {
         Hud hud = hudWithMetricsFont();
-        Level level = harness.roomOf("forest-2", 6);
+        Level level = bossRoom();
         double bytes = AllocationProbe.bytesPerFrame(i -> hud.render(batch, level.boss(), true, level.player, "60 FPS"));
         assertWithinBudget("Hud.render", HUD_CEILING, bytes);
     }

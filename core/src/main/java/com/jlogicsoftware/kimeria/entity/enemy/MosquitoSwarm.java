@@ -16,12 +16,14 @@ import java.util.Map;
 
 /**
  * The forest mosquito swarm (#645, D151): a loose cloud that flies to and fro along an authored horizontal or vertical line,
- * as the {@link Bat} does, and never reacts to the hero. It is lethal exactly where it is drawn: the oval its mosquitoes fill
- * ({@value #WIDTH} by {@value #HEIGHT} px). Touching it kills on any side, also during a swing and also from above (no
- * stomp, no bounce); the death lands on the swarm's next frame, so a hit of the touching frame wins (#503, #505). The sword
- * never kills it: a swing that reaches it blows the mosquitoes away from the hero, once per swing, stretching the oval by up
- * to {@value #SCATTER_REACH} px on the far side only, and they gather again; the blade goes on through it. A thrown stone, a
- * fireball or a thrown torch kills the whole swarm at once; it leaves no body, only its mosquitoes, which drop and fade.
+ * as the {@link Bat} does at half its speed, and never reacts to the hero. Its mosquitoes fly freely all over a cloud of
+ * {@value #WIDTH} by {@value #HEIGHT} px; what kills is the cloud's core, the oval {@value #CORE_INSET} px inside it all
+ * round, where they are thickest, so the strays at the fringe are harmless. Touching the core kills on any side, also during
+ * a swing and also from above (no stomp, no bounce); the death lands on the swarm's next frame, so a hit of the touching
+ * frame wins (#503, #505). The sword never kills it: a swing that reaches the core blows the mosquitoes away from the hero,
+ * once per swing, stretching the cloud and its core by up to {@value #SCATTER_REACH} px on the far side only, and they gather
+ * again; the blade goes on through it. A thrown stone, a fireball or a thrown torch kills the whole swarm at once; it leaves
+ * no body, only its mosquitoes, which drop and fade.
  *
  * <p>Every mosquito's place is a fixed function of the swarm's own clock, so a retry is the same (D7). World Y grows
  * downward: the oval's bottom edge is the larger y.
@@ -29,34 +31,42 @@ import java.util.Map;
 public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     public enum State { FLY, DEAD }
 
-    /** The gathered cloud: the oval inscribed in this box, whose top-left is {@code position}. */
+    /** The gathered cloud its mosquitoes fly in: the oval inscribed in this box, whose top-left is {@code position}. */
     public static final float WIDTH = 22, HEIGHT = 18;
-    /** As the Bat flies (px/s). */
-    public static final float SPEED = 50;
-    /** A swing stretches the far side of the oval by up to this many px. */
+    /** The lethal core is the oval this far inside the box all round: 18 by 14 px gathered. */
+    public static final float CORE_INSET = 2;
+    /** Half the Bat's speed (px/s): the author's playtest, a real swarm drifts. */
+    public static final float SPEED = 25;
+    /** A swing stretches the far side of the cloud and its core by up to this many px. */
     public static final float SCATTER_REACH = 12;
     /** The scatter: blown out, held, gathered again; together as long as the swing. */
     public static final float SCATTER_OUT = .1f, SCATTER_HOLD = .2f, SCATTER_GATHER = .4f;
     public static final float SCATTER_SECONDS = SCATTER_OUT + SCATTER_HOLD + SCATTER_GATHER;
 
-    /** How many mosquitoes are drawn, and the size of each one's sprite. */
-    public static final int COUNT = 14;
-    public static final int MOSQUITO_WIDTH = 5, MOSQUITO_HEIGHT = 4;
+    /** How many mosquitoes are drawn, and the size of each one's sprite: a dot of 1 or 2 px. */
+    public static final int COUNT = 28;
+    public static final int MOSQUITO_WIDTH = 2, MOSQUITO_HEIGHT = 1;
     /**
-     * Each mosquito's top-left in the gathered box, and how far it circles from there on each axis. The ones on the rim
-     * (left, right, top, bottom) circle along it only, so the oval's edge stays drawn; every drawn pixel stays inside the oval.
+     * Each mosquito wanders on its own over the whole cloud: on each axis a slow swing and a quicker, smaller one, mapped from
+     * the square into the oval, whose middle it strays from by at most {@value #PATH_X} px across and {@value #PATH_Y} px up
+     * or down, so every drawn pixel stays inside the cloud. No path keeps to the rim: a ring would read as a drawn circle.
      */
-    private static final int[] HOME_X = {0, 17, 8, 9, 3, 14, 3, 13, 5, 12, 8, 6, 12, 9};
-    private static final int[] HOME_Y = {7, 7, 0, 14, 3, 3, 11, 11, 6, 7, 4, 9, 4, 10};
-    private static final int[] REACH_X = {0, 0, 2, 1, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    private static final int[] REACH_Y = {1, 1, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1};
-    /** Turns of its small path per second: base plus a per-mosquito step, so no two move together. */
-    private static final float CIRCLE_RATE = 1.3f, CIRCLE_RATE_STEP = .17f, PHASE_STEP = .37f, VERTICAL_RATE_RATIO = 1.31f;
-    private static final int RATE_STEPS = 7;
+    private static final float PATH_X = 9.3f, PATH_Y = 8f;
+    /** A mosquito's share of that reach, and the turns per second of its slow and quick swings, each from a least value over a spread. */
+    private static final float REACH_MIN = .65f, REACH_SPREAD = .35f;
+    private static final float SLOW_RATE = .07f, SLOW_SPREAD = .06f, QUICK_RATE = .22f, QUICK_SPREAD = .14f;
+    private static final float SLOW_SHARE = .68f;
+    /**
+     * Irrational steps: the fractional part of {@code (i + 1) * STEPS[k]} spreads constant {@code k} of mosquito {@code i}, so
+     * no two move together and every retry draws the same flight. Per axis (x, then y): reach, slow rate, quick rate, slow
+     * phase, quick phase.
+     */
+    private static final float[] STEPS = {.618034f, .414214f, .732051f, .236068f, .645751f, .316625f, .162278f, .872983f, .123106f, .358899f};
+    private static final int REACH = 0, SLOW = 1, QUICK = 2, SLOW_PHASE = 3, QUICK_PHASE = 4, AXIS_STEPS = 5;
     /** Wing frames per second, and the sheet's layout: two wing frames for a dark mosquito, two for a fed one, then the dead and the burning one. */
     private static final float WING_RATE = 20;
     private static final int WING_FRAMES = 2, DEAD_FRAME = 4, EMBER_FRAME = 5, FRAMES = 6;
-    /** Every this many mosquitoes one has a crimson belly. */
+    /** Every this many mosquitoes one has a rose body (the fed frames). */
     private static final int FED_EVERY = 4;
     private static final int NO_SWING = -1;
 
@@ -75,12 +85,11 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
      */
     public static final float DEATH_SECONDS = .8f, EMBER_SECONDS = .25f;
     private static final float FADE_FROM = .35f;
-    private static final int[] DRIFT = {-3, 4, 1, -2, 2, -4, 3, 0, -1, 3, -3, 1, 4, -2};
-    private static final int[] FALL = {12, 8, 16, 6, 14, 10, 7, 15, 9, 13, 17, 11, 8, 14};
+    private static final int[] DRIFT = {-3, 4, 1, -2, 2, -4, 3, 0, -1, 3, -3, 1, 4, -2, 2, -1, 3, -4, 0, 4, -3, 1, -2, 2, -4, 3, -1, 0};
+    private static final int[] FALL = {12, 8, 16, 6, 14, 10, 7, 15, 9, 13, 17, 11, 8, 14, 7, 12, 9, 16, 13, 6, 15, 10, 17, 8, 11, 14, 9, 12};
 
+    /** The only two sounds, quiet whines: one mosquito darting out of the sword's way, several dying. No loop while it flies. */
     static final String SCATTER_SOUND = "mosquito_scatter", DIE_SOUND = "mosquito_die";
-    /** The loop heard while a live swarm is in view ({@code Level.updateSwarmWhine}). */
-    public static final String WHINE_SOUND = "mosquito_whine";
 
     public final boolean isVertical;
     private final TextureRegion[] frames = new TextureRegion[FRAMES];
@@ -167,19 +176,20 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     /** +1 while it is blown to the right, -1 to the left. */
     public int blowDirection() { return blow; }
 
-    /** The box round the lethal oval now: the near side stays, the far side moves out while scattered. */
+    /** The box round the lethal core now: its near side stays, its far side moves out while scattered. */
     public Rectangle shapeInto(Rectangle out) {
         float spread = scatterAmount() * SCATTER_REACH;
-        return out.set(blow > 0 ? position.x : position.x - spread, position.y, WIDTH + spread, HEIGHT);
+        return out.set((blow > 0 ? position.x : position.x - spread) + CORE_INSET, position.y + CORE_INSET,
+            WIDTH - CORE_INSET - CORE_INSET + spread, HEIGHT - CORE_INSET - CORE_INSET);
     }
 
-    /** The body's bounds are the oval's box, scattered or not. */
+    /** The body's bounds are the core's box, scattered or not. */
     @Override
     public Rectangle boundsInto(Hitbox box, Rectangle out) {
         return box == hitbox ? shapeInto(out) : super.boundsInto(box, out);
     }
 
-    /** What kills is what is drawn (D5, D10): the oval, not its box. Touching its edge is not a hit. */
+    /** What kills is the thick of what is drawn (D5, D10): the core's oval, not its box. Touching its edge is not a hit. */
     @Override
     public boolean hitboxOverlaps(Rectangle rect) {
         Rectangle shape = shapeInto(bodyScratch);
@@ -257,29 +267,42 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     public float rangeNeg() { return rangeNeg; }
     public float rangePos() { return rangePos; }
 
-    /** The left edge of mosquito {@code i}'s sprite now: whole px from the box, spread with the oval while scattered. */
+    /**
+     * The left edge of mosquito {@code i}'s sprite now: whole px from the box, spread with the cloud while scattered, and
+     * rounded towards the box's middle, so a mosquito at the rim never leaves the cloud.
+     */
     public float mosquitoX(int i) {
         if (current == State.DEAD) return deadX[i] + MathUtils.round(DRIFT[i] * deadShare());
-        float home = HOME_X[i] + circle(i, REACH_X[i], 1);
+        float u = stray(i, 0), v = stray(i, 1);
+        float middle = WIDTH * HALF + u * (float) Math.sqrt(1 - v * v * HALF) * PATH_X;
         float stretch = 1 + scatterAmount() * SCATTER_REACH / WIDTH;
-        float centre = home + MOSQUITO_WIDTH * HALF;
-        float spread = blow > 0 ? centre * stretch : WIDTH - (WIDTH - centre) * stretch;
-        return position.x + MathUtils.round(spread - MOSQUITO_WIDTH * HALF);
+        float spread = blow > 0 ? middle * stretch : WIDTH - (WIDTH - middle) * stretch;
+        float left = spread - MOSQUITO_WIDTH * HALF;
+        return position.x + (middle > WIDTH * HALF ? MathUtils.floor(left) : MathUtils.ceil(left));
     }
 
     /** The top edge of mosquito {@code i}'s sprite now. */
     public float mosquitoY(int i) {
         if (current == State.DEAD) return deadY[i] + MathUtils.round(deadFall[i] * deadShare());
-        return position.y + HOME_Y[i] + circle(i, REACH_Y[i], VERTICAL_RATE_RATIO);
+        float u = stray(i, 0), v = stray(i, 1);
+        float middle = HEIGHT * HALF + v * (float) Math.sqrt(1 - u * u * HALF) * PATH_Y;
+        return position.y + MathUtils.round(middle - MOSQUITO_HEIGHT * HALF);
     }
 
     private float deadShare() { return Math.min(1, deadClock / DEATH_SECONDS); }
 
-    /** The whole-px offset of mosquito {@code i} on one axis of its small path. */
-    private int circle(int i, int reach, float rateRatio) {
-        if (reach == 0) return 0;
-        float turns = clock * (CIRCLE_RATE + CIRCLE_RATE_STEP * (i % RATE_STEPS)) * rateRatio + PHASE_STEP * i;
-        return MathUtils.round(MathUtils.sin(turns * MathUtils.PI2) * reach);
+    /** Where mosquito {@code i} is on one axis (0 x, 1 y) of its wander now, -1..1. */
+    private float stray(int i, int axis) {
+        int base = axis * AXIS_STEPS;
+        float slow = MathUtils.sin((clock * (SLOW_RATE + SLOW_SPREAD * share(i, base + SLOW)) + share(i, base + SLOW_PHASE)) * MathUtils.PI2);
+        float quick = MathUtils.sin((clock * (QUICK_RATE + QUICK_SPREAD * share(i, base + QUICK)) + share(i, base + QUICK_PHASE)) * MathUtils.PI2);
+        return (REACH_MIN + REACH_SPREAD * share(i, base + REACH)) * (SLOW_SHARE * slow + (1 - SLOW_SHARE) * quick);
+    }
+
+    /** Constant {@code k} of mosquito {@code i}, 0..1 ({@link #STEPS}). */
+    private static float share(int i, int k) {
+        float turns = (i + 1) * STEPS[k];
+        return turns - (int) turns;
     }
 
     /** The sheet frame of mosquito {@code i} now. */
@@ -311,10 +334,10 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     /**
      * The load checks (D151), on the {@value #WIDTH} by {@value #HEIGHT} swarm whatever the object's size. Along the whole
      * line, with the scatter's reach either side: inside the room and the camera's view, clear of {@code blockers} (solids,
-     * platforms, hanging and moving objects), and over no standing place. A floor lies under every column of that sweep. A free
-     * way past is open (D26): a horizontal line passes either high enough to walk under or low enough to jump over with clear
-     * height; a vertical line leaves one of the two open at least {@value #MIN_OPEN_SECONDS} s in every cycle. A way round is
-     * not judged. Null when it is fine, else what is wrong.
+     * platforms, hanging and moving objects, the falls of branches and stones), and over no standing place. A floor lies under
+     * every column of that sweep. A free way past is open (D26): a horizontal line passes either high enough to walk under or
+     * low enough to jump over with clear height; a vertical line leaves one of the two open at least
+     * {@value #MIN_OPEN_SECONDS} s in every cycle. A way round is not judged. Null when it is fine, else what is wrong.
      */
     public static String problem(float x, float y, float w, float h, boolean vertical, float offNeg, float offPos,
                                  List<Rectangle> floors, List<Rectangle> blockers, Rectangle room, float cameraTop,

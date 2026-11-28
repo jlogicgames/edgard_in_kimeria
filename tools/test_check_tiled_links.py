@@ -862,6 +862,17 @@ class MosquitoSwarmLinksTest(unittest.TestCase):
         for name in ('mosquito-test', 'mosquito-still', 'mosquito-run', 'mosquito-high', 'mosquito-vertical'):
             self.assertEqual([], check((tiles / f'{name}.tmx').read_text(encoding='utf-8')), name)
         self.assertIn('entrance', check((tiles / 'mosquito-entrance.tmx').read_text(encoding='utf-8'))[0])
+        self.assertIn('moving on its line', check((tiles / 'mosquito-stone.tmx').read_text(encoding='utf-8'))[0])
+
+    def test_a_falling_trap_over_the_line_fails_through_its_whole_fall(self):
+        for trap, box in (('FallingStone', 'x="300" y="0" width="16" height="16"'),
+                          ('FallingBranch', 'x="296" y="200" width="32" height="16"')):
+            over = falling(trap, 'zoneX=292 zoneY=280 zoneWidth=40 zoneHeight=40', box=box)
+            errors = self.run_map(self.swarm() + over)
+            self.assertTrue(any('moving on its line' in e for e in errors), (trap, errors))
+            clear = falling(trap, 'zoneX=492 zoneY=280 zoneWidth=40 zoneHeight=40', box=box.replace('x="3', 'x="5').replace('x="2', 'x="5'))
+            errors = self.run_map(self.swarm() + clear)
+            self.assertFalse(any('MosquitoSwarm' in e for e in errors), (trap, errors))
 
 
 class LegHoldLinksTest(unittest.TestCase):

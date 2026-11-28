@@ -1310,6 +1310,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
         for (int i = 0, n = level.objects.size(); i < n; i++)
             if (level.objects.get(i) instanceof Breakable gob && gob.isBreakable() && gob.breakableInto(remainsScratch).overlaps(attackHitbox))
                 gob.breakApart(false);
+        // D151: what the blade passes through (the mosquito swarm) reacts in a pass of its own, so a target that stops the blade,
+        // listed first, never hides it; it is never the swing's kill, whose body the swing must leave (D101).
+        for (int i = 0, n = level.objects.size(); i < n; i++)
+            if (level.objects.get(i) instanceof Enemy<?> enemy && !enemy.stopsSword() && enemy.hitboxOverlaps(attackHitbox))
+                enemy.hitBySword(level);
         for (int i = 0, n = level.objects.size(); i < n; i++) {
             var obj = level.objects.get(i);
             // D101: the swing crumbles a monster's body and goes on, so a body never shields a live monster behind it.
@@ -1317,11 +1322,11 @@ public class Player extends Actor<Player.State> implements CollideBody {
                 if (!swordKills.contains(obj, true) && body.remainsInto(remainsScratch).overlaps(attackHitbox)) body.crumble();
                 continue;
             }
-            if (obj instanceof Enemy<?> enemy) {
+            if (obj instanceof Enemy<?> enemy && enemy.stopsSword()) {
                 if (enemy.hitboxOverlaps(attackHitbox)) {
                     if (enemy instanceof Boss boss) { if (bossesHit.add(boss)) boss.collidedWithActor(true); }
                     else { enemy.hitBySword(level); if (enemy.isDefeated()) swordKills.add(enemy); }
-                    if (enemy.stopsSword()) break;
+                    break;
                 }
             }
         }

@@ -119,11 +119,14 @@ wind-up takes its length from `TrapWarnings`. New monsters are met in play: no t
 monster's card in `docs/GAME_DESIGN.md` ("Forest monster ideas") first; the beetle, the spider (D102) and the snail (D106) are
 the templates (`Beetle`, `BeetleFx`; `Spider`, `SpiderFx`; `Snail`, `SnailFx`). A ranged monster owns its projectile, one per
 monster with no allocation, and every weapon breaks it and flies on (`Breakable`, the snail's gob). A monster that leaves its floor (the spider's walls and silk thread, D103) moves
-on a route checked at load and strikes only along a line its wind-up has drawn; never from a wall.
+on a route checked at load and strikes only along a line its wind-up has drawn; never from a wall. The mosquito swarm
+(D151) is the exception the sword cannot kill: it flies like the bat at half its speed and never reacts to the hero (no notice, no wind-up),
+its contact kills also during a swing and from above (no stomp), the blade passes through it, and it leaves no body
+(`Enemy.stopsSword`, `touchesDuringSwing`, `hitByFire`).
 
 ## Monster bodies (D101)
 
-A monster killed without bursting leaves its body (`Remains`): its pose must differ from every live frame (the readability
+A monster killed without bursting leaves its body (`Remains`; the mosquito swarm leaves none, D151): its pose must differ from every live frame (the readability
 rule, not the palette), and it keeps its live palette, ink and moon rim (D117): no recolour, tint or halo, measured as active. It is harmless, blocks nothing and counts
 as defeated; it rocks (and decor bushes sway) when any actor passes, not only the hero; only the sword and a stomp (with the normal
 bounce) crumble it and a fireball or a thrown torch burns it (both fly on, never stopped or spent), while a stone and every other thrown object fly straight through it (D119). A burst or blast leaves nothing; a reset or a passed room leaves no

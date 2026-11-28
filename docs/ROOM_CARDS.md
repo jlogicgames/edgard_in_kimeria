@@ -870,17 +870,17 @@ y 304 ================================================
 | Develops | - |
 | Combines | - |
 | Repeats | proximity-thorn |
-| Mastered route | 7.30 s from the entrance (`RoomReplayTest`, three identical attempts), with no charge and the stone left lying: wait short of the low swarm until it comes, jump it, jump the thorn root, wait for the second swarm to rise and walk under it; 6.43 to 9.68 s over every start delay through 12 s, the same with and without the longer-warnings assist (`ForestHollowTest`); 6.43 s on a collection return, the swarms gone if killed (`RoomReplayTest`); target about 20 s (D19) |
+| Mastered route | 10.08 s from the entrance (`RoomReplayTest`, three identical attempts), with no charge and the stone left lying: wait short of the low swarm until it comes, jump it, jump the thorn root, wait for the second swarm to rise and walk under it; 6.43 to 13.35 s over every start delay through 12 s, the same with and without the longer-warnings assist (`ForestHollowTest`); 6.43 s on a collection return, the swarms gone if killed (`RoomReplayTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | the whole room, at most about 10 s: walking blind into the low swarm costs 1.97 s, into the thorn root 3.73 s, under the second swarm 5.98 s (`ForestHollowTest.carelessWalksDieAtTheCardsTimes`) |
+| Retry cost | the whole room, at most about 14 s: walking blind into the low swarm costs 1.80 s, into the thorn root 3.73 s; walking blind under the rising swarm kills at 51 of 145 start moments, the soonest after 6.00 s (`ForestHollowTest`) |
 | Beats | mosquito-swarm@5440, proximity-thorn@5632, mosquito-swarm@5876 |
-| Beat time | 7.30 (`RoomReplayTest`) |
+| Beat time | 10.08 (`RoomReplayTest`) |
 | First meeting | mosquito-swarm: beat 1, pocket at x 5350, on open floor 40 px short of the swarm's sweep (x 5396), the stone beside him: the swarm flies to and fro in front of him and cannot reach him, and the second swarm is out of the camera's view (`FirstMeetingPocketTest.forestHollowTheSwarm`) |
-| Optional | kill a swarm with the stone in the pocket (23 of 32 throws sampled over its period reach the low one) or with a fireball (every sampled cast); a missed stone can be picked up again |
+| Optional | kill a swarm with the stone in the pocket (21 of 32 throws sampled over its period reach the low one) or with a fireball (every sampled cast); a missed stone can be picked up again |
 | D26 | the exit is always reachable: nothing in the room is one-shot, both swarms have a free way past at every phase (checked at load and swept in `ForestHollowTest`), no ammunition or stone is needed |
 | Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
 | Landmark | the cloud rising and sinking before the exit |
-| Status | new, [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645) (card and room approved by the author 2026-11-27). The jump over the low swarm in the room: taken standing 18 px short of its line it clears from 75 of the 192 frames of the swarm's period, 36 px short from 33 (it turns at the ends of its 80 px line). D84 check: the first swarm is in view from the entrance; its danger is exactly what is drawn; the stone lies where he first watches it. Built and tested with a scripted hero; not yet played by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
+| Status | new, [#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645) (card and room approved by the author 2026-11-27). The jump over the low swarm in the room: taken standing 18 px short of its line it clears from 162 of the 384 frames of the swarm's period, 36 px short from 78 (it turns at the ends of its 80 px line). D84 check: the first swarm is in view from the entrance; its danger lies inside what is drawn; the stone lies where he first watches it. Built and tested with a scripted hero; not yet played by the author ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
 | Decisions | D72, D100, D105, D151 |
 
 Sketch (Y grows downward, floor top y 304; one character is 16 px, column 0 is x 5216; `@` the entrance, `o` the stone, `m` a swarm on its line, `^` the thorn root, `E` the exit):

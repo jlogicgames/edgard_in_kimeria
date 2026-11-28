@@ -4942,41 +4942,65 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D151. The forest mosquito swarm: it flies like the bat, the sword only scatters it and a stomp kills the hero (#645, #240)
 
 - **Status:** Accepted (author, 2026-11-25 for the movement, the deadly contact and stomp, the harmless sword, the two
-  kills and the free ways past; 2026-11-27 for the rest, approving the card with every recommendation). Built; the author
-  has not played it yet ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)).
+  kills and the free ways past; 2026-11-27 for the rest, approving the card with every recommendation). **Amended
+  2026-11-27 after the author's playtests:** the mosquitoes are dots of 1 or 2 px that all fly freely, half as fast as
+  first built; the swarm flies at 25 px/s; what kills is an 18×14 core inside the cloud; the flight has no sound and the two
+  sounds left are quiet whines. The author has not played this version ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)).
 - **Decision:**
-  - **Look and shape.** An oval cloud, **22×18 px**, of 14 mosquitoes, each on a small path that is a fixed function of the
-    swarm's clock. **What kills is the oval they fill**, not its box (D5, D10, as D148).
-  - **Flight.** The `Bat`'s: horizontal or vertical, **50 px/s**, inside Tiled `offNeg`/`offPos`. It never reacts to the hero:
-    no notice beat, no wind-up; the moving cloud is the warning (D7). Nothing is scaled by the assist.
+  - **Look and shape.** An oval cloud, **22×18 px**, of 28 mosquitoes, **each a dot of 1 or 2 px** (the plain pixels of the
+    hive's stingers). All fly freely over the whole cloud, each on a slow path of its own that is a fixed function of the
+    swarm's clock (about 6 px/s). **What kills is the cloud's core, an oval of 18×14 px**, 2 px inside it all round, where
+    they are thickest; the fringe is harmless (D5, D10). The author chose this on 2026-11-27 after seeing eighteen of the
+    dots kept on the rim of a lethal 22×18 oval: the rim read as a drawn circle, which mosquitoes do not fly in.
+  - **Flight.** The `Bat`'s kind: horizontal or vertical inside Tiled `offNeg`/`offPos`, at **25 px/s**, half the `Bat`'s
+    (the author: a real swarm moves about twice as slowly as the first build). It never reacts to the hero: no notice beat,
+    no wind-up; the moving cloud is the warning (D7). Nothing is scaled by the assist.
   - **Contact** is lethal on every side, **also during a swing**, and lands on the swarm's next frame, so a ball cast or a
     stone thrown on the touching frame wins (#503, #505).
   - **Exception to [D4](#d4-stomp-is-allowed-from-above-only):** landing on it kills the hero. No bounce.
-  - **The sword never kills it.** Once per swing it blows the mosquitoes away from the hero: the near edge stays, the far
-    edge goes **12 px** further, out in 0.1 s, held 0.2 s, gathered in 0.4 s. It stays lethal wherever they are drawn, and
+  - **The sword never kills it.** Once per swing that reaches the core it blows the mosquitoes away from the hero: the near
+    edge stays, the far edge goes **12 px** further, out in 0.1 s, held 0.2 s, gathered in 0.4 s. The core stretches with
+    the cloud and stays lethal, and
     its flight goes on. The blade passes through, so the swarm shields nothing behind it.
   - **Kills:** a thrown stone (it stops and drops), a fireball (spent) or a thrown torch, each taking the whole swarm.
     **No body** ([D101](#d101-monster-bodies-a-monster-killed-quietly-leaves-its-body-posed-apart-from-the-living-which-reacts-to-the-hero-and-is-finished-by-a-weapon-327-240-398)): its mosquitoes drop and fade within 0.8 s, as embers first when fire took
     them. They are the swarm's own sprite frames: the art gate rejected a first version that drew them as particle squares.
-  - **Sounds:** `mosquito_whine`, one loop while any live swarm is in the camera view; `mosquito_scatter`; `mosquito_die`.
-  - **Load checks** (`MosquitoSwarm.problem`, mirrored in `check_tiled_links.py`): with the scatter's 12 px either side, the
-    line is inside the room and view, clear of anything solid, one-way, hanging or moving, off every standing place, over
-    floor, and leaves a free way past (D26): under at 24 px up or over at most 32 px up with 80 px of clear height; a vertical
-    line leaves one of the two open at least 0.75 s of every cycle. A way round is not judged.
+  - **Sounds:** none while it flies. Two quiet whines: `mosquito_scatter` (one mosquito, when the swarm evades a swing) and
+    `mosquito_die` (several, when it dies). The author said mosquitoes whine very quietly and that the swarm may well fly
+    without a constant sound; the loop of the first version is removed. Test targets changed with the new files
+    (`test_generate_sounds.py`), because the author judged the first level far too loud: RMS -22 and -21 to **-31 dBFS**
+    both (measured peaks -23.8 and -18.1, over the unchanged audibility floor of -24), lengths 0.26 to 0.34 and 0.36 to
+    0.44 s to **0.4 to 0.5 and 0.65 to 0.75 s**; the whine's loop and level rows are gone with it.
+  - **Load checks** (`MosquitoSwarm.problem`, mirrored in `check_tiled_links.py`): on the whole 22×18 cloud, stricter than
+    the core needs, with the scatter's 12 px either side, the
+    line is inside the room and view, clear of anything solid, one-way, hanging or moving and of the whole fall of a falling
+    branch or stone, off every standing place, over floor, and leaves a free way past (D26): under at 24 px up or over at
+    most 32 px up with 80 px of clear height; a vertical line leaves one of the two open at least 0.75 s of every cycle. A
+    way round is not judged.
 - **Why:** the author asked for a monster the sword cannot answer. A harmless scattered cloud, or a sword that held it off,
   would give the sword a use the author did not ask for.
 - **Built (#645):**
   - **Code.** `entity/enemy/MosquitoSwarm.java`; `Enemy.stopsSword`, `Enemy.touchesDuringSwing`
-    and `Enemy.hitByFire` (the sword loop goes on through it, its contact counts during a swing, fire flares it);
-    `Level.updateSwarmWhine`.
-  - **Art.** `art/objects/monster/mosquito.grid` (six 5×4 frames). The first, darker wings measured outline 0.277 at
-    forest-hollow x 5872 against the floor of 0.28; the wings and body were made paler (no threshold changed).
-  - **Sounds.** Seeds 7601 to 7603; the other generated files are unchanged.
+    and `Enemy.hitByFire` (the blade passes through it, its contact counts during a swing, fire flares it). What the blade
+    passes through reacts in a pass of its own, so a monster listed before the swarm cannot take its scatter, and a dead
+    swarm still falling never becomes the swing's kill (it made the swing crumble the body it had just left, D101). A
+    dropped level ends the loop it started, the wall's rumble (`KimeriaGame.dropLevel`).
+  - **Art.** `art/objects/monster/mosquito.grid` (six 2×1 frames), outline 0.354 to 0.605 in `forest-hollow` against the
+    floor of 0.28 (no threshold changed; the first version's 5×4 sprites measured 0.306 to 0.372).
+  - **Sounds.** Seeds 7602 and 7603; the other generated files are unchanged.
   - **Room.** `forest-hollow`, forest-2's sixth room ([ROOM_CARDS.md](ROOM_CARDS.md#forest-hollow)).
 - **Measured (2026-11-27, scripted hero):** a running jump towards the low swarm clears it over 0.55 s of take-offs, after
-  it or from standing 0.14 s; a hero who stands swinging at an oncoming one dies 0.35 s after the blade first reaches it. A
-  scattered mosquito, rounded to whole px, was at most 0.003 past the rim in squared radius. Allocation
-  (`AllocationBudgetTest.mosquitoSwarmThroughTheRealLevel`): 0.6, 0.6 and 0.1 B/frame in 3 runs (ceiling 8).
+  it over 0.41 s, from standing never; a hero who stands swinging at an oncoming one dies 0.68 s after the blade first
+  reaches it. Every drawn pixel, gathered over two minutes or scattered, lies inside the cloud (no tolerance); from the rim
+  of the core the nearest drawn pixel is 1.68 px away at the median and within 3.42 px 95 times in 100 (widest 5.43).
+  Allocation (`AllocationBudgetTest.mosquitoSwarmThroughTheRealLevel`): 0.0 B/frame in 3 runs (ceiling 8). `forest-hollow`:
+  the figures on its room card.
+- **Tests changed with the free flight**, because what they pinned changed by the author's decision:
+  `whatIsDrawnIsInsideTheLethalOval` and `theLethalEdgeIsDrawnAllRound` (no gap over 2 px) became
+  `whatIsDrawnStaysInTheCloudRoundTheCore` and `theRimOfTheCoreIsRarelyFarFromAMosquito` (median at most 2 px, 95 in 100 at
+  most 4.5); the swing death 0.34 to 0.68 s; the jump after it 0.14 to 0.41 s and the standing jump under 0.2 s to none; the
+  room's pins to the card's new figures, the blind walk under the rising swarm now counted over start delays (51 of 145 die)
+  instead of one death at 5.98 s.
 - **Applies to:** the Swamp swarm ([#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646)) keeps this behaviour.
 
 ## D152. The false honey fungus bursts as sparks and a ring, not a swirl (#608, amends D63)

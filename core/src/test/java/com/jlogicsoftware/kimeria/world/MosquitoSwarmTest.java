@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.enemy.Bat;
 import com.jlogicsoftware.kimeria.entity.enemy.MosquitoSwarm;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
+import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
 import org.junit.jupiter.api.AfterEach;
@@ -26,7 +27,7 @@ import static org.junit.jupiter.api.Assertions.*;
  * <p>Fixtures: a room 640 wide with its floor at y 320, the hero entering at x 32, a stone at x 96 and one swarm whose 22x18
  * box is authored at (309, 298), 4 to 22 px over the floor. mosquito-test flies x 245..373, mosquito-run x 117..501,
  * mosquito-still holds its place, mosquito-high holds it 24 px up (y 278), mosquito-vertical flies y 250..298 (its bottom
- * 4 to 52 px up), mosquito-entrance breaks a load rule.
+ * 4 to 52 px up), mosquito-entrance and mosquito-stone (mosquito-test under a falling stone) each break a load rule.
  */
 class MosquitoSwarmTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
@@ -37,6 +38,11 @@ class MosquitoSwarmTest {
     private static final int TORCH_ID = 9001;
     /** The sheet's frames of a dead and a burning mosquito. */
     private static final int DEAD_FRAME = 4, EMBER_FRAME = 5;
+    /** The lethal core's box, gathered. */
+    private static final float CORE_WIDTH = 18, CORE_HEIGHT = 14;
+    /** The core's rim sampled at this many points, every {@code RIM_EVERY} frames of a minute; the bounds on the gaps. */
+    private static final int RIM_POINTS = 60, RIM_FRAMES = 60 * 60, RIM_EVERY = 3;
+    private static final float RIM_MEDIAN = 2f, RIM_MOST = 4.5f;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -124,45 +130,93 @@ class MosquitoSwarmTest {
         }
     }
 
-    /** D5, D10: every drawn pixel lies in the lethal oval, gathered and scattered, and the gathered cloud reaches its edges. */
-    @Test void whatIsDrawnIsInsideTheLethalOval() {
+    /**
+     * D10: every drawn pixel lies in the cloud, the oval {@code CORE_INSET} px round the lethal core, gathered over two minutes of
+     * flight and while swings from either side scatter it; the mosquitoes wander past the core, so it has a harmless fringe.
+     */
+    @Test void whatIsDrawnStaysInTheCloudRoundTheCore() {
         Pixmap sheet = new Pixmap(Gdx.files.internal("images/objects/monster-mosquito.png"));
         try {
             for (int hero : new int[]{291, 349}) {   // a swing from the left blows it right, from the right blows it left
                 Level level = level("mosquito-still");
                 MosquitoSwarm s = swarm(level);
-                Rectangle oval = new Rectangle();
-                float minX = Float.MAX_VALUE, maxX = -Float.MAX_VALUE, minY = Float.MAX_VALUE, maxY = -Float.MAX_VALUE;
-                for (int f = 0; f < 600; f++) {
-                    if (f == 470) place(level, hero);
-                    if (f == 480) { level.player.facingRight = hero < SPAWN_X; press(Input.Keys.K); }
+                Rectangle core = new Rectangle();
+                int fringe = 0;
+                for (int f = 0; f < 60 * 120; f++) {
+                    if (f == 3590) place(level, hero);
+                    if (f >= 3600 && (f - 3600) % 97 == 0) { level.player.facingRight = hero < SPAWN_X; press(Input.Keys.K); }
                     frame(level);
                     harness.held.clear();
-                    s.shapeInto(oval);
+                    s.shapeInto(core);
+                    float rx = core.width / 2 + MosquitoSwarm.CORE_INSET, ry = core.height / 2 + MosquitoSwarm.CORE_INSET;
+                    float cx = core.x + core.width / 2, cy = core.y + core.height / 2;
                     for (int i = 0; i < MosquitoSwarm.COUNT; i++) {
-                        for (int px = 0; px < MosquitoSwarm.MOSQUITO_WIDTH; px++) for (int py = 0; py < MosquitoSwarm.MOSQUITO_HEIGHT; py++) {
+                        for (int px = 0; px < MosquitoSwarm.MOSQUITO_WIDTH; px++) {
                             int column = (i & 1) == 0 ? px : MosquitoSwarm.MOSQUITO_WIDTH - 1 - px;
-                            int cell = s.frameIndex(i);
-                            if ((sheet.getPixel(cell * MosquitoSwarm.MOSQUITO_WIDTH + column, py) & 0xff) == 0) continue;
-                            float x = s.mosquitoX(i) + px + .5f, y = s.mosquitoY(i) + py + .5f;
-                            float dx = (x - oval.x - oval.width / 2) / (oval.width / 2), dy = (y - oval.y - oval.height / 2) / (oval.height / 2);
-                            // Scattered, a mosquito is rounded to whole px: measured at most 0.0031 past the rim (squared radius).
-                            float slack = s.scatterAmount() > 0 ? .005f : 0;
-                            assertTrue(dx * dx + dy * dy <= 1 + slack, "frame " + f + " mosquito " + i + ": " + (dx * dx + dy * dy));
-                            if (f < 480) {
-                                minX = Math.min(minX, x); maxX = Math.max(maxX, x); minY = Math.min(minY, y); maxY = Math.max(maxY, y);
-                            }
+                            if ((sheet.getPixel(s.frameIndex(i) * MosquitoSwarm.MOSQUITO_WIDTH + column, 0) & 0xff) == 0) continue;
+                            float x = s.mosquitoX(i) + px + .5f, y = s.mosquitoY(i) + .5f;
+                            float dx = (x - cx) / rx, dy = (y - cy) / ry;
+                            assertTrue(dx * dx + dy * dy <= 1, "frame " + f + " mosquito " + i + ": " + (dx * dx + dy * dy));
+                            float inX = (x - cx) / (core.width / 2), inY = (y - cy) / (core.height / 2);
+                            if (inX * inX + inY * inY > 1) fringe++;
                         }
                     }
                 }
-                assertEquals(SPAWN_X + .5f, minX, 1f, "the left rim is drawn");
-                assertEquals(SPAWN_X + MosquitoSwarm.WIDTH - .5f, maxX, 1f, "the right rim");
-                assertEquals(SPAWN_Y + .5f, minY, 1f, "the top rim");
-                assertEquals(SPAWN_Y + MosquitoSwarm.HEIGHT - .5f, maxY, 1f, "the bottom rim");
+                assertTrue(fringe > 0, "strays fly outside the lethal core");
             }
         } finally {
             sheet.dispose();
         }
+    }
+
+    /**
+     * D5, D10 the other way round, as the author accepted it with the free flight (2026-11-27): the rim of the lethal core is
+     * usually near a drawn pixel. Over a minute of the gathered cloud, from points all round the rim, the median distance to the
+     * nearest pixel and the distance 95 in 100 stay within bounds.
+     */
+    @Test void theRimOfTheCoreIsRarelyFarFromAMosquito() {
+        Pixmap sheet = new Pixmap(Gdx.files.internal("images/objects/monster-mosquito.png"));
+        try {
+            Level level = level("mosquito-still");
+            MosquitoSwarm s = swarm(level);
+            Rectangle core = new Rectangle();
+            float[] gaps = new float[RIM_FRAMES / RIM_EVERY * RIM_POINTS];
+            int n = 0;
+            for (int f = 0; f < RIM_FRAMES; f++) {
+                frame(level);
+                if (f % RIM_EVERY != 0) continue;
+                s.shapeInto(core);
+                for (int k = 0; k < RIM_POINTS; k++) {
+                    double angle = 2 * Math.PI * k / RIM_POINTS;
+                    float ex = core.x + core.width * (.5f + .5f * (float) Math.cos(angle));
+                    float ey = core.y + core.height * (.5f + .5f * (float) Math.sin(angle));
+                    gaps[n++] = nearestDrawn(sheet, s, ex, ey);
+                }
+            }
+            java.util.Arrays.sort(gaps);
+            float median = gaps[n / 2], most = gaps[n * 95 / 100];
+            System.out.printf(java.util.Locale.ROOT, "SWARM core rim to the nearest mosquito: median %.2f, 95%% %.2f, widest %.2f px%n",
+                median, most, gaps[n - 1]);
+            assertTrue(median <= RIM_MEDIAN, "typical gap " + median + " px");
+            assertTrue(most <= RIM_MOST, "95 in 100 gaps within " + most + " px");
+        } finally {
+            sheet.dispose();
+        }
+    }
+
+    /** From a point to the nearest opaque pixel (its square) of any mosquito, as drawn: odd ones mirrored. */
+    private static float nearestDrawn(Pixmap sheet, MosquitoSwarm s, float x, float y) {
+        float best = Float.MAX_VALUE;
+        for (int i = 0; i < MosquitoSwarm.COUNT; i++) {
+            for (int px = 0; px < MosquitoSwarm.MOSQUITO_WIDTH; px++) {
+                int column = (i & 1) == 0 ? px : MosquitoSwarm.MOSQUITO_WIDTH - 1 - px;
+                if ((sheet.getPixel(s.frameIndex(i) * MosquitoSwarm.MOSQUITO_WIDTH + column, 0) & 0xff) == 0) continue;
+                float left = s.mosquitoX(i) + px, top = s.mosquitoY(i);
+                float dx = Math.max(Math.max(left - x, 0), x - left - 1), dy = Math.max(Math.max(top - y, 0), y - top - 1);
+                best = Math.min(best, (float) Math.hypot(dx, dy));
+            }
+        }
+        return best;
     }
 
     @Test void walkingIntoItKillsOnTheSwarmsNextFrame() {
@@ -176,12 +230,12 @@ class MosquitoSwarmTest {
         assertFalse(swarm(level).isDefeated(), "contact never harms the swarm");
     }
 
-    @Test void theEmptyCornerOfItsBoxIsSafeAndItsEdgeIsNot() {
+    @Test void theFringeOfTheCloudIsSafeAndTheCoreIsNot() {
         Level level = level("mosquito-still");
-        for (int f = 0; f < 10; f++) hover(level, 311 - HERO_HALF, 300);
-        assertTrue(alive(level), "a body in the box's corner, outside the oval");
-        for (int f = 0; f < 3; f++) hover(level, 313 - HERO_HALF, 302);
-        assertFalse(alive(level), "inside the oval");
+        for (int f = 0; f < 10; f++) hover(level, 311 - HERO_HALF, 312);
+        assertTrue(alive(level), "a body in the 2 px fringe, up to the core's tip");
+        for (int f = 0; f < 3; f++) hover(level, 313 - HERO_HALF, 312);
+        assertFalse(alive(level), "inside the core");
     }
 
     @Test void landingOnItKillsTheHeroAndNotTheSwarm() {
@@ -217,15 +271,15 @@ class MosquitoSwarmTest {
             for (int f = 0; f < 60; f++) {
                 s.shapeInto(shape);
                 widest = Math.max(widest, shape.width);
-                if (fromLeft) assertEquals(SPAWN_X, shape.x, .001f, "the near edge stays");
-                else assertEquals(SPAWN_X + MosquitoSwarm.WIDTH, shape.x + shape.width, .001f, "the near edge stays");
-                assertEquals(MosquitoSwarm.HEIGHT, shape.height, 0, "no taller");
+                if (fromLeft) assertEquals(SPAWN_X + MosquitoSwarm.CORE_INSET, shape.x, .001f, "the near edge stays");
+                else assertEquals(SPAWN_X + MosquitoSwarm.WIDTH - MosquitoSwarm.CORE_INSET, shape.x + shape.width, .001f, "the near edge stays");
+                assertEquals(CORE_HEIGHT, shape.height, 0, "no taller");
                 if (s.scatterAmount() > 0) apart++;
                 frame(level);
             }
-            assertEquals(MosquitoSwarm.WIDTH + MosquitoSwarm.SCATTER_REACH, widest, .001f, "12 px further on the far side");
+            assertEquals(CORE_WIDTH + MosquitoSwarm.SCATTER_REACH, widest, .001f, "12 px further on the far side");
             assertEquals(MosquitoSwarm.SCATTER_SECONDS, apart * STEP, STEP * 1.5f, "gathered after 0.7 s");
-            assertEquals(MosquitoSwarm.WIDTH, s.shapeInto(shape).width, 0);
+            assertEquals(CORE_WIDTH, s.shapeInto(shape).width, 0);
             assertFalse(s.isDefeated(), "the sword never kills it");
             assertTrue(alive(level), "the swing itself does not push it into the hero");
             assertEquals(List.of("mosquito_scatter"), harness.sounds, "once per swing");
@@ -253,7 +307,32 @@ class MosquitoSwarmTest {
         assertFalse(swarm(level).isDefeated());
     }
 
-    /** The card: swinging at an oncoming swarm and standing, the hero dies about 0.34 s after the blade first reaches it. */
+    /** The list order is the map's: a monster listed first, which stops the blade, leaves the swarm its scatter on that frame. */
+    @Test void aMonsterListedFirstDoesNotKeepTheBladeOffTheSwarm() {
+        Level level = level("mosquito-still");
+        Bat bat = new Bat(harness.assets(), harness.game(), SPAWN_X, SPAWN_Y, 16, 16, false, 0, 0);
+        bat.setPlayer(level.player);
+        level.objects.add(0, bat);
+        swingAt(level, true);
+        assertTrue(bat.isDefeated(), "the blade still reaches the bat");
+        assertTrue(harness.sounds.contains("mosquito_scatter"), "scattered on the frame of the blow: " + harness.sounds);
+    }
+
+    /** A dead swarm still falling in the blade's reach must not undo D101: the swing that kills a monster leaves its body. */
+    @Test void aFallingDeadSwarmDoesNotMakeTheSwingCrumbleTheBodyItMade() {
+        Level level = level("mosquito-still");
+        Snail snail = new Snail(harness.assets(), harness.game(), SPAWN_X, FLOOR - 16, 32, 16, 0, 0);
+        snail.setPlayer(level.player);
+        snail.setLevel(level);
+        level.objects.add(0, snail);
+        swarm(level).collidedWithActor(true);
+        swingAt(level, true);
+        assertTrue(snail.isDefeated(), "the blade killed it");
+        settle(level, 20);
+        assertTrue(snail.isRemains(), "its body is left by the swing that made it");
+    }
+
+    /** The card: swinging at an oncoming swarm and standing, the hero dies about 0.68 s after the blade first reaches it. */
     @Test void swingingAtAnOncomingSwarmAndStandingKills() {
         Level level = level("mosquito-test");
         MosquitoSwarm s = swarm(level);
@@ -261,11 +340,11 @@ class MosquitoSwarmTest {
         float middle = 245;
         place(level, middle);
         settle(level, 3);
-        until(level, () -> s.position.x <= middle + SWORD_REACH + 1.5f, 60 * 3);
+        until(level, () -> s.position.x + MosquitoSwarm.CORE_INSET <= middle + SWORD_REACH + .5f, 60 * 6);
         tap(level, Input.Keys.K);
         until(level, () -> harness.sounds.contains("mosquito_scatter"), 3);   // the blade reaches it
-        int frames = until(level, () -> !alive(level), 42);
-        assertEquals(.34f, frames * STEP, .06f);
+        int frames = until(level, () -> !alive(level), 48);
+        assertEquals(.68f, frames * STEP, .06f);
         assertFalse(s.isDefeated());
     }
 
@@ -385,10 +464,10 @@ class MosquitoSwarmTest {
             Level level = level("mosquito-run");
             MosquitoSwarm s = swarm(level);
             if (oncoming) {
-                until(level, () -> s.position.x >= 501 - .01f, 60 * 8);
-                settle(level, 90);               // flying left from x 426
+                until(level, () -> s.position.x >= 501 - .01f, 60 * 16);
+                settle(level, 180);              // flying left from x 426
             } else {
-                settle(level, 30);               // flying right from x 334
+                settle(level, 60);               // flying right from x 334
             }
             place(level, s.position.x + 11 - distance);
             if (s.hitboxOverlaps(level.player.hitboxBounds())) continue;
@@ -411,11 +490,10 @@ class MosquitoSwarmTest {
         assertEquals(.55f, clear.size() / (100 + MosquitoSwarm.SPEED), .02f, "take-offs " + clear);
     }
 
-    @Test void jumpingAfterASwarmOrOverItFromStandingIsAThinWindow() {
+    @Test void jumpingAfterASwarmIsNarrowerAndFromStandingItIsNotCleared() {
         List<Integer> after = clearingTakeOffs(false, true), standing = clearingTakeOffs(true, false);
-        assertEquals(.14f, after.size() / (100 - MosquitoSwarm.SPEED), .03f, "after it: " + after);
-        float window = standing.size() / MosquitoSwarm.SPEED;
-        assertTrue(window < .2f, "from standing " + window + " " + standing);
+        assertEquals(.41f, after.size() / (100 - MosquitoSwarm.SPEED), .03f, "after it: " + after);
+        assertTrue(standing.isEmpty(), "at half the speed a jump on the spot never lets it pass under: " + standing);
     }
 
     @Test void aSwarm24PxUpPassesOverAStandingHero() {
@@ -460,37 +538,23 @@ class MosquitoSwarmTest {
         assertEquals(MosquitoSwarm.State.FLY, swarm(level).state());
     }
 
-    @Test void theWhineLoopsOnlyWhileALiveSwarmIsInView() {
+    /** D151: no sound of its own while it flies, however long it is watched; only the evasion and the death are heard. */
+    @Test void itFliesWithoutAnyLoopOrSound() {
         Rectangle view = new Rectangle(0, 0, 640, 360);
-        Level level = harness.roomOf("mosquito-still", 0, () -> view);
-        frame(level);
-        assertTrue(harness.loops.contains("mosquito_whine"));
-        view.x = 400;
-        frame(level);
-        assertFalse(harness.loops.contains("mosquito_whine"), "off screen");
-        view.x = 0;
-        frame(level);
-        level.clearCameraEffects();   // pause and a room change
-        assertFalse(harness.loops.contains("mosquito_whine"));
-        frame(level);
-        assertTrue(harness.loops.contains("mosquito_whine"), "heard again after the pause");
-        swarm(level).collidedWithActor(true);
-        frame(level);
-        assertFalse(harness.loops.contains("mosquito_whine"), "dead");
+        Level level = harness.roomOf("mosquito-test", 0, () -> view);
+        settle(level, 60 * 6);
+        assertTrue(harness.loops.isEmpty(), harness.loops.toString());
+        assertTrue(harness.sounds.isEmpty(), harness.sounds.toString());
     }
 
-    @Test void theWhineStopsWithTheHeroAndStaysOffWithTheSoundSwitch() {
-        Rectangle view = new Rectangle(0, 0, 640, 360);
-        Level level = harness.roomOf("mosquito-still", 0, () -> view);
-        frame(level);
-        place(level, SPAWN_X);
-        settle(level, 3);
-        assertFalse(alive(level));
-        assertFalse(harness.loops.contains("mosquito_whine"), "silent over the death");
+    @Test void withTheSoundSwitchOffTheEvasionAndTheDeathAreSilent() {
         harness.playSounds = false;
-        Level quiet = harness.roomOf("mosquito-still", 0, () -> view);
-        frame(quiet);
-        assertTrue(harness.loops.isEmpty());
+        Level level = level("mosquito-still");
+        swingAt(level, true);
+        settle(level, 60);
+        swarm(level).collidedWithActor(true);
+        settle(level, 5);
+        assertTrue(harness.sounds.isEmpty() && harness.loops.isEmpty(), harness.sounds + " " + harness.loops);
     }
 
     // -- Load checks (D151, D26) -------------------------------------------------------------------------------------------
@@ -542,5 +606,12 @@ class MosquitoSwarmTest {
         IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> level("mosquito-entrance"));
         assertTrue(error.getMessage().contains("MosquitoSwarm"), error.getMessage());
         assertTrue(error.getMessage().contains("entrance"), error.getMessage());
+    }
+
+    /** The stone of mosquito-stone hangs at the room top, clear of the line, and falls through it: the whole column counts. */
+    @Test void theLevelRejectsAFallingStoneOverTheLine() {
+        IllegalArgumentException error = assertThrows(IllegalArgumentException.class, () -> level("mosquito-stone"));
+        assertTrue(error.getMessage().contains("MosquitoSwarm"), error.getMessage());
+        assertTrue(error.getMessage().contains("moving on its line"), error.getMessage());
     }
 }

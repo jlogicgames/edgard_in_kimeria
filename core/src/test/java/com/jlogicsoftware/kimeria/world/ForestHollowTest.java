@@ -28,6 +28,8 @@ class ForestHollowTest {
     /** The hero's frame x from its middle, and its frame's y on the floor (top 304). */
     private static final float HERO_MIDDLE = 23.5f, FLOOR_Y = 256;
     private static final int LIMIT = 60 * 25;
+    /** The low swarm's period in frames: 80 px there and back at 25 px/s. */
+    private static final int LOW_PERIOD = 384;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
 
@@ -91,18 +93,18 @@ class ForestHollowTest {
             }
             System.out.printf(java.util.Locale.ROOT, "HOLLOW route over start delays (assist %b): %.2f to %.2f s%n", longer, shortest, longest);
             assertEquals(6.43f, shortest, .1f, "the shortest start");
-            assertEquals(9.68f, longest, .1f, "the longest wait");
+            assertEquals(13.35f, longest, .1f, "the longest wait");
         }
         setLonger(false);
     }
 
     /**
-     * The card's jump in the room (the swarm turns at its line's ends): frames of the swarm's 3.2 s period from which a running
+     * The card's jump in the room (the swarm turns at its line's ends): frames of the swarm's 6.4 s period from which a running
      * jump taken standing with the body's right edge at {@code front} clears it.
      */
     private int takeOffFrames(float front) {
         int clearing = 0;
-        for (int wait = 0; wait < 192; wait++) {
+        for (int wait = 0; wait < LOW_PERIOD; wait++) {
             Level level = level();
             MosquitoSwarm low = swarms(level).get(0);
             for (int f = 0; f < wait + 3; f++) {
@@ -121,9 +123,9 @@ class ForestHollowTest {
 
     @Test void theJumpOverTheLowSwarmHasAWideWindowCloseToItsLine() {
         int near = takeOffFrames(5390), farther = takeOffFrames(5372);
-        System.out.printf("HOLLOW take-off frames of 192: %d at 18 px short of the line, %d at 36 px%n", near, farther);
-        assertEquals(76, near, 4);
-        assertEquals(32, farther, 4);
+        System.out.printf("HOLLOW take-off frames of %d: %d at 18 px short of the line, %d at 36 px%n", LOW_PERIOD, near, farther);
+        assertEquals(162, near, 8);
+        assertEquals(78, farther, 8);
     }
 
     /** The camera at the first meeting's pocket does not show the second swarm: one new thing at a time (D105). */
@@ -167,7 +169,7 @@ class ForestHollowTest {
 
     @Test void theStoneAndAFireballReachTheFirstSwarmFromThePocket() {
         int throwsThatKill = 0, castsThatKill = 0, tries = 0;
-        for (int delay = 0; delay < 192; delay += 6) {
+        for (int delay = 0; delay < LOW_PERIOD; delay += 12) {
             tries++;
             if (shotKills(true, delay)) throwsThatKill++;
             if (shotKills(false, delay)) castsThatKill++;
@@ -190,17 +192,13 @@ class ForestHollowTest {
         assertTrue(stone.getX() >= 5232 && stone.getX() < 5936, "still in the room");
     }
 
-    /** Seconds until a hero who only holds right from the entrance (jumping at {@code jumps}) dies; fails if he lives. */
-    private float blindWalk(boolean withoutLow, boolean withoutThorn, float... jumps) {
+    /** Seconds until a hero who only holds right from the entrance dies; fails if he lives. */
+    private float blindWalk(boolean withoutLow) {
         Level level = level();
         if (withoutLow) swarms(level).get(0).collidedWithActor(true);
-        int jump = 0;
         for (int f = 0; f < LIMIT; f++) {
             h.held.clear(); h.pressed.clear();
             h.held.add(Input.Keys.D);
-            if (jump < jumps.length && level.player.position.x >= jumps[jump] && level.player.isOnGround()) {
-                h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); jump++;
-            }
             level.update(STEP);
             if (!alive(level)) { h.held.clear(); return (f + 1) * STEP; }
             assertFalse(level.atRoomExit(), "reached the exit alive");
@@ -209,15 +207,43 @@ class ForestHollowTest {
         return 0;
     }
 
-    /** The card's retry times: walking into the low swarm, into the thorn root, and blind under the vertical swarm. */
+    /** The card's retry times: walking into the low swarm and into the thorn root. */
     @Test void carelessWalksDieAtTheCardsTimes() {
-        float low = blindWalk(false, false);
-        float thorn = blindWalk(true, false);
-        float high = blindWalk(true, true, ForestHollowRoute.ROOT_JUMP);
-        System.out.printf(java.util.Locale.ROOT, "HOLLOW deaths: low swarm %.2f s, thorn root %.2f s, vertical swarm %.2f s%n", low, thorn, high);
-        assertEquals(1.97f, low, .1f);
+        float low = blindWalk(false);
+        float thorn = blindWalk(true);
+        System.out.printf(java.util.Locale.ROOT, "HOLLOW deaths: low swarm %.2f s, thorn root %.2f s%n", low, thorn);
+        assertEquals(1.80f, low, .1f);
         assertEquals(3.73f, thorn, .1f);
-        assertEquals(5.98f, high, .1f);
+    }
+
+    /**
+     * The third beat still asks for the timing: with the low swarm gone and the root jumped, a hero who never looks at the rising
+     * swarm walks into it for about one start in three (the swarm at half the Bat's speed, its lethal core inside the cloud).
+     */
+    @Test void walkingBlindUnderTheRisingSwarmKillsAtSomeMoments() {
+        int died = 0, starts = 0;
+        float soonest = Float.MAX_VALUE;
+        for (int delay = 0; delay <= 720; delay += 5) {
+            Level level = level();
+            swarms(level).get(0).collidedWithActor(true);
+            boolean jumped = false;
+            starts++;
+            for (int f = 0; f < LIMIT; f++) {
+                h.held.clear(); h.pressed.clear();
+                if (f >= delay) {
+                    h.held.add(Input.Keys.D);
+                    if (!jumped && level.player.position.x >= ForestHollowRoute.ROOT_JUMP && level.player.isOnGround()) {
+                        h.held.add(Input.Keys.J); h.pressed.add(Input.Keys.J); jumped = true;
+                    }
+                }
+                level.update(STEP);
+                if (!alive(level)) { died++; soonest = Math.min(soonest, (f + 1 - delay) * STEP); break; }
+                if (level.atRoomExit()) break;
+            }
+            h.held.clear();
+        }
+        System.out.printf(java.util.Locale.ROOT, "HOLLOW blind under the rising swarm: %d of %d starts die, the soonest after %.2f s%n", died, starts, soonest);
+        assertEquals(51, died, 8, "of " + starts);
     }
 
     @Test void standingOnTheLineAndSwingingDoesNotClearTheWay() {
@@ -233,6 +259,6 @@ class ForestHollowTest {
         assertFalse(alive(level), "it comes on through the swings");
         assertFalse(low.isDefeated());
         Rectangle shape = low.shapeInto(new Rectangle());
-        assertTrue(shape.width >= MosquitoSwarm.WIDTH);
+        assertTrue(shape.width >= MosquitoSwarm.WIDTH - 2 * MosquitoSwarm.CORE_INSET);
     }
 }

@@ -1430,21 +1430,24 @@ the ground beetle (`effects.BeetleFx`).
   trial placements in all 24 other forest rooms gave a live outline of 0.295 to 0.834).
 
 **Forest mosquito swarm, built (#645, [D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240); the card approved by the author
-2026-11-27, the drawing not yet judged by the author, #645).**
+2026-11-27; redrawn as dots after the author's playtest the same day, the dots not yet judged by the author, #645).**
 
-- **Sheet** `assets/images/objects/monster-mosquito.png`, six 5×4 frames (`dark1`, `dark2`, `fed1`, `fed2`: wings up and flat,
-  a dark or a crimson belly; `dead`, curled; `ember`, burning), drawn in `art/objects/monster/mosquito.grid` and exported by
-  `tools/forest_trap_sprites.py monster:mosquito`; no moon rim (its wings are the light edge).
-- **The cloud** is fourteen of them in a 22×18 oval, half of them mirrored, wings flickering 20 times a second, each circling
-  one or two px on its own path; the rim ones move along the rim, so the lethal edge is what is seen. Scattered, the oval
-  stretches 12 px away from the sword. It reads apart from the `Bat` (one solid shape) and the hive's stingers (a straight
-  falling column) as many small things moving every way, the sky between them.
-- **Palette** (11 entries with transparency): ink `0b0814`, crimson `9c2050`, rose `c87896`, pale rose wings `f0d0dc` and
-  `d09cac`, the eye `ff6b57`, and for the ember the fireball's own ramp `fdfaa0`, `fde902`, `fc5601`, `c50e10`.
+- **Sheet** `assets/images/objects/monster-mosquito.png`, six 2×1 frames, each a dot of 1 or 2 px: `dark1` (a pale wing and an
+  ink body), `dark2` (the wing alone), `fed1` and `fed2` (the same with a rose body), `dead` (one dim pixel), `ember` (two
+  burning pixels); drawn in `art/objects/monster/mosquito.grid` and exported by `tools/forest_trap_sprites.py monster:mosquito`;
+  no moon rim (the pale pixels carry the contrast).
+- **The cloud** is twenty-eight of them in a 22×18 oval, half of them mirrored, flickering 20 times a second, each flying
+  freely over the whole cloud on its own slow path, about 6 px/s. No dot keeps to the rim: the author's playtest (2026-11-27)
+  read a rim of dots as a drawn circle. What kills is the 18×14 core, where they are thickest; the strays outside it are
+  harmless. Scattered, the cloud and its core stretch 12 px away from the sword. It speaks the plain pixels of the hive's
+  stingers and reads apart from them (a straight falling column of upright streaks) and from the `Bat` (one solid shape) as
+  separate dots drifting every way, the sky between them.
+- **Palette** (7 entries with transparency): ink `0b0814`, rose `c87896`, pale rose `f0d0dc` and `d09cac`, and for the ember
+  two of the fireball's own ramp, `fde902` and `fc5601`.
 - **Death:** no body and no particles: each mosquito drops 6 to 17 px (never under the floor), drifting up to 4 px, drawn
   `dead` and fading, gone within 0.8 s; a fire kill draws it `ember` for the first 0.25 s.
-- **Contrast** (the gathered cloud along its line, `check_contrast.py`): outline 0.306 to 0.372 in `forest-hollow`, active
-  floor 0.28.
+- **Contrast** (the gathered cloud along its line, `check_contrast.py`): outline 0.354 to 0.605 in `forest-hollow`, active
+  floor 0.28 (the 5×4 sprites measured 0.306 to 0.372).
 
 ## Gameplay sprites and procedural-art prohibition (2026-10-22)
 

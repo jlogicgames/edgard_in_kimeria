@@ -20,7 +20,7 @@ final class ForestHollowRoute {
      * Where the hero waits for the low swarm (his body's right edge, short of its line from x 5408), and where the swarm's left
      * edge is, coming towards him, when he jumps.
      */
-    static final float LOW_WAIT = 5386f, TAKE_OFF_FROM = 5430f, TAKE_OFF_TO = 5470f;
+    static final float LOW_WAIT = 5386f, TAKE_OFF_FROM = 5420f, TAKE_OFF_TO = 5450f;
     /** Where he waits for the high swarm, and the swarm's top at or above which he walks under it while it still rises. */
     static final float HIGH_WAIT = 5852f, HIGH_ENOUGH = 262f;
 
