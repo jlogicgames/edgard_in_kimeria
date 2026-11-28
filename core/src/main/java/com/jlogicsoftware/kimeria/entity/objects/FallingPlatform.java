@@ -17,7 +17,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 
-/** A one-shot platform that lights up, then collapses after a shared warning delay once the player lands on it. */
+/**
+ * A one-shot platform that lights up, then collapses after a shared warning delay once the player lands on it. The moment
+ * it gives way is reported once through {@link #onGiveWay} (#444): the crack and the splinters.
+ */
 public class FallingPlatform extends Actor<FallingPlatform.State> implements Collidable {
     public enum State {IDLE, FALLING}
 
@@ -42,6 +45,7 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
     private float fallDelay = -1f;
     private Torch torch;
     private final Consumer<WorldObject> spawner;
+    private Runnable onGiveWay = () -> { };
     private float fallVelocity = 0f;
     public static final float FALL_DISTANCE = 200f;
     private static final float FALL_DURATION = 1.5f;
@@ -116,6 +120,9 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
         return fallDelay > total / 2f ? CRUMBLE_FIRST : CRUMBLE_SECOND;
     }
 
+    /** Called once, in the frame the warning ends and the platform starts to drop; restoring a fall under way is not one. */
+    public void onGiveWay(Runnable listener) { onGiveWay = listener; }
+
     @Override
     public void render(Batch batch) {
         batch.draw(crumbleFrames[crumbleFrame()], position.x, position.y, size.x, size.y);
@@ -143,6 +150,7 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
             if (fallDelay <= 0) {
                 if (torch != null) torch.toggleFire(false);
                 fallVelocity = 0.0001f; // marks "now actually falling"
+                onGiveWay.run(); // seen and heard when it acts (D93)
             }
         } else if (fallVelocity > 0) {
             fallVelocity += dt;

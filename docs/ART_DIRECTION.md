@@ -1784,6 +1784,16 @@ pixel for pixel, and only the sun changes between frames (`tools/test_arms_sprit
 are metal, not light. Code draws the strip through `ui/KimeriaArms` at a whole-number scale.
 [Frames at 8x](references/kimeria-arms-frames.png).
 
+## Falling platform splinters (#444)
+
+When the rotten log or the rotten branch gives way, `EnvironmentFx.splinters` throws 6 splinters from the break (the middle of the
+platform, 40 % of its height under its top edge): `KIND_GRIT` squares of 1.5 to 2.5 px that fly 8 to 22 px, alternately left and
+right, and fall to between the platform's resting bottom edge and 12 px under it (the closest floor under a shipped platform is
+16 px down), fading over 0.35 to 0.6 s while the platform drops away from them. Each wood has its own three colours, taken from its
+sheet: the log `8a5a30`/`c08a4c`/`efe6c4`, the rotten branch `7a6e6c`/`b8ad9c`/`efe6c4`; no accent hue and no screen shake (it is
+not an impact). They share the level's grit pool (48; a full pool drops its oldest speck). Sound: [SOUND_DIRECTION.md](SOUND_DIRECTION.md),
+"Platform crack".
+
 ## Forest trap sprites (#230)
 
 First-pass native sprite sets for the D42 forest traps, hand-drawn for this remake (the DOS

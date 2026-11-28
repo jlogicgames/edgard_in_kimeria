@@ -8,7 +8,8 @@ import java.util.function.BooleanSupplier;
 
 /**
  * The environment effects of one {@code Level} (#239, #285 step 5): the screen shake, a dust puff under the hero on a
- * ground jump and a smaller one when it lands and the grit that falls from the ceiling when a lever moves a wall. Dust and grit are two
+ * ground jump and a smaller one when it lands, the grit that falls from the ceiling when a lever moves a wall and the chips
+ * and splinters of the traps. Dust and grit are two
  * {@link KimeriaParticleSystem}s with their own seeded random streams. Everything here is cosmetic: no collision,
  * timing or route reads it. Particles advance only in {@link #update}, so pause freezes them. World Y grows downward.
  */
@@ -72,6 +73,18 @@ public final class EnvironmentFx {
     private static final float THORN_SPECK_LIFE_MIN = .25f, THORN_SPECK_LIFE_MAX = .4f, THORN_SPECK_SIZE_MIN = 1.5f, THORN_SPECK_SIZE_MAX = 2, THORN_SPECK_DRIFT_MIN_FRACTION = .5f;
     /** The root's mound colours (`8a5a30` earth, `a89c78` pale tip): lighter than the first dark soil, which sat at zero lightness distance (OKLab L 0.003) from the forest's `2c3f66`; these are 0.14 and 0.32 above it. */
     private static final float[] SOIL_COLORS = {.541f, .353f, .188f, .659f, .612f, .471f};
+
+    /** A falling platform, rotten log or rotten branch gives way (#444, D93): splinters fly from the break and fade. */
+    public static final int SPLINTERS = 6;
+    /** How far under the platform's resting bottom edge a splinter may drift (the closest shipped floor is 16 px under one). */
+    public static final float SPLINTER_REACH_PX = 12;
+    private static final int SPLINTER_SIDES = 2;
+    private static final float SPLINTER_SPREAD_PX = 5, SPLINTER_START_SPREAD_PX = 2, SPLINTER_DRIFT_MIN = 8, SPLINTER_DRIFT_MAX = 22;
+    private static final float SPLINTER_LIFE_MIN = .35f, SPLINTER_LIFE_MAX = .6f, SPLINTER_SIZE_MIN = 1.5f, SPLINTER_SIZE_MAX = 2.5f;
+    /** The log's wood and its pale splinter (`8a5a30`, `c08a4c`, `efe6c4`). */
+    private static final float[] LOG_SPLINTER_COLORS = {.541f, .353f, .188f, .753f, .541f, .298f, .937f, .902f, .769f};
+    /** The rotten branch's dead grey wood, pale top and splinter (`7a6e6c`, `b8ad9c`, `efe6c4`). */
+    private static final float[] BRANCH_SPLINTER_COLORS = {.478f, .431f, .424f, .722f, .678f, .612f, .937f, .902f, .769f};
 
     private static final float GRIT_EXTRA_SPREAD_PX = 24, GRIT_MAX_FALL_PX = 64;
     private static final float GRIT_SPEED_MIN = 70, GRIT_SPEED_MAX = 110;
@@ -234,6 +247,27 @@ public final class EnvironmentFx {
             grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, floorY - THORN_SPECK_START_RISE_PX,
                 startX + away * THORN_SPECK_DRIFT_PX * (THORN_SPECK_DRIFT_MIN_FRACTION + random.nextFloat() * (1 - THORN_SPECK_DRIFT_MIN_FRACTION)), floorY - size / 2f, life, size,
                 SOIL_COLORS[c], SOIL_COLORS[c + GREEN], SOIL_COLORS[c + BLUE]);
+        }
+    }
+
+    /**
+     * {@value #SPLINTERS} splinters from the break at ({@code x}, {@code crackY}), flying out to alternate sides and falling
+     * (larger Y is lower) to between the platform's resting bottom edge {@code bottomY} and {@value #SPLINTER_REACH_PX} px
+     * under it; {@code deadWood} gives the rotten branch's greys instead of the log's browns.
+     */
+    public void splinters(float x, float crackY, float bottomY, boolean deadWood) {
+        float[] colors = deadWood ? BRANCH_SPLINTER_COLORS : LOG_SPLINTER_COLORS;
+        RandomXS128 random = grit.random();
+        for (int n = 0; n < SPLINTERS; n++) {
+            float startX = x + range(random, -SPLINTER_SPREAD_PX, SPLINTER_SPREAD_PX);
+            float startY = crackY + range(random, -SPLINTER_START_SPREAD_PX, SPLINTER_START_SPREAD_PX);
+            float away = n % SPLINTER_SIDES == 0 ? -1 : 1;
+            float size = range(random, SPLINTER_SIZE_MIN, SPLINTER_SIZE_MAX);
+            int c = random.nextInt(colors.length / COLOR_STRIDE) * COLOR_STRIDE;
+            grit.spawn(KimeriaParticleSystem.KIND_GRIT, startX, startY,
+                startX + away * range(random, SPLINTER_DRIFT_MIN, SPLINTER_DRIFT_MAX),
+                bottomY + range(random, 0, SPLINTER_REACH_PX - size / 2f),
+                range(random, SPLINTER_LIFE_MIN, SPLINTER_LIFE_MAX), size, colors[c], colors[c + GREEN], colors[c + BLUE]);
         }
     }
 
