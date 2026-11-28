@@ -292,11 +292,12 @@ room, the group property `roomx` that room's x in the map and `parallaxx`/`paral
 (sheets and collections of images, `region(gid)`); the first one is the play layer's.
 
 `world.ParallaxRenderer` draws them from `Level.render`: `renderBack` (the scenery layers in file order) before `renderBackground`,
-`renderFront` (the current room's foreground groups, in file order) after `fairy.renderFront`; the HUD stays its own later pass. The maths, whole pixels
-as Java's `Math.round` (half up): a layer point sits at `x - round(f * (camX - originX))` on screen, with `originX` 0 for a map-wide scenery
-layer and the room's left edge for the foreground, and at `(y - originY) - round(f * (camTop - originY))`, with `originY` the room's floor
-camera top (`FallingTrapLayout.floorCameraTop`); the offsets are added to the camera's true position, so a layer lines up with the play layer
-whatever the camera's fraction. Clouds add an accumulated drift, fractional and never snapped so they glide (advanced in `Level.finishUpdate`, wrapped at `wrapx`), the moon is a
+`renderFront` (the current room's foreground groups, in file order) after `fairy.renderFront`; the HUD stays its own later pass. The maths: a layer
+point sits at `x - round(f * (camX - originX))` on screen, `camX` and the shift in whole pixels as Java's `Math.round` (half up), with
+`originX` 0 for a map-wide scenery layer and the room's left edge for the foreground, and at `(y - originY) - f * (camTop - originY)`, not
+snapped (D154, so the layers glide with the slow vertical camera), with `originY` the room's floor camera top
+(`FallingTrapLayout.floorCameraTop`); the offsets are added to the camera's true position, so a layer lines up with the play layer whatever
+the camera's fraction. Clouds add an accumulated drift, fractional and never snapped so they glide (advanced in `Level.finishUpdate`, wrapped at `wrapx`), the moon is a
 factor-0 layer. A room change moves the foreground's origin: `RoomFade` hides the jump; map-wide layers hold their place while the rooms share a floor camera top (all forest rooms do). The clouds run on game time (`Level.update`), so they stop in the pause and the fades. A group's `y` is in map coordinates and the group must be named `foreground-<room name>` or `foreground-near-<room name>` with `roomx` = that room's x (checked at load). Nothing allocates per frame (index loops, regions
 resolved at load; `AllocationBudgetTest.forest1ParallaxLayersAndForeground`).
 

@@ -45,8 +45,9 @@ at the room's bottom edge (y 368) to reach the screen bottom. These rules are ch
 
 Vertical parallax: every layer moves in y by its own factor from that floor camera (ORIGIN_Y, below). The camera top still
 changes by up to 8 px (the room is 8 px taller than the view, so it follows the hero between room y 0 and ORIGIN_Y) and during a
-room change; there is no look up or down any more (D111), so no larger range is previewed or checked. Layer offsets are snapped
-as the game's Math.round (half up). `--room calm` also writes `preview-calm-walk.gif`.
+room change; there is no look up or down any more (D111), so no larger range is previewed or checked. The pictures are drawn in
+whole pixels, with offsets snapped as Math.round (half up); the game snaps only the horizontal offset (D154), so the bleed check
+uses its exact vertical one. `--room calm` also writes `preview-calm-walk.gif`.
 """
 import math
 from collections import namedtuple
@@ -155,13 +156,13 @@ RUN_FRAMES = 6
 GIF_COLOURS = 128                       # the preview GIFs' global palette (one index is the transparent 'unchanged')
 # Vertical parallax (author, 2026-11-19): each layer's y factor is its x factor, measured from the floor camera, so the steady
 # frame (camera top ORIGIN_Y) is the authored one: screenY = (y - originY) - f * (camTop - originY), originY = room y +
-# ORIGIN_Y, y the art's room y, whole pixels. The camera top lies between the room top and ORIGIN_Y (8 px apart). Tiled lines the
+# ORIGIN_Y, y the art's room y, not snapped in the game (D154). The camera top lies between the room top and ORIGIN_Y (8 px apart). Tiled lines the
 # layers up when the view centre is on the map's parallax origin, so
 # `parallaxoriginy` is ORIGIN_Y + half the view; every forest room lies at y 0, so it is exact for every room in y.
 ORIGIN_Y = CAMERA_TOP
 ROOM_H = ROWS * TILE
 # Bleed (D111): the camera top lies in 0..ORIGIN_Y, so a layer of vertical factor f trails the camera by at most
-# round(f * ORIGIN_Y) px (12.8 at the foreground's 1.6), and the screen shake moves the camera by up to SHAKE px after the view was
+# f * ORIGIN_Y px (12.8 at the foreground's 1.6), and the screen shake moves the camera by up to SHAKE px after the view was
 # taken, which a layer of factor f shows as up to SHAKE * (1 + f) px. A factor-1 layer needs no art past the room (0 px), the others
 # at most 12.8 + 3.2 px (SHAKE * 1.6 at the foreground); every layer gets one tile row (16 px) of margin, which covers all of it.
 SHAKE = 2.0                             # px, the largest camera shake (ScreenShake.BLAST_AMPLITUDE_PX); conservative: it is clamped to the room, so it never carries the view past the room's top or bottom
@@ -635,9 +636,14 @@ def draw_sprite(frame, key, x, y, w, h):
     return frame, left, top
 
 
+def game_screen_y(y, factor, cam_top):
+    """Game formula for a layer of vertical factor f: screenY = (y - originY) - f * (camTop - originY), y the art's room y, not
+    snapped (D154); the steady camera top ORIGIN_Y shows every layer as authored."""
+    return y - ORIGIN_Y - factor * (cam_top - ORIGIN_Y)
+
+
 def screen_y(y, factor, cam_top):
-    """Game formula for a layer of vertical factor f: screenY = (y - originY) - f * (camTop - originY), y the art's room y
-    (whole pixels; the steady camera top ORIGIN_Y shows every layer as authored)."""
+    """`game_screen_y` in the whole pixels the mock draws in: the same at ORIGIN_Y, within half a pixel at another camera top."""
     return y - ORIGIN_Y - jround(factor * (cam_top - ORIGIN_Y))
 
 
@@ -827,14 +833,14 @@ def check_bleed(scene, out=print):
     def edges(label, top_y, rows, factor, top_edge, bottom_edge):
         margin = math.ceil(SHAKE * (1 + factor))
         for cam_top in range(ORIGIN_Y + 1):
-            top = screen_y(top_y + rows[0], factor, cam_top)
+            top = game_screen_y(top_y + rows[0], factor, cam_top)
             if top_edge and top > -margin:
-                fail(f'{label}: its first drawn row is at screen y {top} at camera top {cam_top} (needs {-margin} or less)')
+                fail(f'{label}: its first drawn row is at screen y {top:g} at camera top {cam_top} (needs {-margin} or less)')
                 break
         for cam_top in range(ORIGIN_Y + 1):
-            bottom = screen_y(top_y + rows[1], factor, cam_top)
+            bottom = game_screen_y(top_y + rows[1], factor, cam_top)
             if bottom_edge and bottom < VIEW[1] + margin:
-                fail(f'{label}: its last drawn row ends at screen y {bottom} at camera top {cam_top} (needs {VIEW[1] + margin} or more)')
+                fail(f'{label}: its last drawn row ends at screen y {bottom:g} at camera top {cam_top} (needs {VIEW[1] + margin} or more)')
                 break
     present = {d.element.get('name') for d in layers.layers}
     for name in [layer[0] for layer in LAYERS] + ['play-above'] + (['play-below'] if scene.game else []):
