@@ -5273,6 +5273,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D159. The menu frame budget takes the median of three windows (#464, 2026-11-28)
 
+- **Status:** Superseded by [D161](#d161-the-allocation-probe-interns-the-test-classs-string-literals-first-464-2026-11-28-replaces-d159),
+  2026-11-28: `menuFrame` measures one window per screen again, and the source of the allocation is identified there.
 - **Failure:** `AllocationBudgetTest.menuFrame` failed intermittently on GraalVM CE 25.0.2: the About rules page read 15.5 to
   17.6 B/frame against its ceiling of 8 (2026-11-28: 2 of 10 isolated runs, 2 of 6 class runs, 0.0 in the others).
 - **Not the game:** `-Xint` measured 0.0 B/frame on every screen (2 runs). A JFR recording with `-XX:-UseTLAB` of a failing run
