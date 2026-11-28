@@ -127,7 +127,7 @@ MONSTER_SHEETS = {
     'flying-beetle': ((40, 32), ('fly1', 'fly2', 'fly3', 'clap', 'tip', 'brace', 'bright', 'white', 'dive', 'dead')),  # #330 (D145)
     'flying-beetle-body': ((40, 32), ('body',)),  # D101: the flying beetle's dead frame; live palette and rim (D117)
     'wolf': ((48, 24), ('stand', 'trot1', 'trot2', 'alert', 'hackle', 'scrape', 'run1', 'run2', 'run3', 'run4', 'skid', 'crouch',
-                     'lunge', 'bite', 'shake', 'bay', 'dead')),  # #331 (D115)
+                     'lunge', 'bite', 'shake', 'bay', 'dead', 'read', 'coil', 'leap')),  # #331 (D115); read, coil, leap #525 (D158)
     'wolf-body': ((48, 24), ('body',)),  # D101: the wolf's dead frame, on its side; live palette and rim (D117)
     'mosquito': ((2, 1), ('dark1', 'dark2', 'fed1', 'fed2', 'dead', 'ember')),  # #645 (D151): one mosquito, a 1-2 px dot
 }

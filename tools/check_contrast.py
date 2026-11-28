@@ -258,7 +258,9 @@ SPRITES = {
     'Snail:body': ('active', 'objects/monster-snail-body.png', (0, 0, 24, 16), 1, 'floor', FULL),  # D101, by BODY_SWEEP; D117
     # #331 (D115): every frame of the wolf, and its body (D101); measured over its range in forest-glade (#331): live frames
     # outline 0.411 to 0.542; its body, active since D117, 0.460 at worst (2026-11-27, #594).
-    'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 17, 'floor', FULL),
+    'Wolf': ('active', 'objects/monster-wolf.png', (0, 0, 48, 24), 20, 'floor', FULL),
+    'Wolf:leap': ('active', 'objects/monster-wolf.png', (912, 0, 48, 24), 1, 'floor', FULL),   # #525: the frames drawn off the floor
+    'Wolf:shake': ('active', 'objects/monster-wolf.png', (672, 0, 48, 24), 1, 'floor', FULL),
     'Wolf:body': ('active', 'objects/monster-wolf-body.png', (0, 0, 48, 24), 1, 'floor', FULL),
     # #478 (D101, D117): the bodies of the three inherited monsters, cells of their own sheets, measured by BODY_SWEEP: the
     # bat's cell (4, 4), and the last death frame (row 4, column 3) of each mob.
@@ -1011,6 +1013,12 @@ def placements(errors, roots=None):
                     for part in flying_beetle_parts(root, float(obj.get('x')), float(obj.get('y')) + offset_y, props):
                         yield (name, *part)
                     continue
+                if group.get('name') == 'SpawnPoints' and obj.get('type') == 'Wolf':
+                    polyline = obj.find('polyline')
+                    for part in wolf_parts(float(obj.get('x')), float(obj.get('y')) + offset_y, props,
+                                           None if polyline is None else polyline.get('points', '')):
+                        yield (name, *part)
+                    continue
                 if group.get('name') == 'SpawnPoints' and obj.get('type') == 'MosquitoSwarm':
                     yield from ((name, *part) for part in swarm_parts(float(obj.get('x')), float(obj.get('y')) + offset_y, props))
                     continue
@@ -1457,23 +1465,67 @@ WOLF_LUNGE_REACH = java_number(WOLF_JAVA, 'LUNGE_REACH')
 WOLF_REACH_STEP = java_number(WOLF_JAVA, 'REACH_STEP')
 
 
-def wolf_body_spots(boxes, solids, x, y, props, blocks=(), name='map'):
-    """(position.x, floor line) of every place a wolf's body can lie: its range, widened by the lunge's reach over floor and
-    up to the first solid."""
-    low, high = x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE
-    line = y + WOLF_FRAME_HEIGHT
-    band = [b for b in blocks if b[0] != 'QuickSand']
-    check_static_column(band, name, 'Wolf', low - WOLF_LUNGE_REACH, high + WOLF_LUNGE_REACH + WOLF_BODY_X + WOLF_BODY_WIDTH, line, line)
+WOLF_FRAME_WIDTH = java_number(WOLF_JAVA, 'FRAME_WIDTH')
+WOLF_LEAP_LIFT = java_number(WOLF_JAVA, 'LEAP_LIFT')
+WOLF_POUNCE_HIGH = java_number(WOLF_JAVA, 'POUNCE_HIGH')
+WOLF_STEP = 16                  # px between measured positions
+WOLF_LEAP_SAMPLES = 4           # pieces a leap's arc is measured in
+WOLF_ROUTE_LEG_POINTS = 2
+WOLF_PARABOLA = 4               # Wolf.PARABOLA: the leap's arc peaks at LEAP_LIFT
 
-    def fits(left):
-        body = left + WOLF_BODY_X, left + WOLF_BODY_X + WOLF_BODY_WIDTH
-        return floor_under(boxes, *body, line) and not solid_in_way(solids, *body, line, WOLF_BODY_HEIGHT)
-    lo, hi = low, high
-    while lo - WOLF_REACH_STEP >= low - WOLF_LUNGE_REACH and fits(lo - WOLF_REACH_STEP):
-        lo -= WOLF_REACH_STEP
-    while hi + WOLF_REACH_STEP <= high + WOLF_LUNGE_REACH and fits(hi + WOLF_REACH_STEP):
-        hi += WOLF_REACH_STEP
-    return {(left, line) for left in _steps(lo, hi)}
+
+def wolf_legs(x, y, props, polyline):
+    """[(lowest position.x, highest, floor line)] of a wolf authored at (x, y): its range, or the floor legs of its polyline
+    route, from the left, as Wolf.Route builds them (D158)."""
+    if polyline is None:
+        return [(x - float(props.get('offNeg', 0)) * TILE, x + float(props.get('offPos', 0)) * TILE, y + WOLF_FRAME_HEIGHT)]
+    points = [(x + float(a), y + float(b)) for a, b in (pair.split(',') for pair in polyline.split())]
+    if points[1][0] < points[0][0]:
+        points.reverse()
+    return [(ax - WOLF_BODY_X, bx - WOLF_BODY_X - WOLF_BODY_WIDTH, ay)
+            for (ax, ay), (bx, _) in zip(points[::WOLF_ROUTE_LEG_POINTS], points[1::WOLF_ROUTE_LEG_POINTS])]
+
+
+def wolf_parts(x, y, props, polyline):
+    """(key, left, top, w, h) for every place a live wolf is drawn: every frame along each leg on its floor; its leap frame and,
+    falling, its shake frame as high as its jump bite flies from a leg (D158); and its leap frame along the arc between two legs."""
+    legs = wolf_legs(x, y, props, polyline)
+    jaw_rise = WOLF_POUNCE_HIGH - WOLF_FRAME_HEIGHT / 2   # the body's rise when the jaws reach the pounce box's top
+    for lo, hi, line in legs:
+        for left in _steps_every(lo, hi, WOLF_STEP):
+            top = line - WOLF_FRAME_HEIGHT
+            yield 'Wolf', left, top, WOLF_FRAME_WIDTH, WOLF_FRAME_HEIGHT
+            for up in (jaw_rise / 2, jaw_rise):
+                for key in ('Wolf:leap', 'Wolf:shake'):
+                    yield key, left, top - up, WOLF_FRAME_WIDTH, WOLF_FRAME_HEIGHT
+    for (_, low_x, low_line), (high_x, _, high_line) in zip(legs, legs[1:]):
+        for from_x, from_line, to_x, to_line in ((low_x, low_line, high_x, high_line), (high_x, high_line, low_x, low_line)):
+            for i in range(1, WOLF_LEAP_SAMPLES):
+                s = i / WOLF_LEAP_SAMPLES
+                # Wolf.leap: up a step it rises before it travels, off one it travels before it drops
+                along = s * s if to_line < from_line else 1 - (1 - s) * (1 - s) if to_line > from_line else s
+                top = from_line + (to_line - from_line) * s - WOLF_FRAME_HEIGHT - WOLF_LEAP_LIFT * WOLF_PARABOLA * s * (1 - s)
+                yield 'Wolf:leap', from_x + (to_x - from_x) * along, top, WOLF_FRAME_WIDTH, WOLF_FRAME_HEIGHT
+
+
+def wolf_body_spots(boxes, solids, x, y, props, blocks=(), name='map', polyline=None):
+    """(position.x, floor line) of every place a wolf's body can lie: its range or each leg of its route, widened by the
+    lunge's reach over floor and up to the first solid."""
+    spots = set()
+    for low, high, line in wolf_legs(x, y, props, polyline):
+        band = [b for b in blocks if b[0] != 'QuickSand']
+        check_static_column(band, name, 'Wolf', low - WOLF_LUNGE_REACH, high + WOLF_LUNGE_REACH + WOLF_BODY_X + WOLF_BODY_WIDTH, line, line)
+
+        def fits(left, line=line):
+            body = left + WOLF_BODY_X, left + WOLF_BODY_X + WOLF_BODY_WIDTH
+            return floor_under(boxes, *body, line) and not solid_in_way(solids, *body, line, WOLF_BODY_HEIGHT)
+        lo, hi = low, high
+        while lo - WOLF_REACH_STEP >= low - WOLF_LUNGE_REACH and fits(lo - WOLF_REACH_STEP):
+            lo -= WOLF_REACH_STEP
+        while hi + WOLF_REACH_STEP <= high + WOLF_LUNGE_REACH and fits(hi + WOLF_REACH_STEP):
+            hi += WOLF_REACH_STEP
+        spots.update((left, line) for left in _steps(lo, hi))
+    return spots
 
 
 def flying_beetle_body_spots(boxes, x, y, props, blocks=(), name='map'):
@@ -1588,7 +1640,9 @@ def body_spot_placements(roots):
                     polyline = obj.find('polyline')
                     spots = spider_body_spots(root, boxes, x, y, props, None if polyline is None else polyline.get('points', ''), blocks, name)
                 elif kind == 'Wolf':
-                    spots = wolf_body_spots(boxes, spider_solids(root), x, y, props, blocks, name)
+                    polyline = obj.find('polyline')
+                    spots = wolf_body_spots(boxes, spider_solids(root), x, y, props, blocks, name,
+                                            None if polyline is None else polyline.get('points', ''))
                 elif kind == 'FlyingBeetle':
                     spots = flying_beetle_body_spots(boxes, x, y, props, blocks, name)
                 elif kind == 'Bat':

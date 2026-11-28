@@ -80,6 +80,10 @@ WAIST = 15
 HERO_H = 31                             # the hero's figure, from the floor line up
 HERO_W = 40                             # the hero stands this far left of a RoomExit box's x when he triggers it (preview and check agree)
 HERO_BOX = (48, 48)                     # a RoomStart box (the Player spawn box)
+WOLF_HEIGHT = 24                        # Wolf.FRAME_HEIGHT: a routed wolf (D158) stands this tall on each floor line of its polyline
+WOLF_OVERHANG_LEFT = 6                  # Wolf.BODY_X: its frame reaches this far past its route's left end
+WOLF_OVERHANG_RIGHT = 8                 # FRAME_WIDTH - BODY_X - BODY_WIDTH: and this far past the right end
+WOLF_LEAP_LIFT = 16                     # Wolf.LEAP_LIFT: a leap's arc rises at most this far over its higher floor
 CAMERA_STEP = 1
 CAMERA_TOP = 8                          # FallingTrapLayout.floorCameraTop for a 368 px room and a 360 px view: 0 + (368 - 360)
 BACKGROUND = '#2c3f66'
@@ -784,7 +788,11 @@ def exclusions(scene, unique=False):
             x0, x1 = x0 - neg, x1 + pos
         if kind == 'Boss':   # the boss has no authored range: it roams its whole arena, wall to wall and up to its jumps
             x0, y0, x1, y1 = 0, 0, scene.width, scene.floor
-        if points:   # a spider's route: its silk and leap range lie on the polyline
+        if points and kind == 'Wolf':   # a wolf's route (D158): its legs are floor lines, its 24 px body stands on them
+            ps = [tuple(float(v) for v in point.split(',')) for point in points.split()]
+            x0, x1 = x + min(px for px, _ in ps) - WOLF_OVERHANG_LEFT, x + max(px for px, _ in ps) + WOLF_OVERHANG_RIGHT
+            y0, y1 = y + min(py for _, py in ps) - WOLF_HEIGHT - WOLF_LEAP_LIFT, y + max(py for _, py in ps)
+        elif points:   # a spider's route: its silk and leap range lie on the polyline
             for point in points.split():
                 px, py = (float(v) for v in point.split(','))
                 x0, y0, x1, y1 = min(x0, x + px), min(y0, y + py), max(x1, x + px + w), max(y1, y + py + h)

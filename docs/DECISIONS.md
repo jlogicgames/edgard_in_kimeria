@@ -3963,6 +3963,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D115. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
 
+- **Amended by [D158](#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28):** the stomp kills only a committed or bayed wolf, it answers jumps and
+  swings, and it leaps on a route.
 - **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
   2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
   with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in `forest-glade`, forest-2's fourth room (the author approved
@@ -3981,7 +3983,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
     **Contact is harmless**: only the jaws kill.
   - **Patrol:** it trots at 40 px/s inside its authored range (`offNeg`/`offPos`), with a 0.6 s sniff at each end; it never
     leaves the range on foot and never leaves its floor (no hops up steps, no leaps over gaps; leaping is a later develop,
-    [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)).
+    [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525); built since, with other changes: D158).
   - **Senses:** sight **256 px** ahead, in a 48 px band above its floor line, cut at the first solid at its eye height (16 px);
     hearing, a **64 px circle** around its body's centre, through anything.
   - **Notice, in body language (D100):** alert, hackles, one paw scrape: **0.5 s**, not scaled by the assist; its own call
@@ -5203,3 +5205,47 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   special cooldown between rounds so the sweep it tests still comes.
 - **Gates and measures:** `AllocationBudgetTest.bossSpecialsThroughTheRealLevel` 0.0 B/frame in 3 runs (ceiling 8);
   `BossFx` pools 8 and 160 for peaks of 2 and 123; `./gradlew :core:check`.
+
+## D158. The forest wolf answers the hero's habits and leaps on a route (#525, amends D115, D4, 2026-11-28)
+
+- **Status:** Decided by the author, 2026-11-25 (the moves: deterministic answers, never a coin) and 2026-11-28 (the card approved;
+  the reactions on every wolf with one new room for the route leap; the longer-warnings assist turns the reactions off; the second
+  swing at a wind-up is waited out). Built ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). Card:
+  [GAME_DESIGN.md, "Wolf develop card"](GAME_DESIGN.md#wolf-develop-card-built-d158-525).
+- **Why:** the wolf lost to one habit. It ran under a hero in the air, and a stomp killed it in any state.
+- **Stomp rule (D4's bounce, as the triggered beetle).** A stomp kills only a **committed** wolf: wind-up, lunge, bite, recovery,
+  and while it bays, the small steps it takes under a perched hero included. A bayed wolf stays bayed until the hero stands on its
+  floor in its reach again, it commits, or it gives up. In every other state the hero bounces off and it lives. The sword, a
+  fireball, a stone and a torch kill it in any state they reach it. It never bays under a hero who is in the air.
+- **Reactions, from the chase and its skid only, one per jump** (nothing new until the hero has stood on something; a bounce counts):
+  - **Landing read:** an airborne hero, feet more than 24 px above its floor, outside the pounce box: 0.25 s braking with its head
+    raised and marks on the floor where he will land at that speed; then it runs until its muzzle is 36 px short of the spot (inside
+    its range) and waits; a full wind-up follows if he comes into the lunge box.
+  - **Jump bite:** an airborne hero whose body is in the box 48 px either side of its centre, 24 to 64 px up: 0.25 s crouch with
+    glints along the arc, then a 0.2 s leap, jaws lethal, to where his body will be (at most 64 px up), a bite hit or miss (D93),
+    and the 0.5 s recovery counted from its landing. Stopping or turning back in the air escapes it.
+- **Reactions to a swing at its wind-up** (a swing begun in the wind-up, facing it, the blade not already on it), taking turns until it
+  gives up: the 1st, 3rd, ... a 0.1 s coil and a 40 px hop back along its floor, then a **1.4 s** recovery; the 2nd, 4th, ...
+  it holds its crouch until the blade is down and winds up in full again. A hop with no clear floor behind it is not made, and the
+  blade meets the lunge. The card proposed a 0.8 s recovery; a test showed a hero 30 to 71 px from the muzzle cannot end his 0.7 s
+  swing and step in within it, so it became 1.4 s (`WolfDevelopTest.theNextSwingInItsRecoveryKillsIt`).
+- **Route leap:** a wolf authored as a Tiled polyline walks its floor legs (two points each, left to right or right to left) and
+  leaps each link, a step of at most 16 px or a gap of at most 48 px, after a 0.3 s coil, on a fixed 0.3 s arc. Harmless; it never
+  strikes across a link. It follows the leg the hero last stood by. `Wolf.routeProblem` checks every leg like a range wolf's and
+  that no solid hangs over a link. A step's face is as high as its eyes, so it does not see over a step it stands below.
+- **Assist:** the longer-warnings assist turns the landing read, the jump bite, the jump back and the held lunge **off** (its
+  wind-up stays 0.75 s). The stomp rule and the route leap stay; the leap's coil is movement and is not scaled.
+- **D115 amended:** "a jump always works" holds for the lunge only (nothing new starts during a wind-up or a lunge). A jump over a
+  chasing wolf is answered by the jump bite or the read. "Every weapon kills it in any state" now excludes the stomp.
+- **Room:** the route is first met in `forest-ridge`, forest-2's seventh room, with the first meeting on a high ledge
+  ([ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge)). The reactions are not introduced one per room: they are every wolf's behaviour
+  (the author's call, an exception to "one new ability per room" in [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)); `forest-glade` keeps its pocket and its mastered route.
+- **Measured:** `forest-glade`: a hop down in front of the wolf is bitten at 4.62 s (was 4.27 s); a hero who hurries over the branch
+  no longer stomps the sprinting wolf and is bitten at 5.92 s. `forest-ridge`: the watched route 12.55 s from every start moment;
+  the same take-offs without the wait still get past the wolf from 105 of 121 start moments in at most 7.8 s. Allocation 0.1 B/frame
+  for the reactions and the leaps (`AllocationBudgetTest.wolfDevelopThroughTheRealLevel`, `wolfLeapsThroughTheRealLevel`; ceiling 8).
+- **Tests changed, not weakened:** in `WolfTest` the stomp case now kills a recovering wolf, and the jump-under and live-swing cases
+  run with the assist; in `ForestGladeTest` the swing case split in two and the hurried stomp is now a death. The room-index tests
+  moved with the new room.
+- **Evidence limit:** scripted heroes. Whether it is hard and fair to a person is judged in play.
+

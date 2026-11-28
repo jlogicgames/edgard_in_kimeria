@@ -12,9 +12,9 @@ author acceptance must not be read as evidence for a later map layout.
 
 The Forest levels are the tutorial `forest-0`, then `forest-1`, then the boss level `forest-2`
 (intended Forest order: `forest-0` → `forest-1` → `forest-2`, [D32](DECISIONS.md#d32-forest-level-order-and-identity)). A level is one TMX map
-containing an ordered chain of rooms. `forest-2` has eight
+containing an ordered chain of rooms. `forest-2` has nine
 rooms in play order: `forest-entry` (736 px), `forest-walls` (544 px, split off it by #376), `forest-fissure` (640 px, the
-ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-glade` (832 px, the forest wolf's first room, #331, appended at the map's end after it, see "forest-2 glade room" below), `forest-roost` (736 px, the forest flying beetle's first room, #330, appended at the map's end after it, see "forest-2 roost room" below), `forest-hollow` (736 px, the mosquito swarm's first room, #645, appended at the map's end after it, see "forest-2 hollow room" below), `forest-canopy`
+ember fissure's teaching room, #366, appended at the map's end, see "forest-2 fissure room" below), `forest-glade` (832 px, the forest wolf's first room, #331, appended at the map's end after it, see "forest-2 glade room" below), `forest-roost` (736 px, the forest flying beetle's first room, #330, appended at the map's end after it, see "forest-2 roost room" below), `forest-hollow` (736 px, the mosquito swarm's first room, #645, appended at the map's end after it, see "forest-2 hollow room" below), `forest-ridge` (864 px, the wolf on its route, #525, appended at the map's end after it, see "forest-2 ridge room" below), `forest-canopy`
 (1120 px, with an ascending optional coin route) and the authored 448 px boss chamber. The canopy RoomExit
 leads into forest-boss. Boss death and the automatic victory walk lead to the post-boss healer dialogue (#86);
 its final advance completes the level; as the last level it opens the ending scroll and then the menu, with the save cleared.
@@ -1361,6 +1361,29 @@ Object positions are on the room card.
   playtest ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 - D26: no lever, support or one-shot object on the route; both swarms are passed by timing; the stone and charges are optional;
   a retry rebuilds both swarms at their spawns.
+
+## forest-2 ridge room (#525, D158)
+
+`forest-ridge`, x 5952-6816 (864 px), floor top y 304, side walls at x 5952-5968 and x 6800-6816 (down to the floor). It is
+appended at the map's end (forest-2 grew from 372 to 426 tiles) and listed after `forest-hollow` in `Rooms`, so it is played
+between the hollow and the canopy. The `Deadline` is unchanged: the room has no pit. Room card:
+[ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge); monster card: [GAME_DESIGN.md](GAME_DESIGN.md#wolf-develop-card-built-d158-525).
+Object positions are on the room card.
+
+- **The route:** the wolf is a polyline over three floor legs, the floor and two 64 px mounds 16 px high with a 32 px trench
+  between them (a step leap and a gap leap). The trench is shallow, so a hero in it is safe from a bite and climbs out.
+- **The pocket:** a one-way ledge at y 256 above the lower leg. From the floor below the first mound's face the wolf cannot see
+  over it, so the hero reaches the ledge unseen; from the mounds it can.
+- **Recipe (the mastered route):** jump the thorn root (take-off at frame x 86 from the room's left), jump on to the ledge (x 215),
+  wait until the wolf bays, walk off the ledge on to it, jump up the first mound and out of the trench, jump the tuft (x 566) and the
+  second root (x 684) (`ForestRidgeRoute`).
+- Foreground: `tools/parallax_game.py` (`forest-ridge` entries): few low pieces and no stem between the mounds and the exit,
+  because they would cover the wolf's route or a thorn (rule B).
+- Measured (`RoomReplayTest`, `ForestRidgeTest`, `FirstMeetingPocketTest`, 2026-11-28, scripted hero, forest-2.tmx SHA-256
+  `27a42bd8a2284b5e919fff9e56932cd34bfbcd208f00e74d3eba29efb13cabb7`): the mastered route 12.55 s (3.14 s per beat), safe from every start moment over 12 s, with and without the assist,
+  7.78 s on a collection return. Evidence limit: a scripted hero, no novice playtest
+  ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
+- D26: no lever, support or one-shot object on the route; a retry rebuilds the wolf calm at its start.
 
 ## forest-1 lever room (#418, D86)
 

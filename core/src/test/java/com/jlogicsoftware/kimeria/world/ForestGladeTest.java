@@ -12,7 +12,7 @@ import org.junit.jupiter.api.Test;
 import static org.junit.jupiter.api.Assertions.*;
 
 /**
- * The wolf's first room, {@code forest-glade} (#331, D115), through the real map and real Level updates with ordinary controls.
+ * The wolf's first room, {@code forest-glade} (#331, D115, D158), through the real map and real Level updates with ordinary controls.
  * World Y grows downward: the floor top is y 304, the trunk (x 3920-3952) and the one-way branch (x 3952-4016) tops y 272, the
  * exit (x 4448-4464) stands on the floor against the right wall. The wolf spawns at x 4144 (the right end of its range x 3984-4144) facing left; its
  * muzzle is at x 4143 and the hero stands to its left unless a test says otherwise. Hero positions are the frame's x (the 11 px
@@ -24,6 +24,8 @@ class ForestGladeTest {
     private static final int SECOND = 60;
     /** Measured, pinned within 0.1 s: the death at the second thorn root on the mastered pace (the card's retry cost). */
     private static final float SECOND_ROOT_DEATH_S = 8.15f;
+    /** Measured, pinned: the bite on a hop down in front of the wolf, and on a hurried walk over the branch (D158). */
+    private static final float HOP_DEATH_S = 4.62f, HURRIED_DEATH_S = 5.92f;
     /** Commit gaps (px, muzzle to the hero's near edge): at the muzzle and at the edge of its box. */
     private static final float AT_MUZZLE = 1, AT_BOX_EDGE = 71;
 
@@ -128,21 +130,27 @@ class ForestGladeTest {
     }
 
     /**
-     * The most expensive wolf death (the second thorn root after it costs more, 8.15 s): a hero who hops down off the trunk or the branch's near end lands on the floor in
-     * front of the wolf and is bitten at 4.27 s; from x 3966 on, the far part of the branch, the same hop lands on it or beyond.
+     * A wolf death on the mastered pace (the second thorn root after it costs more, 8.15 s): a hero who hops down off the trunk or the
+     * branch's near end has his jump read (D158), lands on the floor in front of the wolf and is bitten at 4.6 s.
      */
     @Test void aHeroWhoHopsDownInFrontOfTheWolfIsBittenWithinSixSeconds() {
         for (float hopAt : new float[]{3930, 3948, 3960}) {
             float seconds = drive(false, hopAt);
             assertTrue(seconds < 0, "he is bitten (hop at x " + hopAt + ")");
-            assertEquals(4.27f, -seconds, .15f, "the retry costs the walk to the trunk and the bite (hop at x " + hopAt + ")");
+            assertEquals(HOP_DEATH_S, -seconds, .15f, "the retry costs the walk to the trunk and the bite (hop at x " + hopAt + ")");
             assertTrue(-seconds <= 6f, "D105: a first meeting's retry is at most 6 s");
         }
     }
 
-    /** A hero who hurries over the branch without waiting steps off its end into the wolf as it comes under him: the same stomp. */
-    @Test void aHeroWhoHurriesOverTheBranchStompsItAsItSprintsUnderHim() {
-        assertTrue(drive(false, Float.NaN) > 0, "the wolf is under the branch's end by the time he is: no bite, no wait");
+    /**
+     * A hero who hurries over the branch without waiting steps off its end on to a wolf that is still chasing: since D158 that is no
+     * kill, and walking on he is bitten. Waiting for the bay is the route.
+     */
+    @Test void aHeroWhoHurriesOverTheBranchNoLongerStompsTheSprintingWolfAndIsBitten() {
+        float seconds = drive(false, Float.NaN);
+        assertTrue(seconds < 0, "no free stomp on a sprinting wolf");
+        assertEquals(HURRIED_DEATH_S, -seconds, .1f);
+        assertTrue(-seconds <= 6f, "D105: a first meeting's retry is at most 6 s");
     }
 
     @Test void aHeroWhoWalksStraightIntoTheFirstThornRootIsHitAtTheSoonestWithinSixSeconds() {
@@ -228,17 +236,35 @@ class ForestGladeTest {
         assertFalse(runnerBitten(true, AT_BOX_EDGE), "with the 0.75 s warning, running works again, and the trunk is a refuge");
     }
 
-    @Test void aSwingAsItComesKillsItAndNothingBitesHim() throws Exception {
-        for (boolean longer : new boolean[]{false, true}) {
-            setLonger(longer);
-            Level level = level();
-            Wolf w = committed(level, AT_BOX_EDGE - 1);
-            for (int f = 0; f < SECOND / 5; f++) frame(level);
-            h.held.add(Input.Keys.K); h.pressed.add(Input.Keys.K); frame(level); h.held.remove(Input.Keys.K);
-            for (int f = 0; f < SECOND * 2; f++) frame(level);
-            assertTrue(alive(level), "the sword was live when the jaws arrived (assist " + longer + ")");
-            assertTrue(w.isDefeated(), "it died to the sword");
-        }
+    private void swing(Level level) { h.held.add(Input.Keys.K); h.pressed.add(Input.Keys.K); frame(level); h.held.remove(Input.Keys.K); }
+
+    /** With the assist there is no jump back (D158): a swing begun in the wind-up is still live when the jaws arrive. */
+    @Test void withTheAssistASwingAsItComesKillsItAndNothingBitesHim() throws Exception {
+        setLonger(true);
+        Level level = level();
+        Wolf w = committed(level, AT_BOX_EDGE - 1);
+        for (int f = 0; f < SECOND / 2; f++) frame(level);
+        swing(level);
+        for (int f = 0; f < SECOND * 2; f++) frame(level);
+        assertTrue(alive(level), "the sword was live when the jaws arrived");
+        assertTrue(w.isDefeated(), "it died to the sword");
+    }
+
+    /** Without it, a swing at the wind-up makes it hop back; he steps in while it recovers and the next swing kills it. */
+    @Test void aSwingAtItsWindUpMakesItHopBackAndTheNextOneInItsRecoveryKillsIt() {
+        Level level = level();
+        Wolf w = committed(level, AT_BOX_EDGE - 1);
+        swing(level);
+        until(level, () -> w.state() == Wolf.State.RECOVER, SECOND);
+        until(level, () -> !level.player.isSwinging(), SECOND);
+        float front = w.jawFrontX();
+        h.held.add(Input.Keys.D);
+        until(level, () -> level.player.hitboxBounds().x + level.player.hitboxBounds().width >= front - 8, SECOND * 2);
+        h.held.clear();
+        swing(level);
+        for (int f = 0; f < 3; f++) frame(level);
+        assertTrue(w.isDefeated(), "it died to the second swing");
+        assertTrue(alive(level));
     }
 
     // ---- refuges and the wolf's reach ------------------------------------------------------------------------------------

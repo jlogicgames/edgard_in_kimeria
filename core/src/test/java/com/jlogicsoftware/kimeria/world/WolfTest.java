@@ -401,7 +401,9 @@ class WolfTest {
         assertTrue(longer[0] > 0, "and a jump made at the very commit has landed before the jaws arrive: the jump is timed, not spammed");
     }
 
-    @Test void aJumpDuringItsSprintIsNeverCommittedToAndItRunsUnderneathTheHero() {
+    /** With the longer-warnings assist the jump is not answered (D158), and as before it never commits to a hero in the air. */
+    @Test void withTheAssistAJumpDuringItsSprintIsNeverCommittedToAndItRunsUnderneathTheHero() throws Exception {
+        setLonger(true);
         Level level = harness.roomOf("wolf-long", 0);   // range x 480..896, so it can pass under a hero at x 653
         Wolf w = wolf(level);
         place(level, w.jawFrontX() - 140);
@@ -422,11 +424,13 @@ class WolfTest {
 
     // ---- the sword, a fireball and a stone ---------------------------------------------------------------------------------
 
-    @Test void aSwingLiveWhenTheJawsArriveKillsItAndTheHeroLives() {
+    /** With the assist there is no jump back (D158): a swing begun in the wind-up is live when the jaws arrive. */
+    @Test void withTheAssistASwingLiveWhenTheJawsArriveKillsItAndTheHeroLives() throws Exception {
+        setLonger(true);
         Level level = level();
         Wolf w = committed(level, AT_BOX_EDGE);
-        settle(level, 12);
-        press(level, Input.Keys.K);   // 0.2 s after the commit: the swing (0.7 s) is live when the jaws arrive
+        settle(level, 24);
+        press(level, Input.Keys.K);   // 0.4 s after the commit: the swing (0.7 s) is live when the jaws arrive
         settle(level, SECOND * 2);
         assertTrue(alive(level));
         assertTrue(w.isDefeated());
@@ -506,9 +510,9 @@ class WolfTest {
         assertTrue(w.isRemains());
     }
 
-    @Test void aStompKillsItWithTheNormalBounce() {
+    @Test void aStompOnACommittedWolfKillsItWithTheNormalBounce() {
         Level level = level();
-        Wolf w = wolf(level);
+        Wolf w = inState(level, Wolf.State.RECOVER);
         harness.held.clear();
         level.player.position.set(w.centreX() - 5.5f - 18, 222);   // feet 32 px above its body's top, falling onto it
         level.player.velocity().setZero();

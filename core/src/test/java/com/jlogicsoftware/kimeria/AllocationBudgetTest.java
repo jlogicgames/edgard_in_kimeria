@@ -1374,11 +1374,116 @@ class AllocationBudgetTest {
             level.remainsFx().render(batch);
             peak[0] = Math.max(peak[0], level.wolfFx().soft().count() + level.wolfFx().hard().count());
         });
-        for (Wolf.State state : Wolf.State.values()) assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        for (Wolf.State state : new Wolf.State[]{Wolf.State.TROT, Wolf.State.SNIFF, Wolf.State.NOTICE, Wolf.State.CHASE, Wolf.State.SKID,
+            Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.RECOVER, Wolf.State.BAY, Wolf.State.DEAD, Wolf.State.BURN})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
         assertTrue(peak[0] > 0, "the wolves must actually throw particles");
         assertFalse(level.player.isGotHit(), "the hero was gone before every bite");
         assertTrue(maxTwitch[0] > 0, "an odd wolf's body must twitch when the hero walks up to it");
         assertWithinBudget("wolf notice, sprint, skid, wind-up, lunge, bite, recovery, bay, death and body", WOLF_CEILING, bytes);
+    }
+
+    private static final int DEVELOP_CYCLE_FRAMES = 540, DEVELOP_KILL_FRAME = 500, DEVELOP_SEEN_FRAME = 5;
+    private static final float DEVELOP_HERO_X = 590, DEVELOP_READ_AWAY = 140, DEVELOP_POUNCE_AWAY = 36, DEVELOP_UP = 40, DEVELOP_RISE = -150,
+        DEVELOP_SWING_GAP = 55;
+
+    /**
+     * Wolves in turn answering a hero's habits (#525, D158) in the real {@code Level} of wolf-long.tmx: each notices and chases,
+     * reads a jump far from it, bites a jump near it in the air, then at its next wind-ups meets a swing with a hop and the one
+     * after by waiting it out, and is killed at frame {@value #DEVELOP_KILL_FRAME}. The hero's pose, jump and swing are set by
+     * hand (the swing through his fields, as the player's own update would). Update, render and {@code wolfFx} every frame.
+     */
+    @Test void wolfDevelopThroughTheRealLevel() throws Exception {
+        Level level = harness.roomOf("wolf-long", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / DEVELOP_CYCLE_FRAMES + 1;
+        Wolf[] wolves = new Wolf[cycles];
+        for (int k = 0; k < cycles; k++) {
+            wolves[k] = new Wolf(harness.assets(), harness.game(), 800, WOLF_Y, WOLF_W, WOLF_H, 20, 6);
+            wolves[k].setPlayer(level.player);
+            wolves[k].setLevel(level);
+        }
+        var attacking = com.jlogicsoftware.kimeria.entity.player.Player.class.getDeclaredField("isAttacking");
+        var swings = com.jlogicsoftware.kimeria.entity.player.Player.class.getDeclaredField("swingNumber");
+        attacking.setAccessible(true);
+        swings.setAccessible(true);
+        boolean[] seen = new boolean[Wolf.State.values().length];
+        int[] step = new int[1], held = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / DEVELOP_CYCLE_FRAMES, f = i % DEVELOP_CYCLE_FRAMES;
+            Wolf wolf = wolves[k];
+            var hero = level.player;
+            try {
+                if (f == 0) { step[0] = 0; held[0] = 0; attacking.setBoolean(hero, false); hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.setOnGround(true); }
+                if (f == DEVELOP_SEEN_FRAME) { hero.position.set(DEVELOP_HERO_X - 23.5f, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); }
+                Wolf.State st = wolf.state();
+                if (st == Wolf.State.CHASE && step[0] == 0 && wolf.speed() > 100) {          // a jump far from it: read
+                    hero.position.set(wolf.centreX() - DEVELOP_READ_AWAY - 23.5f, HERO_Y - DEVELOP_UP);
+                    hero.velocity().set(0, DEVELOP_RISE); hero.setOnGround(false); step[0] = 1;
+                } else if (step[0] == 1 && st == Wolf.State.CHASE) {                          // he lands, then jumps right by it: the jump bite
+                    hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); step[0] = 2;
+                } else if (step[0] == 2 && st == Wolf.State.CHASE) {
+                    hero.position.set(wolf.centreX() - DEVELOP_POUNCE_AWAY - 23.5f, HERO_Y - DEVELOP_UP);
+                    hero.velocity().set(0, DEVELOP_RISE); hero.setOnGround(false); step[0] = 3;
+                } else if (step[0] == 3 && st == Wolf.State.POUNCE) {                         // gone as it leaps: a miss
+                    hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); step[0] = 4;
+                } else if (step[0] >= 4 && st == Wolf.State.CHASE) {                           // in reach again
+                    attacking.setBoolean(hero, false);
+                    hero.position.set(wolf.jawFrontX() - DEVELOP_SWING_GAP - 29, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true);
+                    hero.facingRight = true;
+                } else if (step[0] >= 4 && st == Wolf.State.WINDUP && !attacking.getBoolean(hero) && step[0] < 6) { // a swing at it
+                    attacking.setBoolean(hero, true);
+                    swings.setInt(hero, swings.getInt(hero) + 1);
+                    step[0]++;
+                } else if (st == Wolf.State.RECOVER) {
+                    attacking.setBoolean(hero, false);
+                } else if (st == Wolf.State.HOLD && ++held[0] > 10) {
+                    attacking.setBoolean(hero, false);
+                }
+            } catch (IllegalAccessException e) {
+                throw new AssertionError(e);
+            }
+            if (f == DEVELOP_KILL_FRAME) wolf.collidedWithActor(true);
+            if (!wolf.isRemoved()) { wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true; }
+            level.wolfFx().update(STEP);
+            level.wolfFx().render(batch);
+        });
+        for (Wolf.State state : new Wolf.State[]{Wolf.State.READ, Wolf.State.POUNCE_COIL, Wolf.State.POUNCE, Wolf.State.FLINCH, Wolf.State.HOP, Wolf.State.HOLD})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertWithinBudget("wolf landing read, jump bite, jump back and held lunge", WOLF_CEILING, bytes);
+    }
+
+    private static final int LEAP_CYCLE_FRAMES = 300;
+    private static final float LEAP_HERO_X = 650;
+
+    /**
+     * Wolves in turn on the route of wolf-route.tmx (#525, D158): each notices a hero across the gap, coils, leaps over to him and
+     * winds up there; update, render and {@code wolfFx} every frame.
+     */
+    @Test void wolfLeapsThroughTheRealLevel() {
+        Level level = harness.roomOf("wolf-route", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / LEAP_CYCLE_FRAMES + 1;
+        Wolf[] wolves = new Wolf[cycles];
+        for (int k = 0; k < cycles; k++) {
+            wolves[k] = new Wolf(harness.assets(), harness.game(), Wolf.Route.trace(new float[]{400, 320, 640, 320, 672, 320, 880, 320, 880, 304, 1104, 304}));
+            wolves[k].setPlayer(level.player);
+            wolves[k].setLevel(level);
+        }
+        boolean[] seen = new boolean[Wolf.State.values().length];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / LEAP_CYCLE_FRAMES, f = i % LEAP_CYCLE_FRAMES;
+            Wolf wolf = wolves[k];
+            if (f == 0) level.player.position.set(LEAP_HERO_X + 110 - 23.5f, HERO_Y);
+            level.player.velocity().setZero();
+            level.player.setOnGround(true);
+            if (!wolf.isRemoved()) { wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true; }
+            level.wolfFx().update(STEP);
+            level.wolfFx().render(batch);
+        });
+        for (Wolf.State state : new Wolf.State[]{Wolf.State.LEAP_COIL, Wolf.State.LEAP})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertWithinBudget("wolf route leaps", WOLF_CEILING, bytes);
     }
 
     /** The floor spider's states (D102); the climb and the drop (D103) have their own scenarios below. */

@@ -197,7 +197,7 @@ public class Player extends Actor<Player.State> implements CollideBody {
     private float attackElapsed = 0f;
     /** Counts the swings as they start, so a target the blade stays on reacts once to each ({@link #swingNumber}). */
     private int swingNumber;
-    private final Rectangle attackHitbox = new Rectangle(), remainsScratch = new Rectangle();
+    private final Rectangle attackHitbox = new Rectangle(), remainsScratch = new Rectangle(), swordProbe = new Rectangle();
     /** The sword's reach, authored for the right-facing sprite: 17px past the body in front, 9px behind it. */
     private static final Hitbox SWORD_HITBOX = Hitbox.rect(9, 12, 37, 36);
 
@@ -313,6 +313,12 @@ public class Player extends Actor<Player.State> implements CollideBody {
 
     /** The number of the swing in progress, or of the last one. */
     public int swingNumber() { return swingNumber; }
+
+    /** True while a swing is in progress: the blade is live for the whole of it. */
+    public boolean isSwinging() { return isAttacking; }
+
+    /** True when the live blade, where the hero stands and faces now, touches {@code body}: no swing, no reach. */
+    public boolean swordReaches(Rectangle body) { return isAttacking && boundsInto(SWORD_HITBOX, swordProbe).overlaps(body); }
 
     public boolean canFight() { return respawnPhase == RespawnPhase.NONE && !isReachedCheckpoint && !victoryWalk; }
 

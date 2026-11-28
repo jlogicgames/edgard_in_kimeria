@@ -1052,7 +1052,8 @@ public class Level implements WorldObject {
                     roomEnemies.put(o.id, snail);
                 }
                 case "Wolf" -> {
-                    Wolf wolf = new Wolf(assets, game, o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
+                    Wolf wolf = o.polyline != null ? new Wolf(assets, game, Wolf.Route.trace(o.polyline))
+                        : new Wolf(assets, game, o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0));
                     wolf.setPlayer(player);
                     wolf.setLevel(this);
                     objects.add(wolf);
@@ -1569,15 +1570,18 @@ public class Level implements WorldObject {
     /**
      * The wolf (D115) fails at load when its range is shorter than {@link Wolf#MIN_RANGE}, leaves the room or has a gap under it,
      * when a standing place (the entrance body, the room exit, a checkpoint) is within its sight or reach, or when a solid hangs into
-     * the {@link Wolf#HEADROOM} px above its floor over its reach.
+     * the {@link Wolf#HEADROOM} px above its floor over its reach. A wolf on a route (a Tiled polyline, D158) also fails when the
+     * polyline is not a route of steps and gaps it can leap, or a solid is in the way of a leap.
      */
     private void validateWolf(TiledObject o, int owner) {
         Rectangle room = roomLayout.rooms.get(owner).bounds();
         List<Rectangle> solids = new ArrayList<>();
         for (TiledObject c : map.layer("Collisions"))
             if (!"Platform".equals(c.type) && !"QuickSand".equals(c.type)) solids.add(new Rectangle(c.x, c.y, c.width, c.height));
-        String problem = Wolf.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
-            solids, room, standingPlaces(owner));
+        String problem = o.polyline != null
+            ? Wolf.routeProblem(o.polyline, monsterFloors(), solids, room, standingPlaces(owner))
+            : Wolf.problem(o.x, o.y, o.width, o.height, o.propFloat("offNeg", 0), o.propFloat("offPos", 0), monsterFloors(),
+                solids, room, standingPlaces(owner));
         if (problem != null) throw new IllegalArgumentException(o.type + " " + describe(o) + " " + problem);
     }
 

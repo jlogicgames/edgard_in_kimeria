@@ -44,6 +44,9 @@ public final class WolfFx {
     /** Above the floor line, so a streak sits on the floor's top row and not inside it. */
     private static final float BREATH_ABOVE_FLOOR = 1;
 
+    // The landing read's floor marks and the jump bite's arc glints (D158).
+    private static final float MARK_HALF_WIDTH = 7, MARK_SIZE = 2, MARK_RISE_MIN = 2, MARK_RISE_MAX = 6, ARC_LIFE = .14f;
+
     // Skid and bite dust: a puff of floor dust, thrown back the way the wolf was going.
     private static final int SKID_DUST = 2, BITE_DUST = 4;
     private static final float SKID_HALF_WIDTH = 5, SKID_THROW = 6, SKID_LOW = 1, SKID_HIGH = 3, SKID_RISE_MIN = 2, SKID_RISE_MAX = 5;
@@ -90,6 +93,32 @@ public final class WolfFx {
             range(random, BREATH_LIFE_MIN, BREATH_LIFE_MAX), BREATH_SIZE, c[RED], c[GREEN], c[BLUE]);
     }
 
+    /** One pale speck on the floor where a read jump will land (D158), drifting up a little. */
+    public void mark(float spotX, float floorY) {
+        RandomXS128 random = hard.random();
+        float x = spotX + range(random, -MARK_HALF_WIDTH, MARK_HALF_WIDTH), y = floorY - BREATH_ABOVE_FLOOR;
+        float[] c = random.nextFloat() < BREATH_WHITE_CHANCE ? WHITE_RGB : PALE;
+        hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, x, y - range(random, MARK_RISE_MIN, MARK_RISE_MAX),
+            range(random, BREATH_LIFE_MIN, BREATH_LIFE_MAX), MARK_SIZE, c[RED], c[GREEN], c[BLUE]);
+    }
+
+    /** A random place along the jump bite's arc, 0 to 1, from the effects' own seeded stream. */
+    public float arcPoint() { return hard.random().nextFloat(); }
+
+    /** One glint on the arc a jump bite will fly (D158), still where it is born. */
+    public void arc(float x, float y) {
+        hard.spawn(KimeriaParticleSystem.KIND_FLAME, x, y, x, y, ARC_LIFE, BREATH_SIZE, WHITE, WHITE, WHITE);
+    }
+
+    /** The two jaw glints of a bite in the air (D158): no floor dust under it. */
+    public void snap(float jawX, float jawBottomY) {
+        float y = jawBottomY - JAW_ABOVE_FLOOR;
+        for (int i = 0; i < JAW_GLINTS; i++) {
+            float x = jawX + (i == 0 ? -JAW_SPREAD : JAW_SPREAD);
+            soft.spawn(KimeriaParticleSystem.KIND_GLOW, x, y, x, y, JAW_LIFE, JAW_SIZE, WHITE, WHITE, WHITE);
+        }
+    }
+
     /** A puff of dust under a braking wolf at {@code x} on {@code floorY}, thrown back the way it was going ({@code direction}, 1 for right). */
     public void skid(float x, float floorY, float direction) {
         RandomXS128 random = soft.random();
@@ -103,11 +132,7 @@ public final class WolfFx {
 
     /** The bite at {@code jawX} on {@code floorY}, hit or miss: two white jaw glints and a puff of dust at its feet. */
     public void bite(float jawX, float floorY) {
-        float y = floorY - JAW_ABOVE_FLOOR;
-        for (int i = 0; i < JAW_GLINTS; i++) {
-            float x = jawX + (i == 0 ? -JAW_SPREAD : JAW_SPREAD);
-            soft.spawn(KimeriaParticleSystem.KIND_GLOW, x, y, x, y, JAW_LIFE, JAW_SIZE, WHITE, WHITE, WHITE);
-        }
+        snap(jawX, floorY);
         RandomXS128 random = soft.random();
         for (int i = 0; i < BITE_DUST; i++) {
             float x = jawX + range(random, -BITE_DUST_HALF_WIDTH, BITE_DUST_HALF_WIDTH), dy = floorY - range(random, BITE_DUST_LOW, BITE_DUST_HIGH);

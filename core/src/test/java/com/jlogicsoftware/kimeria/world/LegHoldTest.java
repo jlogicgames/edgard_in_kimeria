@@ -197,7 +197,7 @@ class LegHoldTest {
         assertTrue(first.snapFromAfar());
         for (int i = 0; i < 30; i++) level.update(STEP);
         assertEquals(LegHold.Phase.SHUT, first.phase());
-        for (int i = 0; i < 6; i++) level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(h.assets(), h.game(), 0, 0));
+        for (int i = 0; i < 7; i++) level.enterNextRoom(new com.jlogicsoftware.kimeria.entity.player.Player(h.assets(), h.game(), 0, 0));
         level.prepareHealer();
         level.returnForCollection(new com.jlogicsoftware.kimeria.entity.player.Player(h.assets(), h.game(), 0, 0));
         LegHold again = level.objects.stream().filter(LegHold.class::isInstance).map(LegHold.class::cast).findFirst().orElseThrow();

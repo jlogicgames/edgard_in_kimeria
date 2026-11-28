@@ -13,6 +13,11 @@ public final class TrapWarnings {
     public static final float BITE_WARNING_SECONDS = 0.5f;
     /** The forest boss's special attacks (#625, D157): the warning of each falling rock, of the roots and of the blow. */
     public static final float BOSS_ROCKS_WARNING_SECONDS = 1f, BOSS_ROOTS_WARNING_SECONDS = 0.7f, BOSS_BLOW_WARNING_SECONDS = 0.9f;
+    /**
+     * The forest wolf's other tells (D158): reading a jump, gathering a jump bite, coiling away from a swing. The assist turns
+     * those moves off instead of lengthening them; the coil before a leap on its route is movement, never scaled.
+     */
+    public static final float WOLF_READ_SECONDS = 0.25f, WOLF_POUNCE_SECONDS = 0.25f, WOLF_FLINCH_SECONDS = 0.1f, WOLF_LEAP_SECONDS = 0.3f;
     private static final float ASSIST_MULTIPLIER = 1.5f;
     private boolean longer = Settings.DEFAULT_LONGER_TRAP_WARNINGS;
 

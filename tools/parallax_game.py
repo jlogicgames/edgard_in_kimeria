@@ -97,6 +97,7 @@ FOREST_2 = {
     'forest-glade': (('near-fern', -88, 0), ('near-canopy', 732, 0), ('roots-curtain', 60, -16)),
     'forest-roost': (('near-fern', -88, 0), ('near-sprig', 694, 0), ('roots-curtain', -40, -16)),
     'forest-hollow': (('near-fern', -88, 0), ('near-fern', 692, 0), ('vine-curtain', 76, 0)),   # a stone: no canopy (D113)
+    'forest-ridge': (('near-fern', -88, 0), ('near-sprig', 822, 0), ('vine-curtain', 76, 0)),
     'forest-canopy': (('near-fern', -88, 0), ('near-sprig', 1308, 0), ('rise-fern', 1268, 112)),
     'forest-boss': (('rise-reeds', 426, 128),),
 }
@@ -166,6 +167,7 @@ NEAR = {
                      ('edge-giant-low-c', 584, 288), ('edge-giant-low-d', 784, 272)),
     'forest-hollow': (('edge-giant-left', -128, 48), ('edge-giant-low-a', -80, 280), ('edge-giant-low-b', 160, 304),
                       ('edge-giant-low-c', 376, 288), ('edge-giant-low-d', 812, 272)),
+    'forest-ridge': (('edge-giant-left', -128, 48), ('edge-giant-low-a', -80, 280), ('edge-giant-low-b', 160, 304)),
     'forest-canopy': (('edge-giant-left', -112, 48), ('edge-giant-right', 1568, 176), ('edge-giant-low-a', -80, 280),
                       ('edge-giant-low-b', 204, 304), ('edge-giant-low-c', 488, 288), ('edge-giant-low-d', 772, 304),
                       ('edge-giant-low-a', 1056, 304), ('edge-giant-low-b', 1340, 304), ('edge-giant-low-a', 64, 304),
@@ -219,6 +221,7 @@ MORE_BOTTOM = {
                      ('clump-grass', 216, 304), ('clump-mixed', 530, 304), ('clump-fern', 706, 304), ('tuft', 855, 284)),
     'forest-roost': (('clump-mixed', -96, 304), ('clump-fern', -24, 296), ('tuft', 383, 296), ('clump-mixed', 621, 304)),
     'forest-hollow': (('clump-mixed', -96, 304), ('clump-mixed', 443, 304), ('clump-fern', 764, 296)),
+    'forest-ridge': (('clump-mixed', -96, 304), ('clump-fern', 160, 304), ('clump-mixed', 621, 304)),
     'forest-canopy': (('rise-reeds', 1104, 128), ('clump-mixed', -96, 304), ('clump-fern', 80, 304), ('clump-fern', 229, 304),
                       ('clump-fern', 450, 304), ('tuft', 599, 296), ('clump-fern', 694, 296), ('clump-leaves', 843, 304),
                       ('tuft', 1014, 296), ('clump-grass', 1101, 294), ('clump-mixed', 1223, 304)),
@@ -241,6 +244,7 @@ MIDDLE = {
     'forest-glade': (('near-sprig', 452, 0), ('rise-reeds', -41, 128)),
     'forest-roost': (('near-fern', 336, 0), ('rise-fern', -210, 112), ('rise-fern', 685, 112)),
     'forest-hollow': (('near-sprig', 464, 0), ('rise-reeds', 516, 128), ('rise-fern', -210, 112)),
+    'forest-ridge': (('near-sprig', 464, 0), ('rise-fern', -210, 112), ('rise-fern', 889, 112)),   # no stem over the wolf's mounds
     'forest-canopy': (('near-sprig', 360, 0), ('near-fern', 768, 0), ('rise-reeds', -9, 128)),   # a fern by the swaying hanging vines
 }
 # every forest map and its rooms' sharp foreground

@@ -657,7 +657,7 @@ below when the hero enters their awareness area (the hearing range).
 | Spider | Same patrol and chase as the beetle. | Bites and kills instead of exploding. Built: the card below (D102). |
 | Snail | Slow. Crawls along its path like the others. | Sees the hero and spits at them; a long reload between shots. Built: the card below (D106). |
 | Flying beetle | A beetle in flight that flies to and fro along a level line, rising over a ledge or a low rock in its way (asked for as "looks like a bat, flies around on its own"; its card sets the look and the flight). | Explodes near the hero. Built: the card below (D145), met in `forest-roost` ([#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330)). |
-| Wolf | Fast runner, faster than the hero. Trots to and fro along its path. | Sees and hears the hero, sprints after them and bites in a long, low lunge; the most dangerous Forest monster. Built: the card below (D115). |
+| Wolf | Fast runner, faster than the hero. Trots to and fro along its path, or leaps a route of steps and gaps. | Sees and hears the hero, sprints after them and bites in a long, low lunge; answers a jump and a swing; the most dangerous Forest monster. Built: the cards below (D115, D158). |
 | Mosquito swarm (author's request, 2026-11-25) | A cloud of mosquitoes. Flies like the Bat: straight to and fro along an authored horizontal or vertical trajectory; it does not react to the hero. Built at half the Bat's speed (the author's playtest, 2026-11-27). | Touching it kills, and so does landing on it (a stomp kills the hero, not the swarm). The sword only scatters it a little and it gathers back; only a thrown stone, a thrown torch (added with the card's approval) or a fireball kills it. Jump over it or go around it. Built: the card below (D151), met in `forest-hollow` ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)); it returns in the Swamp, [#646](https://github.com/jlogicgames/edgard_in_kimeria/issues/646). |
 
 The inherited RedMob and Bat keep their behaviour, frames, timing and boxes and were redrawn on 2026-11-21 in the danger
@@ -861,7 +861,7 @@ for the whole 0.7 s swing, the hero stopped while swinging).
 | Standing, stepping back | a hero who stands is bitten whatever the assist; one who steps back is the runner above | hesitation is punished: only a jump, a swing or a shot works without the assist |
 | Jumping | the jaws reach a hero G px from the muzzle G/640 s into the lunge and pass him 18 px later; the feet stay above the jaws (15 px) from 0.06 s to 0.84 s after take-off, so a take-off up to **0.55 s** after the commit clears them at the edge of its box (71 px) and up to **0.45 s** at its muzzle; with the assist up to **0.82 s** and **0.72 s**, and a jump made at the very commit has then landed before the jaws arrive (the first clearing take-off is 0.07 s after it): the jump is timed, not spammed (measured, `WolfTest`). A hero more than 24 px up is never committed to: a jump during its sprint makes it run underneath, and it stops under him (it skids only if he lands behind it) | the one answer that always works, and the wolf's lesson |
 | Sword | kills it in any state, with the light spray of D65, and leaves its body. Its body reaches the sword box (17 px past the hero's hitbox) about 0.6 s after the commit, as the jaws arrive: a swing started anywhere from just before the commit to about 0.6 s after it is live then (`WolfTest` pins one started 0.2 s after). A swing started early, while it is still noticing or sprinting in, ends before the lunge: a bite. After a jumped lunge, the 0.5 s recovery is a kill from behind for a hero who turns and swings at once (its haunches end about 15 px away) | timed melee, harder than the spider's because the punish window is shorter and needs a turn first |
-| Stomp | kills it in any state with the normal bounce and leaves its body; its use is dropping on it from a refuge while it bays | the reward for going up |
+| Stomp | **D158:** kills it only when committed or bayed, with the normal bounce, and leaves its body; otherwise the hero bounces off it. Its use is dropping on it from a refuge while it bays | the reward for going up |
 | Fireball, stone, torch | kill it in any state, the lunge included, and leave its body; no blood (D99). One cast or thrown on the frame the jaws arrive wins the tie | the safe answer costs a charge or a carried stone, and the hero must stand and face it to aim |
 | Killed mid-act | killed during the wind-up it never lunges; killed in the lunge the body slides on to the lunge's end over the floor | what the player read still holds |
 | Body (D101) | `dead`: **lying flat on its side along the floor, forelegs stretched forward under its flat head, hind legs back, tail limp** (the author's edit: a wolf's paws never stick up). The active frame holds 0.3 s, then cross-fades over 0.6 s into `monster-wolf-body.png` (the live palette, ink and rim from above, D117). **It does not rock; it twitches**, a 1 px shudder of the same frame for about 0.3 s, when any actor comes within 6 px (as D101 lists for the wolf, D119). The sword or a stomp crumble it into fur tufts and dark chips; a fireball or a thrown torch burns it (`RemainsFx`) and flies on; a stone flies through it (D119); the swing that killed it does not crumble it | every live frame stands on four paws, so lying on its side is far from all of them (well over the 25 % floor of `RemainsTest`) |
@@ -887,8 +887,9 @@ always works (low jaws and 64 px of headroom checked at load); contact is harmle
 through a wall; the chase ends at its range and at any refuge more than 24 px up, with a 1.0 s cool-down; locked direction,
 fixed reach and timings, so the same dodge works on every retry (D7); the assist makes running work again.
 
-It stays on its floor; leaping up steps and over gaps on an authored route is a later develop of the element `wolf`, as
-the climb and the silk drop developed `spider` ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). Its first
+This card is the wolf as first built (D115). The **develop** below (D158, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)) changes it: the stomp kills only a committed
+or bayed wolf, it answers jumps and swings, and a routed wolf leaps steps and gaps; where a row here disagrees with it, the
+develop card holds. Its first
 meeting is a refuge pocket in `forest-glade`, forest-2's fourth room ([ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); the author approved
 the card on 2026-11-21): a one-way branch 32 px above its floor, at the near end of its range, out of its reach but in its sight, from
 which the hero watches it trot, notice him, sprint under him, bay, give up and trot back (D105). The ledge of that pocket is a one-way
@@ -904,6 +905,51 @@ window of take-offs that clear the jaws, a hero 24 px up never committed to, the
 lunge stopping at a gap and at a wall, every weapon in every state, both same-frame ties, the load checks), `WolfFxTest`, `RemainsTest`,
 `AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it), `check_contrast.py` (the wolf and its body, once placed),
 `FirstMeetingPocketTest.forestGladeTheWolf`, `ForestGladeTest` and `RoomCardsTest` (the placement, #331).
+
+### Wolf develop card (built, [D158](DECISIONS.md#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28), [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525))
+
+The wolf lost to one habit: jump over it and come down on it. The develop gives it one deterministic answer per habit, never a roll
+(D7). Approved by the author 2026-11-28. Hero numbers from the code: jump 260 px/s under 588 px/s², 0.88 s in the air, apex 57 px,
+feet more than 24 px up from 0.11 s to 0.78 s; run 100 px/s with full steering in the air; sword live 0.7 s, 17 px past the
+hitbox, the hero stopped.
+
+**Stomp rule.** Landing on it **kills** only when it is committed: wind-up, lunge, bite, recovery, and while it bays, its small
+steps under a perched hero included (it stays bayed until the hero stands on its floor in its reach, it commits, or it gives up).
+Otherwise (trot, sniff, notice, chase, skid and each new move) the hero **bounces off, no kill**. Sword, fireball, stone and torch
+kill it in any state they reach it. It never bays under a hero in the air.
+
+**Shared rules.** The read and the jump bite start only from the chase and its skid and answer **one jump once**: after either, or
+after a bounce, nothing new starts until the hero has stood on something. A move whose path meets a solid, leaves its floor or
+leaves its range plus the lunge's reach is not made. Each tell is a `TrapWarnings` base of its own.
+
+| Move | Trigger | Tell (seen and heard) | Act | Safe answer | Free counter |
+| --- | --- | --- | --- | --- | --- |
+| **Landing read** | the hero is airborne, feet more than 24 px above its floor, outside the jump bite's box | **0.25 s**: it brakes, raises its head (`read`), pale marks on the floor where he will land; `wolf_read` | the spot is locked from his speed at that instant; it runs until its muzzle is 36 px short of it, inside its range, and waits; a normal full wind-up follows if he comes into the lunge box | steer in the air to another spot, or land on a perch | it is harmless until the normal wind-up |
+| **Jump bite** | the airborne hero's body is in the box 48 px either side of its centre, 24 to 64 px above its floor | **0.25 s**: haunches down, head up (`coil`), glints along the arc; `wolf_pounce` | **0.20 s** leap (`leap`) to where his body will be (at most 64 px up), jaws lethal all the way, bite hit or miss (D93), then it falls and recovers **0.5 s** from its landing | stop or turn back in the air, or walk out if already down | while it recovers a stomp or a swing kills it |
+| **Jump back** | a swing begun during its wind-up, facing it, the blade not already touching it (1st, 3rd, ...) | **0.10 s** coil, `wolf_flinch` | **0.20 s** hop **40 px** back along its floor, then **1.4 s** recovery | not needed: it attacks nothing | step in and swing during the recovery |
+| **Held lunge** | the next such swing (2nd, 4th, ...) | it stays crouched, its breath streaks held | it waits until the blade is down, then winds up **0.5 s** again and lunges; the count starts over when it gives up or the room resets | jump the delayed lunge | swing in its recovery |
+| **Route leap** | its route goes on across a step of at most 16 px or a gap of at most 48 px | **0.30 s** coil at the lip (`coil`), `wolf_leap` (claws, in view) | a **0.30 s** fixed arc (`leap`) to the next floor leg; harmless; no strike across a link | stand more than 24 px above every leg, or beyond the route's ends | a stomp bounces off it; the sword, a shot or a stone kills it |
+
+**Refuges that remain.** Anything more than 24 px above the floor leg it stands on, anything past its range or route plus its lunge
+box, and the far side of a solid. A hero **standing** on a refuge is never jump-bitten. On a route a one-tile step is no refuge.
+
+**Assist.** The longer-warnings assist turns the landing read, the jump bite, the jump back and the held lunge **off** (the wind-up
+stays 0.75 s). The stomp rule and the route leap stay.
+
+**D115 amended.** "A jump always works" holds for the lunge only: nothing new starts during a wind-up or a lunge. A jump over a
+chasing wolf is answered by the jump bite or the read.
+
+**Authoring.** A routed wolf is a Tiled polyline in `SpawnPoints`: floor legs of two points each along the floor lines, joined by
+the links it leaps; it starts at the first point. `Wolf.routeProblem` holds every leg to the range wolf's load checks (gapless
+floor, nothing of the entrance, exit or checkpoints in its sight, 64 px of headroom), asks 160 px from end to end and a clear air
+over every link. It does not see over a step it stands below (the face is at its eye height); it hears there.
+
+**Rooms.** The reactions are every wolf's. The route is first met in `forest-ridge`, forest-2's seventh room
+([ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge)), from a high one-way ledge. `forest-glade` keeps its pocket (a hero standing on the
+branch) and its mastered route (the stomp on the bayed wolf); its hurried variant, a stomp on a sprinting wolf, is now a bounce and a
+bite. Sounds (seeds 7312 to 7316, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)). Code: `entity/enemy/Wolf.java` (`Wolf.Route`),
+`effects/WolfFx.java`; tests: `WolfDevelopTest`, `ForestRidgeTest`, `ForestGladeTest`, `FirstMeetingPocketTest.forestRidgeTheWolfLeaps`,
+`AllocationBudgetTest`, `check_contrast.py` (the wolf along its legs, its leap and fall off the floor).
 
 ### Flying beetle card (built, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398), [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330))
 

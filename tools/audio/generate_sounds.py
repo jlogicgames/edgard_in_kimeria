@@ -1400,6 +1400,40 @@ WOLF_PAW_GAIN = 1.0
 WOLF_RUN_BREATH_BAND = (1200.0, 700.0)
 WOLF_RUN_BREATH_GAIN = 0.35
 WOLF_RUN_RMS_DB = -30.0
+# The develop's tells (#525, D158), seeds 7312 to 7316. Read (wolf_read): a jump seen, a short low huff and one closed "hm"
+# rising through the snout: it watches where he will land.
+WOLF_READ_DURATION = 0.22
+WOLF_READ_SEED = 7312
+WOLF_READ_HUFF_BAND = (1500.0, 900.0)
+WOLF_READ_HUFF_LEN = 0.07
+WOLF_READ_HUFF_GAIN = 0.55
+WOLF_READ_VOICE = Voice(7313, 0.14, (210.0, 300.0), WOLF_SNOUT_GROWL, WOLF_SNOUT_GROWL, -19.4, asp_len=0.010, asp_level=0.5,
+                        attack=0.040, tau=0.20, release=0.030, jitter=0.08, rough=0.7, rough_start=0.0, lowpass=2400.0)
+WOLF_READ_VOICE_START = 0.065
+WOLF_READ_RMS_DB = -19.4
+# Pounce (wolf_pounce): the jump bite's tell, a sharp snarl that climbs fast and ends on its peak, with the teeth's hiss.
+WOLF_POUNCE_DURATION = 0.25
+WOLF_POUNCE_VOICE = Voice(7314, 0.25, (270.0, 430.0), WOLF_SNOUT_GROWL, WOLF_SNOUT_GROWL, -19.0, asp_len=0.012, asp_level=0.4,
+                          attack=0.080, tau=1.0, release=0.015, jitter=0.12, rough=1.0, rough_start=0.0, lowpass=3200.0)
+WOLF_POUNCE_RMS_DB = -19.0
+# Flinch (wolf_flinch): it coils away from a swing: one short surprised yelp, falling.
+WOLF_FLINCH_DURATION = 0.14
+WOLF_FLINCH_VOICE = Voice(7315, 0.12, (520.0, 330.0), WOLF_SNOUT, WOLF_SNOUT, -19.4, asp_len=0.006, asp_level=0.5,
+                          attack=0.004, tau=0.05, release=0.030, jitter=0.05, rough=0.4, rough_start=0.0, lowpass=4500.0)
+WOLF_FLINCH_RMS_DB = -19.4
+# Leap (wolf_leap): its coil at a lip: claws scraping the ground twice and a breath drawn in. Environment level, in view only.
+WOLF_LEAP_SEED = 7316
+WOLF_LEAP_DURATION = 0.26
+WOLF_SCRAPE_TIMES = (0.010, 0.110)               # s
+WOLF_SCRAPE_LEN = 0.045
+WOLF_SCRAPE_BAND = (2300.0, 1100.0)
+WOLF_SCRAPE_GAIN = 0.8
+WOLF_INHALE_START = 0.130
+WOLF_INHALE_LEN = 0.12
+WOLF_INHALE_SWEEP = (800.0, 1700.0)              # Hz, band-pass centre rising: a breath drawn in
+WOLF_INHALE_GAIN = 0.7
+WOLF_LEAP_DRIVE = 3.0                            # tanh drive: a dense, low-crest scrape, as wolf_lunge
+WOLF_LEAP_RMS_DB = -22.0
 
 
 def wolf_notice() -> list[float]:
@@ -1468,6 +1502,49 @@ def wolf_bay() -> list[float]:
     for voice, start, gain in zip(WOLF_BAY_VOICES, WOLF_BAY_STARTS, WOLF_BAY_GAINS):
         _add_at(out, n_samples(start), render_voice(voice), gain)
     return finish_rms(out, WOLF_BAY_RMS_DB, REMAINS_PEAK_DB)
+
+
+def wolf_read() -> list[float]:
+    rng = random.Random(WOLF_READ_SEED)
+    out = [0.0] * n_samples(WOLF_READ_DURATION)
+    _add_tick(rng, out, n_samples(0.004), n_samples(WOLF_READ_HUFF_LEN), WOLF_READ_HUFF_BAND, WOLF_READ_HUFF_GAIN)
+    _add_at(out, n_samples(WOLF_READ_VOICE_START), render_voice(WOLF_READ_VOICE), 1.0)
+    return finish_rms(out, WOLF_READ_RMS_DB)
+
+
+def wolf_pounce() -> list[float]:
+    growl = render_voice(WOLF_POUNCE_VOICE)
+    rng = random.Random(WOLF_POUNCE_VOICE.seed)
+    n = len(growl)
+    lo, hi = WOLF_HISS_BAND
+    hiss = bandpass(noise(rng, n), lambda t: lo + (hi - lo) * t, WOLF_HISS_BW)
+    hp = max(abs(v) for v in hiss) or 1.0
+    out = [WOLF_GROWL_GAIN * growl[i] + WOLF_HISS_GAIN * hiss[i] / hp * (i / n) ** 2 for i in range(n)]
+    tail = n_samples(0.012)
+    for j in range(tail):   # no click at the cut
+        out[n - tail + j] *= 1.0 - j / tail
+    return finish_rms(out, WOLF_POUNCE_RMS_DB)
+
+
+def wolf_flinch() -> list[float]:
+    out = [0.0] * n_samples(WOLF_FLINCH_DURATION)
+    _add_at(out, n_samples(0.004), render_voice(WOLF_FLINCH_VOICE), 1.0)
+    return finish_rms(out, WOLF_FLINCH_RMS_DB)
+
+
+def wolf_leap() -> list[float]:
+    rng = random.Random(WOLF_LEAP_SEED)
+    out = [0.0] * n_samples(WOLF_LEAP_DURATION)
+    for t in WOLF_SCRAPE_TIMES:
+        _add_tick(rng, out, n_samples(t), n_samples(WOLF_SCRAPE_LEN), WOLF_SCRAPE_BAND, WOLF_SCRAPE_GAIN)
+    ni = n_samples(WOLF_INHALE_LEN)
+    lo, hi = WOLF_INHALE_SWEEP
+    breath = bandpass(noise(rng, ni), lambda t: lo + (hi - lo) * t, WOLF_EXHALE_BW)
+    bp = max(abs(v) for v in breath) or 1.0
+    env = envelope(ni, 0.050, 0.04)
+    _add_at(out, n_samples(WOLF_INHALE_START), [v / bp * e for v, e in zip(breath, env)], WOLF_INHALE_GAIN)
+    peak = max(abs(v) for v in out) or 1.0
+    return finish_rms([math.tanh(WOLF_LEAP_DRIVE * v / peak) for v in out], WOLF_LEAP_RMS_DB, REMAINS_PEAK_DB)
 
 
 def wolf_run() -> list[float]:
@@ -2146,6 +2223,7 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "spore_puff.wav": spore_puff, "puffball_burst.wav": puffball_burst,
                "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
                "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run,
+               "wolf_read.wav": wolf_read, "wolf_pounce.wav": wolf_pounce, "wolf_flinch.wav": wolf_flinch, "wolf_leap.wav": wolf_leap,
                "handover.wav": handover, "elixir.wav": elixir,
                "flying_beetle_notice.wav": flying_beetle_notice, "flying_beetle_windup.wav": flying_beetle_windup,
                "flying_beetle_windup_long.wav": flying_beetle_windup_long, "flying_beetle_dive.wav": flying_beetle_dive,
