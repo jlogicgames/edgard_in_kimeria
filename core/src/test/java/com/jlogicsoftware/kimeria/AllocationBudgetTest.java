@@ -1505,6 +1505,67 @@ class AllocationBudgetTest {
         assertWithinBudget("wolf landing read, jump bite, jump back and held lunge", WOLF_CEILING, bytes);
     }
 
+    private static final int BAY_CYCLE_FRAMES = 360, BAY_SEEN_FRAME = 5, BAY_STEPS = 40, BAY_KILL_FRAME = 340;
+    /** wolf-long's floor line and the height of the wolf's body. */
+    private static final float BAY_FLOOR = 320, BAY_BODY_HIGH = 18;
+    private static final float BAY_PERCH_AWAY = 120, BAY_PERCH_UP = 40, BAY_DROP_UP = 30, BAY_DROP_VX = 100, BAY_DROP_VY = 60, BAY_STOMP_VY = 200;
+
+    /**
+     * Wolves in turn at a perched hero (D165) in the real {@code Level} of wolf-long.tmx: each notices him, comes up and bays, steps
+     * after him as he moves along his perch, leaps at him as he comes down, is bounced off while it gathers (it locks the spot of
+     * his fall) and bites, then is killed at frame {@value #BAY_KILL_FRAME}. The hero's pose is set by hand. Update, render and
+     * {@code wolfFx} every frame.
+     */
+    @Test void wolfBayAndItsBiteThroughTheRealLevel() throws Exception {
+        Level level = harness.roomOf("wolf-long", 0);
+        for (int i = 0; i < BEETLE_SETTLE_FRAMES; i++) level.update(STEP);
+        int cycles = (AllocationProbe.WARMUP_FRAMES + AllocationProbe.MEASURED_FRAMES) / BAY_CYCLE_FRAMES + 1;
+        Wolf[] wolves = new Wolf[cycles];
+        for (int k = 0; k < cycles; k++) {
+            wolves[k] = new Wolf(harness.assets(), harness.game(), 800, WOLF_Y, WOLF_W, WOLF_H, 20, 6);
+            wolves[k].setPlayer(level.player);
+            wolves[k].setLevel(level);
+        }
+        var previousFeet = com.jlogicsoftware.kimeria.entity.player.Player.class.getDeclaredField("previousFeetY");
+        previousFeet.setAccessible(true);
+        // Set once, outside the measured frames (reflection allocates): the hero is never updated here, so a drop on to the wolf's back counts as a stomp.
+        previousFeet.setFloat(level.player, BAY_FLOOR - BAY_BODY_HIGH - 1);
+        boolean[] seen = new boolean[Wolf.State.values().length], bounced = new boolean[cycles];
+        int[] bayed = new int[1], coil = new int[1], longestCoil = new int[1], stepped = new int[1];
+        double bytes = AllocationProbe.bytesPerFrame(i -> {
+            int k = i / BAY_CYCLE_FRAMES, f = i % BAY_CYCLE_FRAMES;
+            Wolf wolf = wolves[k];
+            var hero = level.player;
+            if (f == 0) { bayed[0] = 0; coil[0] = 0; hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); }
+            if (f == BAY_SEEN_FRAME) hero.position.set(wolf.centreX() - BAY_PERCH_AWAY - 23.5f, HERO_Y - BAY_PERCH_UP);
+            Wolf.State st = wolf.state();
+            if (st == Wolf.State.BAY && bayed[0] < BAY_STEPS) { hero.position.x += 1; bayed[0]++; }       // along his perch: it steps back
+            else if (st == Wolf.State.BAY && bayed[0] == BAY_STEPS) {                                       // he comes down off it
+                hero.position.y = HERO_Y - BAY_DROP_UP; hero.velocity().set(BAY_DROP_VX, BAY_DROP_VY); hero.setOnGround(false); bayed[0]++;
+            } else if (st == Wolf.State.POUNCE_COIL && !bounced[k]) {                                       // and bounces off its back
+                bounced[k] = true;
+                hero.position.set(wolf.centreX() - 23.5f, BAY_FLOOR - BAY_BODY_HIGH - 1 - 48);
+                hero.velocity().set(BAY_DROP_VX, BAY_STOMP_VY);
+                wolf.collidedWithActor(false);
+            } else if (st == Wolf.State.POUNCE) { hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); }
+            if (f == BAY_KILL_FRAME) wolf.collidedWithActor(true);
+            if (!wolf.isRemoved()) {
+                float was = wolf.position.x;
+                wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true;
+                if (wolf.state() == Wolf.State.BAY && wolf.position.x != was) stepped[0]++;
+                coil[0] = wolf.state() == Wolf.State.POUNCE_COIL ? coil[0] + 1 : 0;
+                longestCoil[0] = Math.max(longestCoil[0], coil[0]);
+            }
+            level.wolfFx().update(STEP);
+            level.wolfFx().render(batch);
+        });
+        for (Wolf.State state : new Wolf.State[]{Wolf.State.BAY, Wolf.State.POUNCE_COIL, Wolf.State.POUNCE, Wolf.State.BITE})
+            assertTrue(seen[state.ordinal()], "the scenario must reach " + state);
+        assertTrue(stepped[0] > 0, "it must step after him while bayed");
+        assertTrue(longestCoil[0] * STEP > com.jlogicsoftware.kimeria.TrapWarnings.WOLF_POUNCE_SECONDS * 1.5f, "the bounce must lock the spot of his fall");
+        assertWithinBudget("wolf bay, steps, bite off the perch and its re-aim", WOLF_CEILING, bytes);
+    }
+
     private static final int LEAP_CYCLE_FRAMES = 300;
     private static final float LEAP_HERO_X = 650;
 

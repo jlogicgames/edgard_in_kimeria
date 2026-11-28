@@ -366,9 +366,11 @@ Keyboard, gamepad, touch and left-handed bindings are in
 Currently the sword cannot be used in the air; ordinary enemies can be killed
 by stomping from above. Preserve [D4](DECISIONS.md#d4-stomp-is-allowed-from-above-only)
 until a separate change is accepted. Future throwing/fireball descriptions do not
-implicitly change these existing rules. The one accepted exception among monsters is the
-mosquito swarm: the sword never kills it, and landing on it kills the hero
-([D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240)).
+implicitly change these existing rules. Among monsters, the accepted exceptions include the
+mosquito swarm (the sword never kills it, and landing on it kills the hero,
+[D151](DECISIONS.md#d151-the-forest-mosquito-swarm-it-flies-like-the-bat-the-sword-only-scatters-it-and-a-stomp-kills-the-hero-645-240))
+and the forest wolf (a stomp kills it only while it recovers, and otherwise bounces the hero off,
+[D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28)).
 
 **Accepted carrying and throwing rules:**
 
@@ -856,12 +858,12 @@ for the whole 0.7 s swing, the hero stopped while swinging).
 | Wind-up (D7 warning) | `TrapWarnings.duration(BITE_WARNING_SECONDS)`, sampled once: **0.5 s, 0.75 s with the assist**; nothing the hero does changes it. Seen: `crouch` (front low, ears flat, jaws open, drawn 1 px back from the hero); pale **breath streaks** run along its floor line from the jaws to the lunge's end, 60 a second, so the whole 160 px is read (the line is traced at the commit over the floor under it and the lunge flies exactly that line). Heard: `wolf_windup` (`_long`), a rising snarl | the shortest warning in the game, but the jump needs no distance, only timing; at the shared 0.8 s a runner would escape (177 px against 160) |
 | Lunge and bite | a **0.25 s** lunge of **160 px** along its floor (640 px/s; the body moves, `lunge` frame, drawn low), `wolf_lunge`; then `bite` for 0.1 s, jaw glints and floor dust, `wolf_bite`, **hit or miss (D93)**. The **jaw box** (about 7×7, 8 to 15 px above the floor line, inside the drawn muzzle) is lethal during the lunge and the bite and **swept every frame**. The lunge stops against a solid face (it bites there) and at the end of its floor (2 px floor probes, the spider's #497 rule); it may leave its range by up to its reach, over floor only. A bite that reaches the hero lands at the start of the wolf's next frame | outreaches any run: a hero who runs from the commit is 147 px off when the jaws end at 160. Low, so a jump clears it. The next-frame landing gives a killing hit the same-frame tie (#503, #505). Every lunge frame re-checks the floor and solids: a floor that goes during the wind-up (a lever-driven wall set inactive) stops the lunge at the last good place, its body never over air, and the bite is still seen and heard |
 | Recovery | **0.5 s** in `shake` (it shakes its head, flat-footed), harmless, **not scaled by the assist**; then a standing turn if the hero is behind it, and the chase again. Each new lunge needs a full wind-up | a shorter punish window than the spider's 0.6 s, and it is open only to a hero who turns and swings at once; hesitate and a new wind-up begins |
-| Refuge and give-up | when the hero is **out of its reach** (more than its 72 px commit box beyond the range end, so a hero 73 px or more past the muzzle at the range end is safe even though a lunge would cover 160, or on anything whose top is more than 24 px above its floor) it runs to the nearest point it can reach, stops facing him and **bays** (`bay`, head up, `wolf_bay`; harmless). After **1.5 s** of the hero out of reach, or **1.5 s** out of both sight and hearing, it **gives up** and trots back to patrol; it will not notice that hero again until he has been out of its sight for **1.0 s** | the chase always ends; the cool-down stops a loop of notice and bay under a ledge (D26) |
+| Refuge and give-up | when the hero is **out of its reach** (more than its 72 px commit box beyond the range end, so a hero 73 px or more past the muzzle at the range end is safe even though a lunge would cover 160, or on anything whose top is more than 24 px above its floor) it runs to the nearest point it can reach (under a perch, **40 px back** from him, D165), stops facing him and **bays** (`bay`, head up, `wolf_bay`; harmless). After **1.5 s** of holding still at its bay, or **1.5 s** out of both sight and hearing (not while it bays a hero on a perch: there only the 1.5 s of holding still ends it, D165), it **gives up** and trots back to patrol; it will not notice that hero again until he has been out of its sight for **1.0 s** | the chase always ends; the cool-down stops a loop of notice and bay under a ledge (D26) |
 | Running away | it commits when the gap closes to 72 px and stops where it is. A hero who runs from the commit gains 100 px/s through the wind-up and the lunge, so his hitbox's near edge is 72 + 75 = 147 px from the muzzle when the jaws end at 160: **bitten** by 13 px. With the assist (0.75 s) he is at 172: **missed by 12 px**. Measured (`WolfTest`): bitten at every commit gap from 40 to 72 px without the assist; with it, missed from about a 60 px gap up. A hero who survives a lunge by running (assist only) is struck again about 2 s after it began: the 0.5 s recovery leaves him 72 px ahead, it closes the last pixel and winds up for 0.75 s (measured 1.97 s). The reach is 160 px (approved by the author 2026-11-21) because a hero who keeps running gains 25 px during the 0.25 s lunge: at 160 he is bitten by 13 px without the assist and missed by 12 px with it | outrunning is not an answer without the assist |
 | Standing, stepping back | a hero who stands is bitten whatever the assist; one who steps back is the runner above | hesitation is punished: only a jump, a swing or a shot works without the assist |
-| Jumping | the jaws reach a hero G px from the muzzle G/640 s into the lunge and pass him 18 px later; the feet stay above the jaws (15 px) from 0.06 s to 0.84 s after take-off, so a take-off up to **0.55 s** after the commit clears them at the edge of its box (71 px) and up to **0.45 s** at its muzzle; with the assist up to **0.82 s** and **0.72 s**, and a jump made at the very commit has then landed before the jaws arrive (the first clearing take-off is 0.07 s after it): the jump is timed, not spammed (measured, `WolfTest`). A hero more than 24 px up is never committed to: a jump during its sprint makes it run underneath, and it stops under him (it skids only if he lands behind it) | the one answer that always works, and the wolf's lesson |
+| Jumping | the jaws reach a hero G px from the muzzle G/640 s into the lunge and pass him 18 px later; the feet stay above the jaws (15 px) from 0.06 s to 0.84 s after take-off, so a take-off up to **0.55 s** after the commit clears them at the edge of its box (71 px) and up to **0.45 s** at its muzzle; with the assist up to **0.82 s** and **0.72 s**, and a jump made at the very commit has then landed before the jaws arrive (the first clearing take-off is 0.07 s after it): the jump is timed, not spammed (measured, `WolfTest`). A hero more than 24 px up is never committed to: a jump during its sprint is answered by the landing read or the jump bite (D158); with the assist it runs underneath, and it stops under him (it skids only if he lands behind it) | the answer that always works against the lunge, and the wolf's lesson |
 | Sword | kills it in any state, with the light spray of D65, and leaves its body. Its body reaches the sword box (17 px past the hero's hitbox) about 0.6 s after the commit, as the jaws arrive: a swing started anywhere from just before the commit to about 0.6 s after it is live then (`WolfTest` pins one started 0.2 s after). A swing started early, while it is still noticing or sprinting in, ends before the lunge: a bite. After a jumped lunge, the 0.5 s recovery is a kill from behind for a hero who turns and swings at once (its haunches end about 15 px away) | timed melee, harder than the spider's because the punish window is shorter and needs a turn first |
-| Stomp | **D158:** kills it only when committed or bayed, with the normal bounce, and leaves its body; otherwise the hero bounces off it. Its use is dropping on it from a refuge while it bays | the reward for going up |
+| Stomp | **D165:** kills it only while it recovers, with the normal bounce, and leaves its body; otherwise the hero bounces off it | the reward for having dodged |
 | Fireball, stone, torch | kill it in any state, the lunge included, and leave its body; no blood (D99). One cast or thrown on the frame the jaws arrive wins the tie | the safe answer costs a charge or a carried stone, and the hero must stand and face it to aim |
 | Killed mid-act | killed during the wind-up it never lunges; killed in the lunge the body slides on to the lunge's end over the floor | what the player read still holds |
 | Body (D101) | `dead`: **lying flat on its side along the floor, forelegs stretched forward under its flat head, hind legs back, tail limp** (the author's edit: a wolf's paws never stick up). The active frame holds 0.3 s, then cross-fades over 0.6 s into `monster-wolf-body.png` (the live palette, ink and rim from above, D117). **It does not rock; it twitches**, a 1 px shudder of the same frame for about 0.3 s, when any actor comes within 6 px (as D101 lists for the wolf, D119). The sword or a stomp crumble it into fur tufts and dark chips; a fireball or a thrown torch burns it (`RemainsFx`) and flies on; a stone flies through it (D119); the swing that killed it does not crumble it | every live frame stands on four paws, so lying on its side is far from all of them (well over the 25 % floor of `RemainsTest`) |
@@ -887,15 +889,15 @@ always works (low jaws and 64 px of headroom checked at load); contact is harmle
 through a wall; the chase ends at its range and at any refuge more than 24 px up, with a 1.0 s cool-down; locked direction,
 fixed reach and timings, so the same dodge works on every retry (D7); the assist makes running work again.
 
-This card is the wolf as first built (D115). The **develop** below (D158, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)) changes it: the stomp kills only a committed
-or bayed wolf, it answers jumps and swings, and a routed wolf leaps steps and gaps; where a row here disagrees with it, the
-develop card holds. Its first
+This card is the wolf as first built (D115). The **develop** below (D158, [D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28), [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)) changes it: the stomp kills only a recovering
+wolf, it answers jumps and swings, it bays standing back from a perch and bites a hero coming off it, and a routed wolf leaps steps
+and gaps; where a row here disagrees with it, the develop card holds. Its first
 meeting is a refuge pocket in `forest-glade`, forest-2's fourth room ([ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); the author approved
 the card on 2026-11-21): a one-way branch 32 px above its floor, at the near end of its range, out of its reach but in its sight, from
-which the hero watches it trot, notice him, sprint under him, bay, give up and trot back (D105). The ledge of that pocket is a one-way
+which the hero watches it trot, notice him, sprint up, stand back and bay, give up and trot back (D105). The ledge of that pocket is a one-way
 platform: a solid block's face cuts its sight at eye height, so a hero standing on a block beyond its face is not seen (the room's
-fallen trunk hides a hero on its top for exactly that reason). The mastered answer there is a step off the branch's end on to its back
-while it bays (a stomp); a jump, a swing and the assist's run all work on its floor (`ForestGladeTest`). Sounds (seeds 7301 to 7311, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)): its own call `wolf_notice` (a sharp dog-like bark),
+fallen trunk hides a hero on its top for exactly that reason). The mastered answer there is to step off the branch's end, stop in
+the air as it leaps, and strike it with the sword while it recovers; a jump, a swing and the assist's run all work on its floor (`ForestGladeTest`). Sounds (seeds 7301 to 7311, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)): its own call `wolf_notice` (a sharp dog-like bark),
 `wolf_run` (a soft paw patter once a gallop cycle while it sprints, in view only), `wolf_windup` (`_long`), `wolf_lunge`, `wolf_bite`,
 `wolf_bay` (a double bark); its death plays the shared `bounce`. Art: a crimson pelt in the danger family (#236), the largest Forest
 monster ([ART_DIRECTION.md](ART_DIRECTION.md)). Effects are particles on `KimeriaParticleSystem` (`effects.WolfFx`, one per level; the
@@ -903,7 +905,7 @@ body's crumble and burn in `effects.RemainsFx`); the only sprites are its sheet 
 (live palette, D117). Code: `entity/enemy/Wolf.java`; tests: `WolfTest` (the fairness pins: a runner bitten without the assist and missed with it, the
 window of take-offs that clear the jaws, a hero 24 px up never committed to, the refuge, the bay, the give-up and the cool-down, the
 lunge stopping at a gap and at a wall, every weapon in every state, both same-frame ties, the load checks), `WolfFxTest`, `RemainsTest`,
-`AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it), `check_contrast.py` (the wolf and its body, once placed),
+`AllocationBudgetTest.wolfThroughTheRealLevel` (0.2 to 0.6 B/frame before the floor re-check, 0.0 in one run after it) and `wolfBayAndItsBiteThroughTheRealLevel` (D165), `check_contrast.py` (the wolf and its body, once placed),
 `FirstMeetingPocketTest.forestGladeTheWolf`, `ForestGladeTest` and `RoomCardsTest` (the placement, #331).
 
 ### Wolf develop card (built, [D158](DECISIONS.md#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28), [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525))
@@ -913,28 +915,43 @@ The wolf lost to one habit: jump over it and come down on it. The develop gives 
 feet more than 24 px up from 0.11 s to 0.78 s; run 100 px/s with full steering in the air; sword live 0.7 s, 17 px past the
 hitbox, the hero stopped.
 
-**Stomp rule.** Landing on it **kills** only when it is committed: wind-up, lunge, bite, recovery, and while it bays, its small
-steps under a perched hero included (it stays bayed until the hero stands on its floor in its reach, it commits, or it gives up).
-Otherwise (trot, sniff, notice, chase, skid and each new move) the hero **bounces off, no kill**. Sword, fireball, stone and torch
-kill it in any state they reach it. It never bays under a hero in the air.
+**Stomp rule ([D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28)).** Landing on it **kills only while it recovers**: after its lunge or jump bite, or after its jump back,
+so after the player dodged or baited it. In every other state, bay and wind-up included, the hero **bounces off, no kill**. Sword,
+fireball, stone and torch kill it in any state they reach it. It never bays under a hero in the air.
 
-**Shared rules.** The read and the jump bite start only from the chase and its skid and answer **one jump once**: after either, or
-after a bounce, nothing new starts until the hero has stood on something. A move whose path meets a solid, leaves its floor or
-leaves its range plus the lunge's reach is not made. Each tell is a `TrapWarnings` base of its own.
+**Bay stand-off (D165).** Under a perch (his feet 24 px or more above its floor) it stands with its **muzzle 40 px** from his near
+edge, facing him, on the side it is already on (the other side only when that one alone has the room), and **steps after him** at up
+to 120 px/s (`trot` frames) to keep that distance, inside its range (at the range end when the distance does not fit). Steps do not
+count toward the 1.5 s give-up, except a step a solid stops: it counts as holding still. A hero it bays under a perch is **not lost by the senses clock**: he may be out of its sight and
+hearing there, and only the 1.5 s of holding still ends the bay (D26 holds). A hero out of reach on its own floor it bays at from
+the nearest point, as before.
+
+**Shared rules.** The read and the jump bite start only from the chase and its skid (and the bite off the perch from the bay) and
+answer **one jump once**: after either, or after a bounce, nothing new starts until the hero has stood on something. One thing a
+bounce does change (**the coil re-lock**, D165): bounced off while it gathers for a jump bite, it stays gathered, locks the spot
+where the bounce brings his feet back to its floor, faces the side he is on, and holds the coil until the leap will arrive with
+him (the glints move to the new arc; stopping or turning back still escapes; a spot it cannot reach leaves the old arc). Every jump
+bite faces the hero's side when it gathers. A move whose path meets a solid, leaves its floor or leaves its range plus the lunge's
+reach is not made. Each tell is a `TrapWarnings` base of its own.
 
 | Move | Trigger | Tell (seen and heard) | Act | Safe answer | Free counter |
 | --- | --- | --- | --- | --- | --- |
 | **Landing read** | the hero is airborne, feet more than 24 px above its floor, outside the jump bite's box | **0.25 s**: it brakes, raises its head (`read`), pale marks on the floor where he will land; `wolf_read` | the spot is locked from his speed at that instant; it runs until its muzzle is 36 px short of it, inside its range, and waits; a normal full wind-up follows if he comes into the lunge box | steer in the air to another spot, or land on a perch | it is harmless until the normal wind-up |
-| **Jump bite** | the airborne hero's body is in the box 48 px either side of its centre, 24 to 64 px above its floor | **0.25 s**: haunches down, head up (`coil`), glints along the arc; `wolf_pounce` | **0.20 s** leap (`leap`) to where his body will be (at most 64 px up), jaws lethal all the way, bite hit or miss (D93), then it falls and recovers **0.5 s** from its landing | stop or turn back in the air, or walk out if already down | while it recovers a stomp or a swing kills it |
+| **Jump bite** | the airborne hero's body is in the box 48 px either side of its centre, 24 to 64 px above its floor | **0.25 s**: haunches down, head up (`coil`), glints along the arc; `wolf_pounce`; it faces the side he is on (D165) | **0.20 s** leap (`leap`) to where his body will be (at most 64 px up), jaws lethal all the way, bite hit or miss (D93), then it falls and recovers **0.5 s** from its landing. Bounced off while it gathers, it stays gathered and times the leap so its jaws arrive where he comes down (D165) | stop or turn back in the air, or walk out if already down | while it recovers a stomp or a swing kills it |
+| **Bite off the perch** (D165) | bayed under a perch, and his feet come 2 px or more **below the height he stood at** while he drops or jumps | the jump bite's: **0.25 s** `coil`, glints, `wolf_pounce` | the jump bite's **0.20 s** leap to where his body will be, then **0.5 s** recovery from its landing | stay on the perch (jumping on it is safe); moving as it gathers, **stop or steer back in the air** (the spot is locked ahead of him); having let go, **jump or move on out from under it** | while it recovers, the sword or a stomp |
 | **Jump back** | a swing begun during its wind-up, facing it, the blade not already touching it (1st, 3rd, ...) | **0.10 s** coil, `wolf_flinch` | **0.20 s** hop **40 px** back along its floor, then **1.4 s** recovery | not needed: it attacks nothing | step in and swing during the recovery |
 | **Held lunge** | the next such swing (2nd, 4th, ...) | it stays crouched, its breath streaks held | it waits until the blade is down, then winds up **0.5 s** again and lunges; the count starts over when it gives up or the room resets | jump the delayed lunge | swing in its recovery |
 | **Route leap** | its route goes on across a step of at most 16 px or a gap of at most 48 px | **0.30 s** coil at the lip (`coil`), `wolf_leap` (claws, in view) | a **0.30 s** fixed arc (`leap`) to the next floor leg; harmless; no strike across a link | stand more than 24 px above every leg, or beyond the route's ends | a stomp bounces off it; the sword, a shot or a stone kills it |
 
 **Refuges that remain.** Anything more than 24 px above the floor leg it stands on, anything past its range or route plus its lunge
-box, and the far side of a solid. A hero **standing** on a refuge is never jump-bitten. On a route a one-tile step is no refuge.
+box, and the far side of a solid. A hero **standing** on a refuge is never jump-bitten: a leap gathered while he was in the air,
+off a higher perch or on his way up to one, does him no harm once he stands there (a bite that met him in the air still lands on the
+next frame). It **never rests off its floor**: after a jump bite, or killed in the air, it passes down through a one-way perch to the
+floor of its leg (D165). **Leaving** a perch it bays under draws its bite (D165; the safe answers are in the table). On a route a one-tile step is no refuge. The way past from a perch: come down, dodge, then finish it (sword, or a stomp in
+its recovery) or run.
 
-**Assist.** The longer-warnings assist turns the landing read, the jump bite, the jump back and the held lunge **off** (the wind-up
-stays 0.75 s). The stomp rule and the route leap stay.
+**Assist.** The longer-warnings assist turns the landing read, both jump bites, the jump back and the held lunge **off** (the wind-up
+stays 0.75 s). The stomp rule, the bay's stand-off and the route leap stay.
 
 **D115 amended.** "A jump always works" holds for the lunge only: nothing new starts during a wind-up or a lunge. A jump over a
 chasing wolf is answered by the jump bite or the read.
@@ -945,10 +962,14 @@ floor, nothing of the entrance, exit or checkpoints in its sight, 64 px of headr
 over every link. It does not see over a step it stands below (the face is at its eye height); it hears there.
 
 **Rooms.** The reactions are every wolf's. The route is first met in `forest-ridge`, forest-2's seventh room
-([ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge)), from a high one-way ledge. `forest-glade` keeps its pocket (a hero standing on the
-branch) and its mastered route (the stomp on the bayed wolf); its hurried variant, a stomp on a sprinting wolf, is now a bounce and a
-bite. Sounds (seeds 7312 to 7316, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)). Code: `entity/enemy/Wolf.java` (`Wolf.Route`),
-`effects/WolfFx.java`; tests: `WolfDevelopTest`, `ForestRidgeTest`, `ForestGladeTest`, `FirstMeetingPocketTest.forestRidgeTheWolfLeaps`,
+([ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge)), from a one-way ledge 32 px up; the wolf comes down its route toward him, and the flat
+floor between the ledge and the first mound is where a walk forward meets it (D165). `forest-glade` keeps its pocket (a hero standing on the
+branch). Both rooms' mastered route (D165): wait on the perch until it bays, step off, stop in the air as it leaps, strike it as it
+recovers. **Played by the author 2026-11-28** in the web build, both rooms: much better, fair and audible, to be kept as it is; long
+waits on the ridge ledge are accepted; noted, with no change asked, that beating it with a jump is still not hard. The walks that
+still pass it unharmed are measured in D165. The build played predates the rule that it never rests off its floor, so that rule was
+not part of the verdict; on desktop it was checked only by the agent's scripted harness. Sounds (seeds 7312 to 7316, [SOUND_DIRECTION.md](SOUND_DIRECTION.md)). Code: `entity/enemy/Wolf.java` (`Wolf.Route`),
+`effects/WolfFx.java`; tests: `WolfDevelopTest`, `WolfFloorTest`, `ForestRidgeTest`, `ForestGladeTest`, `FirstMeetingPocketTest.forestRidgeTheWolfLeaps`,
 `AllocationBudgetTest`, `check_contrast.py` (the wolf along its legs, its leap and fall off the floor).
 
 ### Flying beetle card (built, [D145](DECISIONS.md#d145-the-forest-flying-beetle-it-hovers-hears-draws-its-dive-and-bursts-on-the-spot-where-the-hero-stood-330-240-398), [#330](https://github.com/jlogicgames/edgard_in_kimeria/issues/330))

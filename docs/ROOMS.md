@@ -1291,20 +1291,25 @@ pit. Room card: [ROOM_CARDS.md](ROOM_CARDS.md#forest-glade); monster card: [GAME
 - **The pocket:** the one-way branch. A solid block's face cuts the wolf's sight at eye height, a platform does not, so the
   hero on the branch is seen from its floor, 32 px up, out of its 24 px lunge box. The trunk hides a hero on its top and on the
   floor before it (`ForestGladeTest.theTrunkHidesAHeroOnItsTopAndOnTheFloorBeforeItFromTheWolfForAWholePatrol`).
-- **Recipe (the mastered route):** jump the thorn root, jump on to the trunk, walk out on the branch and wait until the wolf bays
-  under it, then walk to the branch's end and step off on to its back (a stomp, with the bounce), then run to the second thorn root (x 4360) and jump it, and walk to the exit.
-  Without the wait the stomp still lands when the wolf is under the branch's end, as a hurrying hero reaches it
-  (`ForestGladeTest.aHeroWhoHurriesOverTheBranchStompsItAsItSprintsUnderHim`).
+- **Recipe (the mastered route, D165):** jump the thorn root, jump on to the trunk, walk out on the branch and wait until the wolf
+  bays, standing back past the branch's end; step off the end, stop in the air as it leaps, strike it with the sword while it
+  recovers (with the longer-warnings assist it does not leap: swing as its lunge comes), then run to the second thorn root
+  (x 4360), jump it, and walk to the exit (`ForestGladeRoute`).
 - Answers on its floor (`ForestGladeTest`): a jump a quarter second after the commit clears the lunge from every commit gap of 1 to 72 px
   with and without the assist; a hero who stays put is bitten; a runner is bitten without the assist and missed with it, and then
-  climbs the trunk, a refuge; a swing 0.2 s after the commit kills it; the branch, the trunk top and the floor from x 4264
-  on are never committed to.
-- Measured (`RoomReplayTest`, `ForestGladeTest`, 2026-11-21, scripted hero): the mastered route 8.85 s (three identical attempts,
-  with and without the assist; 2.95 s per beat), 7.42 s on a collection return with the wolf gone (pinned in `RoomReplayTest`); the most
-  expensive death is the second thorn root after the wolf, 8.15 s from the entrance (the whole room replayed; D105's 6 s limit is for a first meeting that is not
-  among the first two beats, which the wolf, beat 2, is not, and 8.15 s is under D105's 15 s split rule); the wolf's own bite on the mastered pace is a hop down
-  in front of it, 4.27 s; the first thorn root kills a hero who walks straight on at 1.17 s. Contrast of the placed wolf over its range (`check_contrast.py`): live frames, outline 0.411 to 0.542 (floor 0.28), body
-  (decor) 0.152 to 0.197 (ceiling 0.20). Evidence limit: a scripted hero, no novice playtest ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
+  climbs the trunk, a refuge; a swing at its wind-up makes it hop back, and the next one kills it as it recovers; the branch, the
+  trunk top and the floor from x 4264 on are never committed to.
+- Measured (`RoomReplayTest`, `ForestGladeTest`, 2026-11-28, scripted hero): the mastered route 9.33 s (three identical attempts;
+  3.11 s per beat), 9.03 s with the assist, safe from every start moment over 12 s, 7.42 s on a collection return with the wolf gone;
+  the most expensive death on that pace is the second thorn root, 8.63 s from the entrance (D105's 6 s limit is for a first meeting
+  that is not among the first two beats, which the wolf, beat 2, is not, and 8.63 s is under D105's 15 s split rule); a hop down in
+  front of the wolf is bitten at 4.62 s; the first thorn root kills a hero who walks straight on at 1.17 s. A walk forward without
+  the dodge: [D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28).
+  Contrast of the placed wolf over its range (`check_contrast.py`, measured 2026-11-21): live frames, outline 0.411 to 0.542
+  (floor 0.28), body (decor) 0.152 to 0.197 (ceiling 0.20). The numbers are a scripted hero's. The room was
+  played by the author 2026-11-28 in the web build: much better, fair and audible, kept as it is ([D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28)); the bare soil under its exit found in that play (x 4400-4464) is fixed. The wolf's rule of never resting off its floor came
+  after that build and was not played; desktop was checked only by the agent's scripted harness. No novice playtest
+  ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 - D26: no lever, support or one-shot state on the route; the wolf gives up after 1.5 s of bay and cannot hold a place; a retry rebuilds
   it calm at its spawn.
 
@@ -1362,7 +1367,7 @@ Object positions are on the room card.
 - D26: no lever, support or one-shot object on the route; both swarms are passed by timing; the stone and charges are optional;
   a retry rebuilds both swarms at their spawns.
 
-## forest-2 ridge room (#525, D158)
+## forest-2 ridge room (#525, D158, D165)
 
 `forest-ridge`, x 5952-6816 (864 px), floor top y 304, side walls at x 5952-5968 and x 6800-6816 (down to the floor). It is
 appended at the map's end (forest-2 grew from 372 to 426 tiles) and listed after `forest-hollow` in `Rooms`, so it is played
@@ -1370,18 +1375,26 @@ between the hollow and the canopy. The `Deadline` is unchanged: the room has no 
 [ROOM_CARDS.md](ROOM_CARDS.md#forest-ridge); monster card: [GAME_DESIGN.md](GAME_DESIGN.md#wolf-develop-card-built-d158-525).
 Object positions are on the room card.
 
-- **The route:** the wolf is a polyline over three floor legs, the floor and two 64 px mounds 16 px high with a 32 px trench
-  between them (a step leap and a gap leap). The trench is shallow, so a hero in it is safe from a bite and climbs out.
-- **The pocket:** a one-way ledge at y 256 above the lower leg. From the floor below the first mound's face the wolf cannot see
-  over it, so the hero reaches the ledge unseen; from the mounds it can.
-- **Recipe (the mastered route):** jump the thorn root (take-off at frame x 86 from the room's left), jump on to the ledge (x 215),
-  wait until the wolf bays, walk off the ledge on to it, jump up the first mound and out of the trench, jump the tuft (x 566) and the
-  second root (x 684) (`ForestRidgeRoute`).
+- **The route:** the wolf is a polyline over three floor legs, the floor and two mounds 16 px high (64 px and 48 px wide) with a
+  32 px trench between them (a gap leap and a step leap). It starts on the right mound facing the hero and comes down toward him.
+  The trench is shallow, so a hero in it is safe from a bite and climbs out.
+- **The pocket:** a one-way ledge at x 6144-6208, y 272, 32 px above the floor leg. The wolf sees a hero on it (a platform does not
+  cut its sight), cannot reach him there, and bays 40 px back.
+- **Why a walk forward meets it (D165):** the wolf starts on the right mound and patrols toward the entrance, and the 176 px of
+  floor from the ledge to the first mound is flat, with no jump of the room on it, so its lunge and its leap off the perch have
+  room there; the two mounds, the tuft and the second root lie beyond.
+- **Recipe (the mastered route, D165):** jump the thorn root (take-off at frame x 54 from the room's left), jump on to the ledge
+  (x 135), wait until the wolf bays, step off its far end, stop in the air as it leaps, strike it with the sword while it recovers
+  (with the longer-warnings assist, as its lunge comes), jump up the first mound and out of the trench, jump the tuft (x 590) and
+  the second root (x 708) (`ForestRidgeRoute`).
 - Foreground: `tools/parallax_game.py` (`forest-ridge` entries): few low pieces and no stem between the mounds and the exit,
-  because they would cover the wolf's route or a thorn (rule B).
+  because they would cover the wolf's route or a thorn (rule B). The left edge leaf and fern moved 16 px left with the entrance.
 - Measured (`RoomReplayTest`, `ForestRidgeTest`, `FirstMeetingPocketTest`, 2026-11-28, scripted hero, forest-2.tmx SHA-256
-  `27a42bd8a2284b5e919fff9e56932cd34bfbcd208f00e74d3eba29efb13cabb7`): the mastered route 12.55 s (3.14 s per beat), safe from every start moment over 12 s, with and without the assist,
-  7.78 s on a collection return. Evidence limit: a scripted hero, no novice playtest
+  `805a6d48b7aa5f57a7015763cfbe1ba8e3e4420aedeb32ce8361824d5c65414c`): the mastered route 10.68 s (2.67 s per beat), 10.12 s with the assist, safe from every start moment over 12 s with and
+  without it (8.88 to 14.65 s), 7.95 s on a collection return. A walk forward without the dodge: the numbers on the room card.
+  The numbers are a scripted hero's. The room was played by the author 2026-11-28 in the web build: much better, fair and audible, kept as it is ([D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28)); long waits are accepted, and that beating the wolf with a jump is still
+  not hard is noted with no change asked. The wolf's rule of never resting off its floor came after that build and was not played;
+  desktop was checked only by the agent's scripted harness. No novice playtest
   ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).
 - D26: no lever, support or one-shot object on the route; a retry rebuilds the wolf calm at its start.
 

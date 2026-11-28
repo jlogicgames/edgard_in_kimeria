@@ -167,7 +167,7 @@ NEAR = {
                      ('edge-giant-low-c', 584, 288), ('edge-giant-low-d', 784, 272)),
     'forest-hollow': (('edge-giant-left', -128, 48), ('edge-giant-low-a', -80, 280), ('edge-giant-low-b', 160, 304),
                       ('edge-giant-low-c', 376, 288), ('edge-giant-low-d', 812, 272)),
-    'forest-ridge': (('edge-giant-left', -128, 48), ('edge-giant-low-a', -80, 280), ('edge-giant-low-b', 160, 304)),
+    'forest-ridge': (('edge-giant-left', -144, 48), ('edge-giant-low-a', -80, 280), ('edge-giant-low-b', 160, 304)),
     'forest-canopy': (('edge-giant-left', -112, 48), ('edge-giant-right', 1568, 176), ('edge-giant-low-a', -80, 280),
                       ('edge-giant-low-b', 204, 304), ('edge-giant-low-c', 488, 288), ('edge-giant-low-d', 772, 304),
                       ('edge-giant-low-a', 1056, 304), ('edge-giant-low-b', 1340, 304), ('edge-giant-low-a', 64, 304),
@@ -244,7 +244,7 @@ MIDDLE = {
     'forest-glade': (('near-sprig', 452, 0), ('rise-reeds', -41, 128)),
     'forest-roost': (('near-fern', 336, 0), ('rise-fern', -210, 112), ('rise-fern', 685, 112)),
     'forest-hollow': (('near-sprig', 464, 0), ('rise-reeds', 516, 128), ('rise-fern', -210, 112)),
-    'forest-ridge': (('near-sprig', 464, 0), ('rise-fern', -210, 112), ('rise-fern', 889, 112)),   # no stem over the wolf's mounds
+    'forest-ridge': (('near-sprig', 464, 0), ('rise-fern', -226, 112), ('rise-fern', 889, 112)),   # no stem over the wolf's mounds
     'forest-canopy': (('near-sprig', 360, 0), ('near-fern', 768, 0), ('rise-reeds', -9, 128)),   # a fern by the swaying hanging vines
 }
 # every forest map and its rooms' sharp foreground

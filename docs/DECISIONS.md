@@ -110,6 +110,9 @@ only in the menu backdrop.
   Ordinary enemies kill the player on side or bottom contact and remain unharmed. The sword is the other way
   to kill, and it cannot be used while airborne, so the stomp is the player's only airborne
   answer. It is described in About and introduced early in the levels.
+- **Amended by [D165](#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28):** the forest wolf is a
+  further exception (first [D158](#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28)): a stomp kills it only while it recovers, and otherwise the
+  hero bounces off it unharmed.
 - **Why:** Gives a second, intuitive way to deal with enemies without special rules.
 - **Tracked in:** #44
 
@@ -3963,8 +3966,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D115. The forest wolf: it sees far, outruns the hero and lunges along a line; jump it, then strike (#331, #240, #398)
 
-- **Amended by [D158](#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28):** the stomp kills only a committed or bayed wolf, it answers jumps and
+- **Amended by [D158](#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28):** the stomp stopped killing it in every state, it answers jumps and
   swings, and it leaps on a route.
+- **Amended by [D165](#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28):** a stomp kills it only in its recovery, and it bays standing back from a perch and
+  bites a hero coming down off it.
 - **Status:** Accepted and built (author, 2026-11-20: "the wolf must be faster and more dangerous than the other enemies";
   2026-11-21: the card and every recommendation of the proposal, the danger-family crimson, the first meeting in forest-2, the art
   with the author's edits to `dead` and `bay`, the sounds with the barks lowered). Placed in `forest-glade`, forest-2's fourth room (the author approved
@@ -5230,6 +5235,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D158. The forest wolf answers the hero's habits and leaps on a route (#525, amends D115, D4, 2026-11-28)
 
+- **Amended by [D165](#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28):** the stomp rule below ("committed or bayed") is replaced by "only in its recovery"; a bayed
+  wolf no longer starts nothing; the glade's and the ridge's mastered routes and times are D165's.
 - **Status:** Decided by the author, 2026-11-25 (the moves: deterministic answers, never a coin) and 2026-11-28 (the card approved;
   the reactions on every wolf with one new room for the route leap; the longer-warnings assist turns the reactions off; the second
   swing at a wind-up is waited out). Built ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). Card:
@@ -5269,7 +5276,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests changed, not weakened:** in `WolfTest` the stomp case now kills a recovering wolf, and the jump-under and live-swing cases
   run with the assist; in `ForestGladeTest` the swing case split in two and the hurried stomp is now a death. The room-index tests
   moved with the new room.
-- **Evidence limit:** scripted heroes. Whether it is hard and fair to a person is judged in play.
+- **Evidence limit:** scripted heroes. The author's verdict by play, on the wolf as D165 changed it, is recorded in
+  [D165](#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28).
 
 ## D159. The menu frame budget takes the median of three windows (#464, 2026-11-28)
 
@@ -5426,3 +5434,155 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests and gates:** `WindTest`, `CrownGlintFxTest`, `WindRoomsTest`, `KimeriaParticleSystemTest`,
   `AllocationBudgetTest.windGustsAndCrownGlintsOverWholeGusts`, `tools/wind_spots.py --check` (`validateWindSpots`,
   `test_wind_spots.py`).
+
+## D165. The wolf is not stomped for free: a stomp only in its recovery, and a bite off the perch (#525, amends D158, D115, 2026-11-28)
+
+- **Status:** Decided by the author, 2026-11-28, after playing D158: "platforms in wolf rooms are placed so that the player almost
+  always, just walking forward, kills the wolf with a jump from above, without noticing the wolf is dangerous at all." Built
+  ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)) and played by the author (below). Card:
+  [GAME_DESIGN.md, "Wolf develop card"](GAME_DESIGN.md#wolf-develop-card-built-d158-525).
+- **Verdict (author, 2026-11-28, playing `forest-ridge` and `forest-glade` in the web build):** the wolf is much better, fair and
+  audible; **keep it as it is**. Long waits on the ridge ledge being mostly safe is **accepted**. Noted, with no change asked:
+  beating it with a jump is still not hard. The same play found bare soil with no grass under `forest-glade`'s exit (x 4400-4464,
+  floor line y 304): fixed in the map. The build played predates the rule below that it never rests off its floor, so that rule
+  was not part of the verdict. On desktop it was checked only by the agent's scripted harness, not by the author.
+- **Second decision (author, 2026-11-28), on the first build:** **accepted** the three things it added beyond the request: the
+  ridge ledge moved, every jump bite faces the hero's side, and a bounce off a gathering wolf re-locks the spot and holds the coil
+  until the leap arrives with him. **Rework `forest-ridge`**: the goal was not met there (a walk forward pausing 0 to 4 s on the
+  ledge got out alive in 39 of 41 runs, one without a pause in 93 of 121 start moments), because the wolf came under the ledge only
+  about 5 s after the hero landed, its 64 px legs cut its lunge and blocked its leaps, and about 1.1 s after the bay it lost the
+  hearing of him and walked off. The target: without the assist most walk-forward runs of both sweeps end bitten, and the mastered
+  route passes from every start moment with and without it.
+- **Why:** a bayed wolf walked to right under the perch, started nothing, and a stomp on it was lethal, so "pause on the perch,
+  walk on" killed it free, and both rooms' mastered routes were exactly that. A walk forward with no pause stomped it in its
+  wind-up.
+- **Stomp rule.** A stomp kills **only while it recovers**: after a bite (lunge or jump bite) or after its jump back, so after the
+  player dodged or baited it. In every other state, bay and wind-up included, the hero bounces off and it lives. The sword, a
+  fireball, a stone and a torch still kill it in any state they reach it.
+- **The bay stands back.** Under a perch (a hero standing with his feet 24 px or more above its floor) it takes its place with its
+  muzzle **40 px** from his near edge, facing him, on the side it is already on (the other side only when that one alone has the
+  room), and keeps it, stepping at up to 120 px/s, inside its range. Where its range is shorter than that, it stands at the range
+  end. Steps do not count toward the 1.5 s give-up, except a step that gets it nowhere against a solid: that counts as holding
+  still, so a stand point it cannot reach does not keep it bayed forever (`WolfDevelopTest.aBayedWolfWhoseStandPlaceIsBehindASolidStillGivesUp`,
+  `wolf-bay-block.tmx`). A hero out of reach on its own floor it bays at as before.
+- **The bite off the perch.** A bayed wolf watches the height he stood at. Once his feet come **2 px or more below it** while he is
+  in the air or falling (a drop, a walk off, a jump off), it gathers for the jump bite's tell (0.25 s, `coil`, glints along the arc,
+  `wolf_pounce`) and leaps (0.2 s, jaws lethal) to where his body will be, then recovers 0.5 s from its landing. A hero who stands
+  on the perch, or jumps on it and lands back on it, never gets below it and is never bitten by it. **Safe answer:** a hero still
+  moving as it gathers stops or steers back in the air (the spot is locked ahead of him). One who has already let go is the spot, so
+  stopping does not save him: he jumps, or moves on out from under it (measured at the ridge ledge's back end, below).
+  **Counter:** its recovery, by the sword or a stomp. A leap whose arc meets a solid, leaves its floor or leaves its range plus
+  160 px is not made (D158's rule).
+- **The jaws toward him.** The jump bite (both) faces the side the hero is on when it gathers, not the side of the locked spot: for
+  a spot behind it, it springs back still facing him; where that arc is blocked it is not made. A hero who **bounces off it while it
+  gathers** no longer leaves the leap to pass under him: it stays gathered, locks the spot where the bounce brings his feet back
+  to its floor, and leaps so that its jaws arrive as he does (the tell is then longer, the glints on the new arc; stopping or
+  turning back still escapes). It faces him there too: the re-locked leap takes the side he is on at the bounce. D115 stands: the
+  jaws kill, the body never does.
+- **A refuge stays a refuge.** A hero standing 24 px or more above its floor is never jump-bitten, also by a leap gathered while
+  he was in the air (down from a higher perch on to a lower one, or up on to one): its jaws do him no harm once he stands there. A
+  bite that met him in the air still lands on the next frame. The leap itself is made, so its recovery stays the counter.
+- **It never rests off its floor.** Seen in the running game: a jump bite whose arc ended above the one-way ledge landed the wolf
+  on it, where it recovered, wound up and lunged at the hero standing there, harmlessly, again and again, its rear over the ledge's
+  end. The cause was the ordinary fall after a leap: a one-way platform catches whatever falls on to it. D158 as merged has it too,
+  and there the bite is lethal: of 1815 scripted runs per room on that build, `forest-glade` ended with the wolf resting on the
+  branch in 392, and it bit the hero standing on the branch in 247 (none in `forest-ridge`, whose ledge was 48 px up). Now,
+  above the floor line of its leg, nothing catches the wolf or its body: it passes through and lands on that floor (with the floor
+  gone it falls on as before). Killed in a route leap, the body comes down on the higher of the link's floors when some of it is
+  over that one and still above it, else on the lower. `WolfFloorTest` holds both rooms to it after jump bites off and on to the
+  perches, after kills in a jump bite and in both leaps down the ridge; all three of its tests fail without the change. The pinned
+  counts and times did not change.
+- **A bay does not lose a perch.** While it bays a hero on a perch, the 1.5 s senses clock does not run (he may be out of its
+  sight and hearing there). The 1.5 s of holding still at the bay still ends it, so D26 holds.
+- **The side is chosen at each notice.** The side of him it stands back on is forgotten when it notices or gives up.
+- **Assist:** the longer-warnings assist turns the bite off the perch off, with the other D158 reactions. The stand-off and the
+  stomp rule stay.
+- **Rooms.** The perches stay as safe places to watch from. The way past is: come down, dodge, then finish it (the sword, or a
+  stomp in its recovery) or leave. `forest-ridge` was reworked (its geometry only; the room's x range, exit and elements stay):
+
+  | Object | D158 | Now |
+  | --- | --- | --- |
+  | one-way ledge | x 6224-6288, y 256 | x 6144-6208, y 272 (32 px up: the wolf sees him on it) |
+  | floor leg | x 6288-6352 | x 6288-6384 |
+  | mounds | x 6352-6416 and 6448-6512 | x 6384-6448 and 6480-6528 (trench 32 px, as before) |
+  | wolf | starts on the floor leg facing right | starts on the right mound facing left (the polyline drawn from the right) |
+  | entrance | x 5984 | x 5968 |
+  | thorn root, tuft, second root | x 6096, 6576, 6696 | x 6064, 6600, 6720 |
+
+  So the wolf comes down its route toward a hero who walks in, notices him as he reaches the ledge, and the 176 px of flat floor
+  between the ledge and the first mound, with none of the room's jumps on it, is where its lunge and its leap reach him. The
+  positions were found by a headless search over the ledge, the mounds, the route and the thorns, scored by the walk-forward runs;
+  moving the scripted walker's take-offs by 4 to 8 px or narrowing its mound jump windows changed a count by at most 2.
+- **The walker.** Its jump windows at the mounds now reach past each face, so a walker who has walked up to a face jumps it; one
+  who stood against it was bitten there by an artefact of the script. Every run through `WolfRoomRuns.run` (both rooms' mastered
+  route over its start moments and their walk-forward sweeps) now fails when the walker holds a direction, neither jumps nor
+  swings, and does not move.
+- **Measured (scripted heroes).** Mastered routes, no ammunition: `forest-glade` 9.33 s (9.03 s with the assist; was 8.85),
+  `forest-ridge` 10.68 s (10.12 s; was 12.55), 8.88 to 14.65 s over the start moments. Both pass from every start moment over
+  12 s, with and without the assist. Retry cost: glade 8.63 s at most on the mastered pace (the second thorn root), ridge 10.22 s
+  for a route started at once (the second root) and under 15 s on every start moment. A careless hero who only walks forward,
+  without the assist (bitten / out alive; "stomped" before is a free kill):
+
+  | Room and walk | D158: bitten | D158: stomped it | D158: out, wolf alive | Now: bitten | Now: out, wolf alive |
+  | --- | --- | --- | --- | --- | --- |
+  | glade, 0 to 4 s pause on the branch (41) | 9 | 17 | 15 | 22 | 19 |
+  | glade, no pause, start moments over 12 s (121) | 62 | 41 | 18 | 76 | 45 |
+  | glade, walks on 0 to 0.9 s after the bay (610) | 0 | 610 | 0 | 610 | 0 |
+  | ridge, 0 to 4 s pause on the ledge (41) | 5 | 2 | 34 | 29 | 12 |
+  | ridge, no pause, start moments over 12 s (121) | 16 | 23 | 82 | 83 | 38 |
+  | ridge, walks on 0 to 0.9 s after the bay (610) | 0 | 419 | 191 | 585 | 25 |
+
+  With the longer-warnings assist, `forest-ridge`: 7 of 41 and 19 of 121 bitten, none of the 610 after the bay. No walk stomps it
+  outside its recovery. The first build of this entry (only the ledge moved) gave the ridge 2 of 41, 28 of 121 and 430 of 610.
+- **Longer waits.** The waits swept in 0.1 s steps up to a cap of **8 s** (480 frames; the pins above stop at 4 s), scripted
+  heroes, bitten / out alive; none kills the wolf outside its recovery (`ForestGladeTest`, `ForestRidgeTest`). "Back end" is the
+  ridge ledge's left end, away from the way on: after the wait he walks off it, lands, and goes forward under the ledge.
+
+  | Walk | No assist, 0 to 4 s (41) | No assist, 4.1 to 8 s (40) | Assist, 0 to 4 s (41) | Assist, 4.1 to 8 s (40) |
+  | --- | --- | --- | --- | --- |
+  | glade, pause on the branch | 22 / 19 | 23 / 17 | 7 / 34 | 13 / 27 |
+  | ridge, pause on the ledge | 29 / 12 | 2 / 38 | 7 / 34 | 0 / 40 |
+  | ridge, wait on the ledge, back end, forward at once | 25 / 16 | 11 / 29 | 12 / 29 | 8 / 32 |
+  | ridge, back end at once, wait on the floor | 17 / 24 | 11 / 29 | 12 / 29 | 8 / 32 |
+  | ridge, back end as it bays, wait on the floor | 41 / 0 | 40 / 0 | 0 / 41 | 20 / 20 |
+
+  **Long waits on the ridge ledge are mostly safe:** of the 40 pauses of 4.1 to 8 s, 38 get out without the assist and all 40 with
+  it, so over the whole 0 to 8 s only 31 of 81 pauses are bitten (7 of 81 with the assist). Leaving by the back end after a long
+  wait is mostly safe too, except as the wolf bays: without the assist its leap then takes a hero who lets go as he clears the
+  ledge and stays there, in all 81 runs. The glade does not become safe with a longer wait without the assist (23 of the 40
+  longer pauses bitten); with it the glade is mostly safe at either length (20 of 81 bitten). The target above was set on pauses of
+  0 to 4 s and on start moments; the author accepted that longer waits are this safe (the verdict above).
+- **The back end's answers** (probed headless over 45 leaps, as it bays and from ledge waits of 0 to 8 s; each answer begun 0,
+  0.05, 0.1, 0.15, 0.2 and 0.25 s after it gathers). It gathers with the hero just off the ledge (body x 6133-6144, feet y 277 to
+  294, falling) and the wolf at its range end (body x 6288-6322), whole on screen (view x 5952-6592). A hero who let go as he
+  cleared the ledge is the locked spot: staying is bitten in all 45. **Walking on away from the wolf** and **jumping** (in place or
+  either way) escape all 45 at every delay; walking on from the first frame carries him on to the first thorn root's column by the
+  time the leap lands. Steering back toward the ledge works only at once (42 of 45 at 0 s and 41 at 0.05 s, by getting back on to
+  it; from 0.1 s none). A hero who holds the direction through the whole fall is not leapt at: the spot would lie past its range plus 160 px. With
+  the assist it never gathers. Staying, walking on, jumping and the two positions are pinned for 18 of these leaps (as it bays,
+  and ledge waits in 0.1 s steps):
+  `ForestRidgeTest.offTheBackEndWalkingOnOrJumpingEscapesTheBaysBiteAndStayingDoesNot`.
+- **Where a walk forward is still safe** (about 3 to 5 runs in 10 of the two sweeps the target names; kept by the verdict
+  above): in the glade a hero who leaves the branch before it has
+  bayed often passes its lunge, which goes the way it faced at the commit, and one who waits past the 1.5 s give-up walks past a
+  wolf that ignores him until he has been out of its sight (D115). In the ridge: a pause on the ledge of 2.8 to 4 s mostly outlasts
+  the bay, and he follows it while its back is turned, passes it as it notices him again and the mound jumps carry him over it; and
+  from start moments of about 4.1 to 7.8 s it is patrolling away up its mounds as he comes down, so he meets it late and gets by
+  on the same jumps.
+- **Tests changed:** the stomp cases of `WolfDevelopTest` (a stomp now kills only in recovery; the bayed and committed cases
+  became no-kill cases), its bounce-off-the-jump-bite case (he is now met if he goes on), both rooms' routes and times
+  (`ForestGladeTest`, `ForestRidgeTest`, `RoomReplayTest`, `FirstMeetingPocketTest`; the ridge pocket moved with the ledge to
+  x 6184, y 272). For the ridge rework: `ForestRidgeTest`'s counts, times, retry figures (the second root, was the tuft's and the
+  root's), leaps seen (now down from the right mound) and mound, the entrance in `RoomTest` and the collection return (7.95 s, was
+  7.78); its walk without a pause and its walk after the bay now also assert the assist's counts. One bound is looser: the
+  longest careless walk-through of the ridge is now held to 8 s, was 7.85 s (measured 7.95 s: the entrance is 16 px further from
+  the exit, and the moved thorns shift the jump timings; the figure is the two changes together). No allocation ceiling was raised. New: the bay, its bite and its safe answers, the refuge below a higher perch (`wolf-steps.tmx`), the bay that keeps a
+  perch it cannot sense, the side chosen afresh, jumping while walking along a perch, the assist watched over the whole drop
+  (`WolfDevelopTest`), the walk-forward counts and the never-bitten perch (both room tests),
+  `AllocationBudgetTest.wolfBayAndItsBiteThroughTheRealLevel` (0.2 to 0.8 B/frame in 3 runs, ceiling 8); the pause sweeps carried
+  to 8 s with their counts up to 4 s unchanged, the back-end walks (`ForestRidgeTest`), the blocked bay (`WolfDevelopTest`), the
+  walker that must not stand still (`WolfRoomRuns`), the floor it never leaves for a perch (`WolfFloorTest`) and the ground tops
+  drawn on both rooms' solids (`ForestRidgeTest`, `ForestGladeTest`).
+- **Evidence limit:** every number here is from scripted, headless heroes. The judgement of fairness and sound is the author's own
+  play in the web build (the verdict above); no novice has played these rooms
+  ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)).

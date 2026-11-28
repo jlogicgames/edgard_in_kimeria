@@ -510,7 +510,7 @@ class WolfTest {
         assertTrue(w.isRemains());
     }
 
-    @Test void aStompOnACommittedWolfKillsItWithTheNormalBounce() {
+    @Test void aStompOnARecoveringWolfKillsItWithTheNormalBounce() {
         Level level = level();
         Wolf w = inState(level, Wolf.State.RECOVER);
         harness.held.clear();

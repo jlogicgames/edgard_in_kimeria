@@ -123,8 +123,10 @@ on a route checked at load and strikes only along a line its wind-up has drawn; 
 (D151) is the exception the sword cannot kill: it flies like the bat at half its speed and never reacts to the hero (no notice, no wind-up),
 its contact kills also during a swing and from above (no stomp), the blade passes through it, and it leaves no body
 (`Enemy.stopsSword`, `touchesDuringSwing`, `hitByFire`). A monster that answers the hero's habits (the wolf, D158) does it by a
-fixed rule with a drawn tell, never by chance, and the longer-warnings assist turns those answers off; a stomp kills the wolf only
-when it is committed or bayed. A routed wolf leaps only steps of 16 px and gaps of 48 px, checked at load, and never strikes across one.
+fixed rule with a drawn tell, never by chance, and the longer-warnings assist turns those answers off. A stomp kills the wolf only
+while it recovers; bayed, it stands back from a perch and bites a hero who comes down off it
+(an answer too), never one who stays on it (D165).
+A routed wolf leaps only steps of 16 px and gaps of 48 px, checked at load, and never strikes across one.
 
 ## Monster bodies (D101)
 

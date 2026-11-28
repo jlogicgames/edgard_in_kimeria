@@ -112,7 +112,7 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 `forest-2` contains nine rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
 with a tree to climb and a leap over two walls (split from the entry by #376, redesigned by #545), the fissure room (two ember fissures and a ledge beetle), the glade (the forest wolf,
-met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), the hollow (two mosquito swarms around a thorn root, #645), the ridge (the wolf leaping two mounds, met from a high ledge, #525), a forest course with an ascending
+met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), the hollow (two mosquito swarms around a thorn root, #645), the ridge (the wolf leaping two mounds, met from a one-way ledge, #525), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -181,6 +181,7 @@ Every monster dies from one hit. A monster killed by the sword also sprays a lig
 droplets away from the hero (#319); one killed by a fireball, a thrown stone or a stomp dies without any spray.
 The forest beetle is the exception (below): the sword and a stomp set it off instead of killing it, and it never bleeds.
 The mosquito swarm is another (below): the sword never kills it, landing on it kills Edgard, and it never bleeds.
+The forest wolf too (below): landing on it kills it only while it recovers, otherwise Edgard bounces off.
 
 ## Forest beetle
 
@@ -272,18 +273,22 @@ line its lunge will cover (half a second, three quarters with the longer-warning
 in a quarter of a second, low over the floor, and bites, with a heavy clack heard hit or miss. Only the jaws kill. It cannot be
 outrun without the assist: a jump, timed within about half a second of its crouch, carries Edgard over the jaws (its jaws are low and the
 rooms it lives in have headroom to jump); the sword, a fireball or a stone kills it as it comes; and anything more than a block
-and a half up is out of its reach: it runs to the nearest point it can reach, bays (a double bark), gives up after a second and a
-half and trots on, and will not notice him again until he has been out of its sight for a second. After a bite it shakes its head
+and a half up is out of its reach: it runs to the nearest point it can reach (under such a perch it stands back from him), bays (a
+double bark), gives up after a second and a half of holding still and trots on, and will not notice him again until he has been
+out of its sight for a second. After a bite it shakes its head
 for half a second, harmless, and chases again with a new crouch. It never goes through a wall. The sword, a fireball, a stone
-or a torch kill it whenever they reach it. Landing on it kills only a committed wolf (crouched, lunging, biting, shaking off a
-bite) or a baying one; otherwise Edgard bounces off. It answers his habits ([D158](DECISIONS.md#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28)): while it chases, a jump
+or a torch kill it whenever they reach it. Landing on it kills only a wolf shaking itself off after a bite or a jump back
+([D165](DECISIONS.md#d165-the-wolf-is-not-stomped-for-free-a-stomp-only-in-its-recovery-and-a-bite-off-the-perch-525-amends-d158-d115-2026-11-28));
+otherwise Edgard bounces off. Coming down off a perch it bays under, by a step or a jump, is met by a leaping bite once he is
+below where he stood (moving, stop or steer back in the air; already still, jump or move on); jumping on the perch is safe. It answers his habits ([D158](DECISIONS.md#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28)): while it chases, a jump
 makes it stop, look up and run to where he will come down, and a jump right by it is met by a leaping bite (stop or turn back in the
 air); a swing as it crouches makes it hop back, and the next such swing it waits out before it crouches again. The longer-warnings
-assist turns those answers off. A wolf with a route also leaps one-block steps and short gaps. It leaves its body lying flat on its side, which twitches when he
+assist turns those answers off, the bite off a perch too. A wolf with a route also leaps one-block steps and short gaps.
+It leaves its body lying flat on its side, which twitches when he
 comes near. There is no hint about it: it is met in play. Authoring: `Wolf` (48×24) in `SpawnPoints` with `offNeg`/`offPos` like the
 mobs, checked at load (a range of at least ten tiles on floor without gaps, nothing of the entrance, exit or checkpoints in its sight,
 and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)),
-and with its route in `forest-ridge`, the seventh room, from a high ledge ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). A routed wolf is a polyline instead of a box
+and with its route in `forest-ridge`, the seventh room, from a one-way ledge ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). A routed wolf is a polyline instead of a box
 (see the develop card in [GAME_DESIGN.md](GAME_DESIGN.md#wolf-develop-card-built-d158-525)).
 
 ## Mosquito swarm

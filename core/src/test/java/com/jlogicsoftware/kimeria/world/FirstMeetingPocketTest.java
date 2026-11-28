@@ -316,23 +316,24 @@ class FirstMeetingPocketTest {
     @Test void forestFissureTheFirstFissure() { pocket("forest-2", "forest-fissure", "clocked-column", EmberFissure.class, 3200, "JET"); }
     /**
      * On the one-way branch (x 3952-4016, 32 px above the wolf's floor), where the trunk's face does not cut its sight (a platform is not a
-     * solid): it notices him, sprints under him, bays at its range end and gives up, and he is never committed to (D115, #331).
+     * solid): it notices him, sprints up, stands back, bays and gives up, and he is never committed to or leapt at (D115, D165,
+     * #331).
      */
     @Test void forestGladeTheWolf() {
         Set<String> seen = pocket("forest-2", "forest-glade", "wolf", Wolf.class, 3976, 272, "BAY");
-        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE})
+        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.POUNCE_COIL, Wolf.State.POUNCE})
             assertFalse(seen.contains(never.name()), "the wolf never commits to a hero 32 px up: it showed " + seen);
         for (Wolf.State shown : new Wolf.State[]{Wolf.State.NOTICE, Wolf.State.CHASE, Wolf.State.TROT})
             assertTrue(seen.contains(shown.name()), "the pocket shows the wolf's " + shown + ": " + seen);
     }
 
     /**
-     * The wolf's develop (#525, D158): on the one-way ledge (x 6224-6288, 48 px above the floor), the hero watches it leap the step
-     * and the trench, notice him, leap down and bay under him; it never commits and nothing starts at him.
+     * The wolf's develop (#525, D158, D165): on the one-way ledge (x 6144-6208, 32 px above the floor), the hero watches it leap the
+     * step and the trench, notice him, leap down, stand back and bay; it never commits and nothing starts at him.
      */
     @Test void forestRidgeTheWolfLeaps() {
-        Set<String> seen = pocket("forest-2", "forest-ridge", "wolf", Wolf.class, 6248, 256, "LEAP");
-        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.READ, Wolf.State.POUNCE})
+        Set<String> seen = pocket("forest-2", "forest-ridge", "wolf", Wolf.class, 6184, 272, "LEAP");
+        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.READ, Wolf.State.POUNCE_COIL, Wolf.State.POUNCE})
             assertFalse(seen.contains(never.name()), "a hero standing on the ledge is not attacked: it showed " + seen);
         for (Wolf.State shown : new Wolf.State[]{Wolf.State.LEAP_COIL, Wolf.State.NOTICE, Wolf.State.BAY})
             assertTrue(seen.contains(shown.name()), "the pocket shows the wolf's " + shown + ": " + seen);
