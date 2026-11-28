@@ -120,7 +120,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | ingredient | `Collectable:Bat`, `Collectable:Mushroom` | collects a healer ingredient | pickup |
 | branch-climb | `Geometry:branch` (skill) | climbs a tree by jumping up through one-way branches (`Collisions:Platform` with `skin=branch`, D80) | skill |
 
-Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:snag` (D122), `Decor:crown`, `HangingVine`, `Torch`
+Not elements (scenery, markers, plain geometry): `Decor:bush`, `Decor:lookalike`, `Decor:trunk`, `Decor:trunk-knot`, `Decor:snag` (D122), `Decor:crown-droop`, `Decor:crown-broad`, `Decor:crown-round`, `Decor:crown-droop-fine`, `Decor:crown-broad-fine`, `Decor:crown-round-fine` (D162), `HangingVine`, `Torch`
 (decorative), `Checkpoint`, `Player`, `Deadline`, `Collisions:Wall` (solid room walls, never grabbed since D121), `Collisions:Platform`
 (one-way platforms), plain `Collisions`, the `Rooms` markers and `Hints` (a `Hint`'s `coach` property, D139, arms a step of the touch tutorial; it is not an element and needs no registry row).
 

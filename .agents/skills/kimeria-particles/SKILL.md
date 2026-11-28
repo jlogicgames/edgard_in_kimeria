@@ -41,6 +41,7 @@ D93: seen and heard when the hazard acts, hit or miss); its sound is
 | `KIND_DOME` | additive | as `KIND_GLOW`, half as tall | as `KIND_GLOW`; the upper half of a glow with its flat edge on y: a flash lying on a floor (`effects.BeetleFx`, D147) |
 | `KIND_SPARK` | normal | head `size * (1 - 0.4 t)` and a streak up to 5 px back along its flight, closing as `(1 - t)^3` | `1` until `t = 0.7`, then down to `0.45`; brakes along its line (`1 - (1 - t)^4`): the false honey fungus burst (D152, `effects.SporeCloud`) |
 | `KIND_LEAF` | normal | long side `size`, width flips edge-on to full; sways and tilts | `0.85`, ramped in and out (`spawnLeaf`; `effects.LeafFx`, #473) |
+| `KIND_GLINT` | normal | a patch of native pixels (runs from its top-left), never moves | its own peak, in over 30 % of its life, out over 50 % (`spawnGlint`; `effects.CrownGlintFx`, D163) |
 
 `KIND_FLAME` (#397) is for warm pixels over the sky: a fading warm colour mixes with the blue into olive or magenta, a shrinking
 opaque one does not. The fireball's `effects.FireballFx` (one per `Level`) uses it for its trail, splash and sparks and `KIND_GLOW`
@@ -48,11 +49,16 @@ for its hit halos, and draws its impact ring through the existing `shockwave.fra
 per hit); it is the model for a weapon or projectile effect. Rings come from the shared `effects.RingPool` (fixed slots, per-pool colour, size and
 life); the pickup's `effects.PickupSparksFx` (#402) is a small second user: sparks on `KIND_FLAME` plus a faint ring.
 
+`effects.CrownGlintFx` (D163) is the wind's effect: light on leaf pixels as a `world.Wind` gust passes, one system per depth, a full
+pool skipping the new glint. Its leaf patches are baked: after a change to a crown grid, `mid.grid`, `grove.grid`, a `leaves` box or a glint
+colour run `python3 tools/wind_spots.py` (`validateWindSpots`); the card is in ART_DIRECTION.md, "Wind in the crowns". A later wind
+effect reads the same `world.Wind` front.
+
 `effects.FlightFx` (D132) is the project's sprite-flight helper (a cached sprite from A to B in screen space, a `KIND_FLAME` trail, a landing twinkle): the pickup flying to the HUD, the healer hand-over, the elixir. Use it, not a new pool, for any "something flies to where it goes" picture; it is cosmetic and cleared with the room.
 
 The false honey fungus's `effects.SporeCloud` (D152) is `KIND_SPARK` sparks plus one `RingPool` ring.
 
-`render` draws the normal-blend pass (smoke, grit, flame, leaves and sparks) first, then the additive pass, then restores white and normal blending.
+`render` draws the normal-blend pass (smoke, grit, flame, leaves, sparks and glints) first, then the additive pass, then restores white and normal blending.
 
 ## Recipe for a new emitter
 

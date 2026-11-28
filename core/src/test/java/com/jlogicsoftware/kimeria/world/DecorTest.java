@@ -49,7 +49,8 @@ class DecorTest {
     }
 
     @Test void theBushKindLoadsAndAnUnknownOrMissingKindFailsTheLoad() {
-        assertEquals(java.util.Set.of("bush", "lookalike", "trunk", "snag", "crown"), Decor.kindNames());
+        assertEquals(java.util.Set.of("bush", "lookalike", "trunk", "trunk-knot", "snag", "crown-droop", "crown-broad", "crown-round",
+            "crown-droop-fine", "crown-broad-fine", "crown-round-fine"), Decor.kindNames());
         assertEquals(Decor.FRAMES, Decor.fromMap(harness.assets(), object("Bush"), "x").frameCount());
         var unknown = assertThrows(IllegalArgumentException.class, () -> Decor.fromMap(harness.assets(), object("tree"), "'Bush' [7]"));
         assertTrue(unknown.getMessage().contains("Decor 'Bush' [7]") && unknown.getMessage().contains("tree"), unknown.getMessage());
@@ -137,7 +138,7 @@ class DecorTest {
 
     @Test void aHeroWalkingPastABushInTheRealLevelStartsItsBrush() {
         Level level = harness.roomOf("forest-0", 0);
-        Decor first = level.decor.stream().min((a, b) -> Float.compare(a.getX(), b.getX())).orElseThrow();
+        Decor first = level.decor.stream().filter(Decor::brushes).min((a, b) -> Float.compare(a.getX(), b.getX())).orElseThrow(); // a bush, not a tree (#635)
         level.player.position.x = first.getX() - 60;
         level.player.position.y = first.getY() + first.getHeight() - level.player.getHeight();
         int starts = 0;
@@ -274,8 +275,10 @@ class DecorTest {
      * transparent 4-neighbours), so the background never shows through a trunk, a crown or a bush.
      */
     @Test void theTreesAndBushesAreSolidWithNoTranslucentPixelAndNoHole() throws Exception {
-        SpriteSheets.Sheet[] sheets = {SpriteSheets.DECOR_TRUNK, SpriteSheets.DECOR_SNAG, SpriteSheets.DECOR_CROWN, SpriteSheets.DECOR_BUSH};
-        int[] frames = {1, 1, 1, Decor.FRAMES};
+        SpriteSheets.Sheet[] sheets = {SpriteSheets.DECOR_TRUNK, SpriteSheets.DECOR_TRUNK_KNOT, SpriteSheets.DECOR_SNAG,
+            SpriteSheets.DECOR_CROWN_DROOP, SpriteSheets.DECOR_CROWN_BROAD, SpriteSheets.DECOR_CROWN_ROUND, SpriteSheets.DECOR_CROWN_DROOP_FINE,
+            SpriteSheets.DECOR_CROWN_BROAD_FINE, SpriteSheets.DECOR_CROWN_ROUND_FINE, SpriteSheets.DECOR_BUSH};
+        int[] frames = {1, 1, 1, 1, 1, 1, 1, 1, 1, Decor.FRAMES};
         for (int s = 0; s < sheets.length; s++) {
             java.awt.image.BufferedImage png;
             try (var input = getClass().getClassLoader().getResourceAsStream(sheets[s].path())) {
@@ -306,5 +309,78 @@ class DecorTest {
                         sheets[s].path() + " frame " + f + ": a hole at (" + x + "," + y + ") shows the background through the drawing");
             }
         }
+    }
+
+    /** Crowns per shipped map (#635, D162; docs/ART_DIRECTION.md, decor tier): about one tree per screen. */
+    private static final Map<String, Integer> CROWNS = Map.of("forest-0", 5, "forest-1", 10, "forest-2", 11);
+    private static final Map<String, SpriteSheets.Sheet> CROWN_SHEETS = Map.of("crown-droop", SpriteSheets.DECOR_CROWN_DROOP,
+        "crown-broad", SpriteSheets.DECOR_CROWN_BROAD, "crown-round", SpriteSheets.DECOR_CROWN_ROUND,
+        "crown-droop-fine", SpriteSheets.DECOR_CROWN_DROOP_FINE, "crown-broad-fine", SpriteSheets.DECOR_CROWN_BROAD_FINE,
+        "crown-round-fine", SpriteSheets.DECOR_CROWN_ROUND_FINE);
+    /** The trunk's middle column, from its 16 px object's x (its 23 px bark runs x - 3 to x + 19, D122). */
+    private static final float TRUNK_MIDDLE = 8f;
+
+    /**
+     * #635 (D162): the forest's trees are decor. Every trunk kind stands on the floor and is drawn behind the play tiles; every
+     * crown hangs from the room's top, centred over a trunk of its room, and is drawn as the decor tier draws it (before the
+     * objects). None is solid or an object. No opaque pixel of a crown, as drawn (mirroring included), lies over a gameplay object
+     * of its room (anything in {@code objects}, a platform, ladder, escalator, lever trigger or solid block), so leaves never cover
+     * what the hero must read. World Y grows downward: a crown's top edge is y 0 and its frame hangs down from it.
+     */
+    @Test void everyShippedCrownHangsOverATrunkAndNoLeafCoversAGameplayObject() throws Exception {
+        Map<String, java.awt.image.BufferedImage> images = new java.util.HashMap<>();
+        for (var e : CROWN_SHEETS.entrySet()) {
+            try (var input = getClass().getClassLoader().getResourceAsStream(e.getValue().path())) {
+                assertNotNull(input, e.getValue().path());
+                images.put(e.getKey(), javax.imageio.ImageIO.read(input));
+            }
+        }
+        CROWNS.forEach((map, expected) -> {
+            int found = 0;
+            for (int room = 0; ; room++) {
+                Level level = harness.roomOf(map, room);
+                List<Rectangle> gameplay = new ArrayList<>();
+                for (var o : level.objects) {
+                    if (o instanceof com.jlogicsoftware.kimeria.entity.Entity e) {
+                        gameplay.add(new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()));
+                    }
+                }
+                List<com.jlogicsoftware.kimeria.entity.Entity> parts = new ArrayList<>(level.collisionBlocks);
+                parts.addAll(level.ladders);
+                parts.addAll(level.escalators);
+                parts.addAll(level.triggers);
+                parts.addAll(level.fallingPlatforms);
+                parts.addAll(level.staticPlatforms());
+                for (var e : parts) gameplay.add(new Rectangle(e.getX(), e.getY(), e.getWidth(), e.getHeight()));
+                for (Decor d : level.decor) {
+                    if (d.behindTiles()) {
+                        assertEquals(304f, d.getY() + d.getHeight(), 0.01f, map + " " + d.kind() + " at x " + d.getX() + ": on the floor");
+                        continue;
+                    }
+                    java.awt.image.BufferedImage image = images.get(d.kind());
+                    if (image == null) continue; // a bush or a look-alike
+                    found++;
+                    String label = map + " " + d.kind() + " at x " + d.getX();
+                    assertEquals(0f, d.getY(), 0.01f, label + " hangs from the room's top");
+                    assertEquals(image.getWidth(), d.getWidth(), 0.01f, label);
+                    assertEquals(image.getHeight(), d.getHeight(), 0.01f, label);
+                    float middle = d.getX() + d.getWidth() / 2f;
+                    assertTrue(level.decor.stream().anyMatch(t -> t.behindTiles() && t.getX() + TRUNK_MIDDLE == middle),
+                        label + " is centred over a trunk of its room");
+                    for (Rectangle r : gameplay) {
+                        int x0 = (int) Math.max(r.x, d.getX()), x1 = (int) Math.min(r.x + r.width, d.getX() + d.getWidth());
+                        int y0 = (int) Math.max(r.y, d.getY()), y1 = (int) Math.min(r.y + r.height, d.getY() + d.getHeight());
+                        for (int x = x0; x < x1; x++) for (int y = y0; y < y1; y++) {
+                            int column = (int) (x - d.getX());
+                            if (d.mirror()) column = image.getWidth() - 1 - column;
+                            assertEquals(0, image.getRGB(column, (int) (y - d.getY())) >>> 24,
+                                label + ": a leaf at (" + x + "," + y + ") covers a gameplay object " + r);
+                        }
+                    }
+                }
+                if (!level.hasNextRoom()) break;
+            }
+            assertEquals(expected, found, map + ": crowns authored");
+        });
     }
 }

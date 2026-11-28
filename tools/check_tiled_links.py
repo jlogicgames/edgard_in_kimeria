@@ -966,7 +966,7 @@ DECOR_JAVA = FALLING_JAVA.with_name('Decor.java')
 
 def decor_kinds():
     """The kind names are the string keys of Decor.KINDS: one source of truth, read from the Java class."""
-    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
+    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of(?:Entries)?\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
     return tuple(re.findall(r'"([^"]+)"\s*,\s*new Kind\(', block.group(1))) if block else ()
 
 
@@ -975,7 +975,7 @@ DECOR_STILL_ARG, DECOR_HANGS_ARG = 3, 4  # positions in `new Kind(sheet, frames,
 
 def _decor_kinds_with(arg):
     """The kinds whose boolean argument at position `arg` of their Kind(...) in Decor.KINDS is true."""
-    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
+    block = re.search(r'KINDS\s*=\s*java\.util\.Map\.of(?:Entries)?\((.*?)\);', DECOR_JAVA.read_text(encoding='utf-8'), re.S)
     if not block:
         return ()
     return tuple(name for name, args in re.findall(r'"([^"]+)"\s*,\s*new Kind\(([^)]*)\)', block.group(1))

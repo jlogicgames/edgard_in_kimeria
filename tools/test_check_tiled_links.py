@@ -514,12 +514,16 @@ class DecorLinksTest(unittest.TestCase):
         self.assertIn('not on the top of a solid block', check(tmx(decor(box='x="500" y="296" width="32" height="24"'), FLOOR))[0])
 
     def test_the_kinds_are_read_from_the_java_table(self):
-        self.assertEqual({'bush', 'lookalike', 'trunk', 'snag', 'crown'}, set(links.decor_kinds()))  # trunk: #349 (D80), snag: D122, crown: #421
+        # trunk: #349 (D80), snag: D122, the second trunk and the three crowns: #635 (D162; they replaced #421's crown)
+        self.assertEqual({'bush', 'lookalike', 'trunk', 'trunk-knot', 'snag', 'crown-droop', 'crown-broad', 'crown-round',
+                          'crown-droop-fine', 'crown-broad-fine', 'crown-round-fine'}, set(links.decor_kinds()))
         self.assertEqual(('lookalike',), links.decor_still_kinds())
-        self.assertEqual(('crown',), links.decor_hanging_kinds())
+        self.assertEqual({'crown-droop', 'crown-broad', 'crown-round', 'crown-droop-fine', 'crown-broad-fine', 'crown-round-fine'},
+                         set(links.decor_hanging_kinds()))
+        self.assertEqual({'trunk', 'trunk-knot', 'snag'}, set(links.decor_trunk_kinds()))
 
     def test_a_crown_hangs_from_the_room_top_or_a_solid_underside_not_from_the_floor(self):
-        crown = lambda y: decor('crown', f'x="64" y="{y}" width="96" height="40"')
+        crown = lambda y: decor('crown-round', f'x="64" y="{y}" width="160" height="144"')
         room = '<objectgroup name="Rooms"><object name="one" type="Room" x="0" y="0" width="400" height="368"/></objectgroup>'
         self.assertEqual([], check(tmx(crown(0), FLOOR).replace('<objectgroup name="Spawn', room + '<objectgroup name="Spawn', 1)))
         self.assertEqual([], check(tmx(crown(16), CEILING + FLOOR)))  # under a solid block
@@ -652,7 +656,7 @@ class BranchRootLinksTest(unittest.TestCase):
                 f'<properties><property name="skin" value="branch"/>{flip}</properties></object>')
 
     def test_the_trunk_kinds_are_read_from_the_java_table(self):
-        self.assertEqual({'trunk', 'snag'}, set(links.decor_trunk_kinds()))
+        self.assertEqual({'trunk', 'trunk-knot', 'snag'}, set(links.decor_trunk_kinds()))  # trunk-knot: #635
 
     def test_a_branch_beside_a_trunk_passes_on_either_side_and_one_px_further_fails(self):
         # a trunk at x 100 is drawn from x 94; its bark runs from x 97 to 119

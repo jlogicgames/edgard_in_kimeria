@@ -10,7 +10,8 @@ asked for per piece in the grid: `blur=R` on a piece line is the out-of-focus Ga
 #597), baked here into the sheet; the game does nothing at run time.
 
 Grid format: `tile N`, `color <char> <RRGGBB[AA]>` lines (`.` is transparent; AA is a straight alpha), then for each piece
-`piece <name> <wtiles> <htiles>` followed by htiles*N rows of wtiles*N characters.
+`piece <name> <wtiles> <htiles>` followed by htiles*N rows of wtiles*N characters. A piece may type `leaves <x> <y> <w> <h>`
+boxes (piece pixels) for the wind's glints (#593, tools/wind_spots.py); they are not drawn.
 
 Outputs (next to the grid): `out/<set>-<name>.png` and `<set>-<name>.tsx`. A tileset with only opaque colours is an exact
 indexed PNG (transparent index 0 when needed); one with partial alpha is RGBA. The installed sheets are registered in
@@ -38,6 +39,7 @@ PIECE_H = 2
 PIECE_OPTIONS = 3
 PIECE_ROWS = 4
 BLUR = 'blur='       # the one piece option: the Gaussian radius in px
+LEAVES = 'leaves'    # a line that types where a piece's leaves are (tools/wind_spots.py)
 
 
 def parse(path):
@@ -57,6 +59,8 @@ def parse_text(text, label):
             tile = int(args[0])
         elif word == 'color':
             colors[args[0]] = tuple(bytes.fromhex(args[1])) + (() if len(args[1]) == HEX_RGBA else (OPAQUE,))
+        elif word == LEAVES:
+            continue  # the wind's leaf boxes (#593), read by tools/wind_spots.py; they change no pixel
         elif word == 'piece':
             pieces.append([args[PIECE_NAME], int(args[PIECE_W]), int(args[PIECE_H]), args[PIECE_OPTIONS:], []])
         elif pieces and tile and len(line) == pieces[-1][PIECE_W] * tile:

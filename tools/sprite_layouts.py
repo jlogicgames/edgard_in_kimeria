@@ -99,7 +99,14 @@ DECOR_SHEETS = {
     'lookalike': ((24, 16), ('static',)),  # #299: the static look-alike, one frame, never animated
     'trunk': ((28, 288), ('trunk',)),  # #349 (D80): the tree trunk behind the branches, one frame; 28 wide since D122
     'snag': ((28, 200), ('snag',)),  # D122: a dead tree's snapped trunk, for a branch whose tree must stop below the moon
-    'crown': ((96, 40), ('crown',)),  # #421: the leaf crown hung over a trunk, one frame
+    'crown-droop': ((208, 160), ('crown-droop',)),  # #635: the weeping crown, a curtain of strands longest at the sides
+    'crown-broad': ((224, 128), ('crown-broad',)),  # #635: the broad dome, the trunk parting into limbs under it
+    'crown-round': ((160, 144), ('crown-round',)),  # #635: the tall round crown, one limb showing (replaced #421's 96x40 crown)
+    # #635 (D162): the same three crowns in the fine-clump style (round 3), the author keeps both styles
+    'crown-droop-fine': ((208, 160), ('crown-droop-fine',)),
+    'crown-broad-fine': ((224, 128), ('crown-broad-fine',)),
+    'crown-round-fine': ((160, 144), ('crown-round-fine',)),
+    'trunk-knot': ((28, 288), ('trunk-knot',)),  # #635: the second trunk, with a hollow and a burl
 }
 WORLD_IMAGES.update({f'decor-{name}': (size[0] * len(frames), size[1]) for name, (size, frames) in DECOR_SHEETS.items()})
 # The shared pickup cue (#345): drawn by every Collectable (its light is the SoftGlowFx effect since #544, not a sheet); runtime export `pickup-<name>.png`, one horizontal strip.
