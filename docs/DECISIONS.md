@@ -5178,8 +5178,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D157. The forest boss gains rocks, roots, a blow and poise (#625, amends D13, 2026-11-28)
 
 - **Status:** Card approved by the author, 2026-11-28 (numbers, choice by place, poise, existing frames). Built. Checked by
-  automated tests and by an agent's screenshots of the web build (BOSS.md, "Web run"); not yet played by a person, seen on
-  desktop or heard ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
+  automated tests, by an agent's screenshots of the web build (BOSS.md, "Web run") and by the author in the running game,
+  who accepted it on 2026-11-28 ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
 - **Why:** the author, 2026-11-25: the boss was very easy to win. It had one attack, walked to where the hero was, and every
   landed sword hit cancelled the sweep, so swinging was a safe trade (the wolf had the same root cause, #525).
 - **Decision** (full card: [BOSS.md](BOSS.md#special-attacks-and-poise-625-d157)):

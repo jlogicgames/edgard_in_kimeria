@@ -131,11 +131,11 @@ completed counter has its own completion shake; the interrupted normal has none.
 
 **Status — 2026-11-28:** the card was approved by the author (the numbers, the choice by the hero's place, poise as one
 uninterrupting hit, existing frames as poses) and is built ([D157](DECISIONS.md#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28)).
-Checked by automated tests and by an agent in the web release build (scripted keys, screenshots; below). Nobody has yet
-played the new fight, seen it on desktop or heard the new sounds ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
+Checked by automated tests and by an agent in the web release build (scripted keys, screenshots; below). The author checked
+the fight in the running game the same day and accepted it ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
 
 The boss keeps its walk, axe sweep and orange counter. It has three special attacks and a poise window, so neither the
-sword nor the walk-in answers everything. All numbers are first values, to be tuned by feel.
+sword nor the walk-in answers everything. These are the first values; the author accepted them unchanged.
 
 ### Which attack comes (deterministic, D7)
 
@@ -213,7 +213,9 @@ only walks in and swings dies. These are machine times, not a player's: timed fi
 the root burls and then the columns, the blow's specks on the dome's rim, its flash and its yellow-green halo, and the
 rocks' falls, landings and cracked frames were all seen, with no console error; the new sound files load. It found one
 defect, fixed here: a root froze 1-2 px high when it killed. The rocks' ground shadow (the Forest stone's art) is faint on
-this room's dark floor. Not checked: how the sounds are heard, the feel, fairness for a person, and the desktop build.
+this room's dark floor. That run did not cover how the sounds are heard, the feel, fairness for a person or the desktop build.
+
+**Author's check, 2026-11-28:** the author checked the fight in the running game and accepted it; no number changed ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
 
 ## Retry, elixir and completion
 
