@@ -3732,7 +3732,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   is read apart (`SceneryLayer`: factors, offsets, opacity, `driftx`, `wrapx`, regions resolved at load) and never feeds collision or the
   play layer; (2) the foreground is an object group per room (`foreground-<room>`, `roomx`, tile objects relative to the room, factor 1.6),
   drawn only in that room; (3) the maths is the card's, in whole pixels as Java's `Math.round` (half up): `x - round(f * (camX - originX))` and
-  `(y - originY) - round(f * (camTop - originY))`, `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
+  `(y - originY) - round(f * (camTop - originY))` (vertically not rounded since D154), `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
   floor camera top; clouds drift by accumulated time, not by the camera; the moon is a factor-0 layer; (4) draw order: scenery, play layer,
   objects and hero, fairy, foreground, HUD; (5) a layer is only as wide as its factor needs; (6) forest-1 uses the terrain sketch as its own
   play tileset (`ForestTerrain.tsx`); forest-0, forest-2 and other worlds keep theirs (forest-0 and forest-2: superseded by D112); (7) the parser is strict: a foreground group needs
@@ -3742,7 +3742,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   whose tiles are sub-rectangles of one packed sheet (896 x 1696), the cull rectangle is the view plus one tile (the shake moves the camera
   up to 1.5 px after `visibleWorldRect`), the batch holds 8191 sprites (the libGDX maximum); a frame of `forest-1-mob` with the 640 px view
   went from 4 198 region draws and 15 texture switches to 3 187 and 9 (800 px view: 4 866 and 21 to 3 698 and 9), measured through `NoopBatch`
-  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`) by a fractional, unsnapped offset (the world is drawn at screen resolution, so the drift glides; the camera parallax stays whole pixels), the two copies `wrapx` apart so the seam stays closed: they
+  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`) by a fractional, unsnapped offset (the world is drawn at screen resolution, so the drift glides; the camera parallax stays whole pixels, horizontally only since D154), the two copies `wrapx` apart so the seam stays closed: they
   stop in the pause, a room fade and after black in a death fade, and slow with the death slow motion; "map-wide layers never jump at a
   room change" holds while the rooms share a floor camera top (`everyForestRoomSharesOneFloorCameraTop`).
 - **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, half-up rounding, per-room origin,
@@ -5102,16 +5102,33 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   a speed limit alone (it starts and stops abruptly, and a tall room could leave the hero behind).
 - **Parallax and gates:** the camera top still lies between 0 and 8, so `check_bleed` and the steady camera of rule B hold; the
   jump apex that rule B measures at camera top 8 is now what a jump from the floor shows.
+- **Parallax (added 2026-11-28, amends D108):** a layer's vertical offset is no longer snapped to whole pixels: a point sits at
+  `(y - originY) - f * (camTop - originY)` on screen with the camera's true top. Snapped, a layer moved with the world and jumped
+  by a whole world pixel each time the rounded top changed: the fixed sky (factor 0) wobbled up and down by 1 px and the
+  foreground (1.6, 2.2) stepped, plain to see at the ease's 23 px a second. The floor camera draws exactly what it drew before;
+  at another camera top a layer lies within half a pixel of its old place. `parallax_mock.py` still draws and checks cover in
+  whole pixels; its bleed check, whose margins are only a fraction of a pixel wider than needed, now uses the game's exact
+  offset (same margins, every shipped room passes). Sideways the offsets stay snapped. `ParallaxRendererTest.everyLayerGlidesWhileTheCameraMovesVertically` pins
+  it; the one older pin it changes is the 0.4 layer at camera top 0, 3.2 px instead of 3.
 - **Allocation:** the follow writes into one reused vector and the view height is cached (before: two `Vector2` made per frame).
 - **Tests:** `VerticalCameraFollowTest` (slack, ease without overshoot, 60 against 144 Hz, the range of the targets),
   `VerticalCameraTest` (in `forest-1-escalators`: room entry, a jump from the floor does not scroll, a pan holds the ease, a
-  map reload does not jump; a rise and a fall move at most 0.4 px a frame and rest at 0 and 8).
+  map reload does not jump; a rise and a fall move at most 0.4 px a frame and rest at 0 and 8). `VerticalCameraRideTest` (a real
+  lift ride in `forest-0-platform`, a ladder climb in `forest-1-bramble` and a fall, at 30, 60 and 144 frames a second: no
+  step over the spring's peak speed, one direction, an 8 px scroll never under 0.3 s).
   `DirectionalActionsTest.aJumpFromTheFloorKeepsTheCarryingReminder`.
   `DirectionalActionsTest.carryingReminderEndsOnCameraScrollAndRearmsOnEachPickup` now holds the hero in the air for 90 frames
   after its teleport, so the camera is at rest before it measures; its assertions are unchanged.
 - **Web run (2026-11-28, release build, a test ladder added to the served `forest-0` only, frames stepped by script):** a jump
   from the floor moved the picture by 0 px; climbing and falling moved it the full 8 px over many frames, at most 1 px between two
-  frames. Not checked: desktop, a lift, and how it looks to a person.
+  frames. Desktop and a lift were checked in the next run.
+- **Desktop and web run (2026-11-28, with the unsnapped parallax):** a lift ride in `forest-0-platform`, a climb in
+  `forest-1-bramble`, a jump from the floor and a fall. Desktop (1280x720, scripted input, vsync frames): at most 0.39 px of
+  camera a frame, one direction on each leg, 0 for the jump; during the lift ride the patch of screen holding the fixed moon
+  changed 42 times with the snapped offset and never without it, and no frame showed a gap between layer rows. Web release (a
+  served copy with the start moved to the lift or the ladder and the clouds stopped): the floor line moved at most 1 screen px
+  a frame, and the moon did not change while the camera moved on the lift and in the fall. Judged by measurement and captured
+  frames, not by a person playing.
 
 ## D155. The falling branch lands with chips, leaves, dust and a rustle, and no shake (#443, 2026-11-28)
 

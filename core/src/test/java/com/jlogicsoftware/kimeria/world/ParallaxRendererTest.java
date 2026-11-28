@@ -64,7 +64,7 @@ class ParallaxRendererTest {
         // vertical: screenY = (y - originY) - f * (camTop - originY); the steady frame is the authored one, a hero standing high lifts the
         // camera top by up to 8 px (the room is 8 px taller than the view): a 0.4 layer lags 3.2 px
         assertEquals(64f - FLOOR_CAMERA_TOP, ParallaxRenderer.worldY(64, MID, 8, FLOOR_CAMERA_TOP) - 8);
-        assertEquals(64f - FLOOR_CAMERA_TOP + 3, ParallaxRenderer.worldY(64, MID, 0, FLOOR_CAMERA_TOP) - 0, "camera top 0: 0.4 x 8 = 3.2, snapped to 3");
+        assertEquals(64f - FLOOR_CAMERA_TOP + 3.2f, ParallaxRenderer.worldY(64, MID, 0, FLOOR_CAMERA_TOP) - 0, 1e-3f, "camera top 0: 0.4 x 8 = 3.2, not snapped (#678)");
     }
 
     @Test void theFloorCameraTopOfARoomIsItsBottomMinusTheView() {
@@ -146,6 +146,49 @@ class ParallaxRendererTest {
         }
         assertEquals(screen[0], screen[1]); assertEquals(screen[0], screen[2]);
         assertEquals(27 * 16f, screen[0], "the first drawn tile of the moon on screen, the same in every world (the piece's corner tile at column 26 is transparent: no cell, no draw)");
+    }
+
+    /** The camera eases up and down slowly (D154): every layer glides with it, never in whole-pixel steps back and forth (#678). */
+    @Test void everyLayerGlidesWhileTheCameraMovesVertically() {
+        TiledMapData map = forest1();
+        ParallaxRenderer renderer = new ParallaxRenderer(map);
+        Rectangle room = new Rectangle(MOB_X, 0, 800, 368), view = new Rectangle(MOB_X, FLOOR_CAMERA_TOP, VIEW_W, VIEW_H);
+        ForegroundGroup sharp = map.foregroundGroups.get(2), near = nearGroupOf(map, sharp);
+        for (int tenth = 80; tenth >= 0; tenth--) { // the room's whole vertical travel, in steps far below a world pixel
+            view.y = tenth / 10f;
+            draw(renderer, view, room);
+            float travel = view.y - FLOOR_CAMERA_TOP;
+            for (SceneryLayer layer : map.sceneryLayers) {
+                int cell = visibleCell(layer, view.x);
+                float authored = layer.offsetY + cell / layer.columns * map.tileHeight - FLOOR_CAMERA_TOP;
+                assertDrawnAtScreenY(layer.cells[cell], view.y, authored - layer.parallaxY * travel, layer.name);
+            }
+            for (ForegroundGroup group : new ForegroundGroup[]{sharp, near}) {
+                int piece = onScreenPiece(group);
+                float top = group.flipY[piece] ? group.y[piece] + group.height[piece] : group.y[piece];
+                assertDrawnAtScreenY(group.regions[piece], view.y, top - FLOOR_CAMERA_TOP - group.factorY * travel, group.name);
+            }
+        }
+    }
+
+    /** The index of a cell of the layer drawn at the camera x {@code camX}, in a row drawn at every vertical position (a one-row layer's only row). */
+    private static int visibleCell(SceneryLayer layer, float camX) {
+        for (int i = 0; i < layer.cells.length; i++) {
+            int row = i / layer.columns;
+            float screenX = layer.offsetX + i % layer.columns * 16 - ParallaxRenderer.shift(layer.parallaxX, (int) camX, 0);
+            if (layer.cells[i] != null && (layer.rows == 1 || row >= 4 && row <= 18) && screenX >= 0 && screenX < VIEW_W) return i;
+        }
+        throw new AssertionError("nothing of " + layer.name + " is on screen at " + camX);
+    }
+
+    private void assertDrawnAtScreenY(TextureRegion region, float camTop, double screenY, String what) {
+        float closest = Float.POSITIVE_INFINITY;
+        for (int i = 0; i < batch.drawnCount(); i++) {
+            if (batch.drawnRegion(i) != region) continue;
+            float off = (float) (batch.drawnY(i) - camTop - screenY);
+            if (Math.abs(off) < Math.abs(closest)) closest = off;
+        }
+        assertEquals(0f, closest, 1e-3f, what + " at camera top " + camTop + " is off its gliding place");
     }
 
     private static ForegroundGroup nearGroupOf(TiledMapData map, ForegroundGroup sharp) {

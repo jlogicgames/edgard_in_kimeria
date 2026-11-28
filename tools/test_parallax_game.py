@@ -405,6 +405,11 @@ if __name__ == '__main__':
 class BleedCheckTest(unittest.TestCase):
     """D111: `check_bleed` passes the shipped rooms and fails when a bleed piece or layer is removed (not vacuous)."""
 
+    def test_the_offset_is_the_games_unsnapped_one(self):
+        """D154: the game does not snap the vertical offset, so the bleed is checked where the game draws, not a rounded pixel off."""
+        self.assertAlmostEqual(pm.game_screen_y(0, 1.6, 0), -pm.ORIGIN_Y + 12.8)
+        self.assertEqual(pm.screen_y(0, 1.6, 0), -pm.ORIGIN_Y + 13)
+
     def run_bleed(self, scene, mutate):
         original = pm.tile_images
         def patched(mock=None):
