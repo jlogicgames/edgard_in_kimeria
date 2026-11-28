@@ -29,6 +29,7 @@ an unknown type fails, so a new sprite cannot skip the check. Tile-layer scenery
 third-party props (#189) that the terrain sheet still carries at their old tile ids; the report is made for the maps that draw that
 sheet and skips the others.
 """
+import functools
 import math
 import re
 from collections import namedtuple
@@ -75,6 +76,19 @@ HEX_BASE = 16
 OPAQUE_HEX = 'ff'
 TILESET = 'assets/images/Tileset/ForestTerrain.png'   # the play sheet whose third-party props TILE_SCENERY's tile ids index (#189)
 NEIGHBOURS = ((1, 0), (-1, 0), (0, 1), (0, -1))
+NEIGHBOUR_COLUMNS, NEIGHBOUR_ROWS = (np.array(offsets) for offsets in zip(*NEIGHBOURS))
+MARGIN = 1  # px round a sprite's box that its neighbour pixels reach
+SPRITE_MODES = ('RGBA',)  # a sprite needs its alpha
+BACKGROUND_MODES = ('RGB', 'RGBA')
+CHANNEL_BITS = 8
+CHANNEL_MASK = (1 << CHANNEL_BITS) - 1
+RED_SHIFT = 2 * CHANNEL_BITS  # a colour code is 0xRRGGBB
+COLOUR_AXIS_LAST = -1  # the channel axis of an (..., channel) array
+COLOUR_BITS = 3 * CHANNEL_BITS
+COLOUR_MASK = (1 << COLOUR_BITS) - 1
+PAIR_DX = 1  # the columns of an edge_pairs row after its lightness (column 0)
+PAIR_DY = 2
+PAIR_ADDED = 3
 
 
 def java_float(path, name):
@@ -329,32 +343,63 @@ def is_opaque(image, x, y):
     return 0 <= x < image.width and 0 <= y < image.height and image.getpixel((x, y))[3] >= ALPHA_MIN
 
 
+# The hot loops work on arrays: numpy selects the pixels, and the colour maths stays the scalar `oklab` and `math.dist`, run
+# once per distinct colour (numpy's own power function may differ from them in the last bit). Sums keep the row-major order of
+# the pixels (NEIGHBOURS order within a pixel).
+
+
+def colour_array(image, modes):
+    """`image` as an (height, width, channel) array; only the modes whose first channels are red, green and blue."""
+    if image.mode not in modes:
+        raise ValueError(f'the gate measures {" or ".join(modes)} images, not {image.mode}')
+    return np.asarray(image)
+
+
+def colour_codes(pixels):
+    """One int per pixel of an (..., channel) array: its RGB, alpha dropped."""
+    red, green, blue = np.moveaxis(pixels[..., :RGB].astype(np.int64), COLOUR_AXIS_LAST, 0)
+    return (red << RED_SHIFT) | (green << CHANNEL_BITS) | blue
+
+
+@functools.lru_cache(maxsize=None)  # keyed by the colour and the glow alone, which are all that `oklab` reads: never stale
+def code_oklab(code, glow=1.0):
+    return oklab((code >> RED_SHIFT, (code >> CHANNEL_BITS) & CHANNEL_MASK, code & CHANNEL_MASK), glow)
+
+
+def per_distinct(codes, value):
+    """The array of value(code) for every entry of the 1-D `codes`, computed once per distinct code."""
+    distinct, index = np.unique(codes, return_inverse=True)
+    return np.array([value(code) for code in distinct.tolist()], dtype=np.float64)[index]
+
+
 def measure(sprite, background, x, y, glow=1.0):
     """(outline, body) of `sprite` drawn with its top-left at (x, y) over `background`; outline is None with no edge."""
-    pairs, body = [], []
-    for j in range(sprite.height):
-        for i in range(sprite.width):
-            if not is_opaque(sprite, i, j) or not (0 <= x + i < background.width and 0 <= y + j < background.height):
-                continue
-            s = oklab(sprite.getpixel((i, j)), glow)
-            body.append(math.dist(s, oklab(background.getpixel((x + i, y + j)))))
-            for u, v in NEIGHBOURS:
-                if not is_opaque(sprite, i + u, j + v) and 0 <= x + i + u < background.width and 0 <= y + j + v < background.height:
-                    pairs.append(abs(s[0] - oklab(background.getpixel((x + i + u, y + j + v)))[0]))
-    if not body:
+    pixels = colour_array(sprite, SPRITE_MODES)
+    # Every array below is the sprite's box grown by the MARGIN its edge pixels' neighbours lie in.
+    solid = np.pad(pixels[..., ALPHA] >= ALPHA_MIN, MARGIN)
+    inside = np.zeros(solid.shape, dtype=bool)
+    inside[max(0, MARGIN - y):max(0, background.height + MARGIN - y), max(0, MARGIN - x):max(0, background.width + MARGIN - x)] = True
+    rows, columns = np.nonzero(solid & inside)
+    if not rows.size:
         return None, None  # nothing opaque inside the background (an empty tile cell)
+    box = (x - MARGIN, y - MARGIN, x + sprite.width + MARGIN, y + sprite.height + MARGIN)
+    under = colour_codes(colour_array(background.crop(box), BACKGROUND_MODES))  # zeros past the background, never read
+    own = colour_codes(pixels)[rows - MARGIN, columns - MARGIN]
+    body = per_distinct((own << COLOUR_BITS) | under[rows, columns],
+                        lambda both: math.dist(code_oklab(both >> COLOUR_BITS, glow), code_oklab(both & COLOUR_MASK))).tolist()
+    near_rows, near_columns = rows[:, None] + NEIGHBOUR_ROWS, columns[:, None] + NEIGHBOUR_COLUMNS
+    edge = ~solid[near_rows, near_columns] & inside[near_rows, near_columns]  # (pixel, neighbour)
+    lightness = per_distinct(own, lambda code: code_oklab(code, glow)[0])
+    outside = per_distinct(under[near_rows[edge], near_columns[edge]], lambda code: code_oklab(code)[0])
+    pairs = np.abs(np.broadcast_to(lightness[:, None], edge.shape)[edge] - outside).tolist()
     return (sum(pairs) / len(pairs) if pairs else None), sum(body) / len(body)
 
 
 def chroma_p90(sprite, glow=1.0):
-    chroma = []
-    for j in range(sprite.height):
-        for i in range(sprite.width):
-            if is_opaque(sprite, i, j):
-                _, a, b = oklab(sprite.getpixel((i, j)), glow)
-                chroma.append(math.hypot(a, b))
-    chroma.sort()
-    return chroma[max(0, int(CHROMA_PERCENTILE * len(chroma)) - 1)]
+    pixels = colour_array(sprite, SPRITE_MODES)
+    opaque = colour_codes(pixels)[pixels[..., ALPHA] >= ALPHA_MIN]
+    chroma = np.sort(per_distinct(opaque, lambda code: math.hypot(*code_oklab(code, glow)[1:])))
+    return chroma[max(0, int(CHROMA_PERCENTILE * len(chroma)) - 1)].item()
 
 
 # More frames measured under the same key: the hero faces either way at every placement (#343, D79).
@@ -1174,13 +1219,20 @@ def edge_pairs(sprite, light, lx, ly, alpha):
 
 def swept_outline(pairs, background, step_x, y_from, y_to, step_y, size, xs=None):
     """Worst mean outline of the pairs over a grid of positions in `background` (x from `xs`, else every step_x): (outline, x, y)."""
-    pixels, worst = background.load(), (1.0, 0, 0)
+    pixels, worst = colour_array(background, BACKGROUND_MODES), (1.0, 0, 0)
+    ys = range(y_from, min(y_to, background.height - size), step_y)
+    if not ys:
+        return worst
+    lightness = np.array([pair[0] for pair in pairs], dtype=np.float64)
+    dx, dy = (np.array([pair[n] for pair in pairs], dtype=np.int64) for n in (PAIR_DX, PAIR_DY))
+    added = np.array([pair[PAIR_ADDED] for pair in pairs], dtype=np.int64).reshape(len(pairs), RGB)
+    rows = np.array(ys)[:, None] + dy  # (position, pair)
     for x in (range(0, background.width - size, step_x) if xs is None else xs):
-        for y in range(y_from, min(y_to, background.height - size), step_y):
-            total = 0.0
-            for lightness, dx, dy, added in pairs:
-                lit = tuple(min(CHANNEL_MAX, c + a) for c, a in zip(pixels[x + dx, y + dy][:RGB], added))
-                total += abs(lightness - oklab(lit)[0])
+        lit = np.minimum(CHANNEL_MAX, pixels[rows, x + dx, :RGB] + added)  # a negative index wraps, past the end raises
+        under = per_distinct(colour_codes(lit).ravel(), lambda code: code_oklab(code)[0]).reshape(rows.shape)
+        steps = np.zeros((len(ys), len(pairs) + 1))  # a zero first: each position's total is added up pair by pair
+        steps[:, 1:] = np.abs(lightness - under)
+        for y, total in zip(ys, np.cumsum(steps, axis=1)[:, -1].tolist()):  # cumsum adds in order; np.sum would not
             outline = total / len(pairs)
             if outline < worst[0]:
                 worst = (outline, x, y)

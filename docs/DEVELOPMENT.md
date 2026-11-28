@@ -663,8 +663,9 @@ sizes, effects, sound and art, and when each gate runs. The tooling it added:
 - CI: [`.github/workflows/check.yml`](../.github/workflows/check.yml) runs on every pull request to `main`: a full-history
   checkout (`fetch-depth: 0`, so `origin/main` and the merge-base exist), JDK 17 as in the deploy workflows,
   `./gradlew :core:check`, then `python -m unittest discover -s tools -p 'test_*.py'` (with Pillow, which
-  `test_forest_trap_sprites.py` needs), because `:core:check` runs only the text-style and style-system tool tests. No
-  deploy and no secrets; the two deploy workflows still build the releases on a push to `main`.
+  `test_forest_trap_sprites.py` needs, and numpy, which the contrast and parallax gates need), because `:core:check`
+  runs only the text-style and style-system tool tests. No deploy and no secrets; the two deploy workflows still build
+  the releases on a push to `main`.
 - `tools/check_skills.py` (`validateSkills`): shared skills, [their index](../.agents/skills/README.md) and the Claude
   pointers agree; English only.
 - Both run after `testStyleSystemGates` (their unit tests and the dispatcher's) in `:core:check`, not in the release
