@@ -36,7 +36,7 @@ class HoneyFungusTest {
     /** The nearest other hazards in forest-canopy, from the map: the RedMob at 1472 patrols to 1472 + 16 + 48; the vine at 1896 (Bat 65 left the room under #500, D105). */
     private static final float BRANCH_ZONE_RIGHT = 1776, CANOPY_MOB_PATROL_RIGHT = 1536, CANOPY_VINE_X = 1896;
     private static final float CANOPY_START_RIGHT = 1625, CANOPY_PASSED_LEFT = 1705, NO_JUMP_GAP = -1000;
-    private static final int CANOPY_ROOM = 6; // after entry, walls, fissure, glade, roost and hollow (#366, #331, #330, #645)
+    private static final int CANOPY_ROOM = 7; // after entry, walls, fissure, glade, roost, hollow and ridge (#366, #331, #330, #645, #525)
     private static final float CANOPY_ENTRANCE_X = 1344;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
@@ -394,7 +394,8 @@ class HoneyFungusTest {
         assertEquals(0, count(room("forest-2", 3), FungusTrap.class), "forest-glade neither (#331)");
         assertEquals(0, count(room("forest-2", 4), FungusTrap.class), "forest-roost neither (#330)");
         assertEquals(0, count(room("forest-2", 5), FungusTrap.class), "forest-hollow neither (#645)");
-        assertEquals(0, count(room("forest-2", 7), FungusTrap.class));
+        assertEquals(0, count(room("forest-2", 6), FungusTrap.class), "forest-ridge neither (#525)");
+        assertEquals(0, count(room("forest-2", 8), FungusTrap.class));
         assertEquals(1, count(room("forest-2", CANOPY_ROOM), FungusTrap.class));
     }
 

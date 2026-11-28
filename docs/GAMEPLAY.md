@@ -110,9 +110,9 @@ until the page has had a user gesture, so the menu music waits for it. Other pla
 
 ## Rooms
 
-`forest-2` contains eight rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
+`forest-2` contains nine rooms: the entry course (YellowMobs, Bats, two pits, the Bomb), a wall room
 with a tree to climb and a leap over two walls (split from the entry by #376, redesigned by #545), the fissure room (two ember fissures and a ledge beetle), the glade (the forest wolf,
-met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), the hollow (two mosquito swarms around a thorn root, #645), a forest course with an ascending
+met from a one-way branch, #331), the roost (a thorn root, the flying beetle met from under a low ledge and a falling stone, #330), the hollow (two mosquito swarms around a thorn root, #645), the ridge (the wolf leaping two mounds, met from a high ledge, #525), a forest course with an ascending
 optional coin route, and the authored boss chamber. The boss starts on a throne; sword
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
@@ -274,11 +274,17 @@ outrun without the assist: a jump, timed within about half a second of its crouc
 rooms it lives in have headroom to jump); the sword, a fireball or a stone kills it as it comes; and anything more than a block
 and a half up is out of its reach: it runs to the nearest point it can reach, bays (a double bark), gives up after a second and a
 half and trots on, and will not notice him again until he has been out of its sight for a second. After a bite it shakes its head
-for half a second, harmless, and chases again with a new crouch. It never goes off its floor or through a wall. Every weapon kills
-it: the sword, a fireball, a stone or a torch, or landing on it. It leaves its body lying flat on its side, which twitches when he
+for half a second, harmless, and chases again with a new crouch. It never goes through a wall. The sword, a fireball, a stone
+or a torch kill it whenever they reach it. Landing on it kills only a committed wolf (crouched, lunging, biting, shaking off a
+bite) or a baying one; otherwise Edgard bounces off. It answers his habits ([D158](DECISIONS.md#d158-the-forest-wolf-answers-the-heros-habits-and-leaps-on-a-route-525-amends-d115-d4-2026-11-28)): while it chases, a jump
+makes it stop, look up and run to where he will come down, and a jump right by it is met by a leaping bite (stop or turn back in the
+air); a swing as it crouches makes it hop back, and the next such swing it waits out before it crouches again. The longer-warnings
+assist turns those answers off. A wolf with a route also leaps one-block steps and short gaps. It leaves its body lying flat on its side, which twitches when he
 comes near. There is no hint about it: it is met in play. Authoring: `Wolf` (48×24) in `SpawnPoints` with `offNeg`/`offPos` like the
 mobs, checked at load (a range of at least ten tiles on floor without gaps, nothing of the entrance, exit or checkpoints in its sight,
-and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)).
+and four tiles of headroom over its reach). Where it is met: `forest-glade`, forest-2's fourth room, from a one-way branch ([#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331)),
+and with its route in `forest-ridge`, the seventh room, from a high ledge ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)). A routed wolf is a polyline instead of a box
+(see the develop card in [GAME_DESIGN.md](GAME_DESIGN.md#wolf-develop-card-built-d158-525)).
 
 ## Mosquito swarm
 

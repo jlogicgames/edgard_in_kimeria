@@ -113,7 +113,7 @@ within 96 px of each other are one beat (a row of falling platforms, the two wal
 | mosquito-swarm | `MosquitoSwarm` | passes over or under a swarm the sword cannot kill and a stomp makes deadly, or kills it with a stone, a fireball or a torch (D151) | monster |
 | snail | `Snail` | crosses a snail's line during its reload, jumps or cuts its gob, comes up behind it or hides behind cover, or shoots it (D106) | monster |
 | spider | `Spider` | steps out of a spider's locked pounce and strikes it while it recovers, meets its leap with the sword, or shoots it (D102); a spider on a route (a polyline) also climbs walls and drops on its thread (D103): each of those is a **develop** of `spider`, one per room, listed under Develops by the room that first shows it: the climb in `forest-1-climb`, the drop in `forest-1-route` (#484) | monster |
-| wolf | `Wolf` | jumps a wolf's low lunge, timed on its drawn line; strikes it as it comes or in its recovery; goes up out of its reach and watches it bay; or shoots it (D115); it cannot be outrun without the longer-warnings assist | monster |
+| wolf | `Wolf` | jumps a wolf's low lunge, timed on its drawn line; strikes it as it comes or in its recovery; goes up out of its reach and watches it bay; or shoots it (D115); it cannot be outrun without the longer-warnings assist. Every wolf also reads a jump, bites in the air and hops back from a swing at its wind-up, and a stomp kills it only when it is committed or bayed (D158). A wolf on a route (a polyline) leaps steps and trenches: a **develop** of `wolf`, listed under Develops by `forest-ridge` (#525) | monster |
 | boss | `Boss` | fights the stage boss | monster |
 | fireball-refill | `FireballRefill` | picks up a ranged-attack charge | pickup |
 | coin | `Collectable:Coin` | collects coins, often off the required route | pickup |
@@ -643,7 +643,7 @@ x    6240 6272  6336        6424 6440-6464         6588 6604-6628 6624          
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 1 of 8 (x 0-736, 736 px, 1.15 screens) |
+| Level | forest-2, play order 3, room 1 of 9 (x 0-736, 736 px, 1.15 screens) |
 | Role | variation |
 | Purpose | New ground, a new enemy and a new, hidden trap before any climbing: a YellowMob charges, is stopped by a low earth block and is stomped from it; climb the stair over the first pit past a Bat; on the floor after it a leg-hold trap lies under leaves (two tooth tips, sinew wraps and a peg show): stand short of it, let it snap empty and walk over it shut (or jump it); then cross the second pit past a second Bat to the exit, and see the coins. |
 | Introduces | yellowmob, leg-hold |
@@ -683,7 +683,7 @@ own floor.
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 2 of 8 (x 736-1280, 544 px, 0.85 screen) |
+| Level | forest-2, play order 3, room 2 of 9 (x 736-1280, 544 px, 0.85 screen) |
 | Role | variation |
 | Purpose | The two tall walls cannot be climbed: climb the tree in front of them and leap from its top branch across the first wall on to the second, where the Bat ingredient lies; drop from it on to the YellowMob, then the RedMob guards the exit. |
 | Introduces | ingredient |
@@ -730,7 +730,7 @@ y 304  ==================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 3 of 8 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 3 of 9 (640 px, one screen, x 3008-3648: appended at the map's end, listed after `forest-walls` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | A burl on the floor lances a root up on a clock: watch the first one alone on open floor and pass between thrusts, then climb through the branch the second one pierces, starting right after a thrust; on the ledge a beetle guards the exit: shoot it from the lip, lure it to commit and step back, or walk on past it. |
 | Introduces | clocked-column |
@@ -772,21 +772,21 @@ x    3008 3040        3232-48           3328    3360-76 3392  3424      3508-356
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 4 of 8 (832 px, 1.3 screens, x 3648-4480: appended at the map's end, listed after `forest-fissure` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 4 of 9 (832 px, 1.3 screens, x 3648-4480: appended at the map's end, listed after `forest-fissure` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | Meet the wolf from a branch it cannot reach: jump a thorn root, hop on to a fallen trunk that hides you from the wolf, step out on the one-way branch, watch it notice you, sprint under you and bay, then step off on to its back; jump a second thorn root on the way to the exit. |
 | Introduces | wolf |
 | Develops | - |
 | Combines | - |
 | Repeats | proximity-thorn |
-| Mastered route | 8.85 s from the entrance (`RoomReplayTest`, three identical attempts, `ForestGladeTest` asserts it with and without the assist, the route meets no wind-up): jump the thorn root, jump on to the trunk, wait on the branch until the wolf bays, walk to the branch's end and step off on to it (a stomp), run to the second thorn root and jump it, walk to the exit; 7.42 s on every collection return (the wolf stays gone with its body, D101, pinned in `RoomReplayTest`); target about 20 s (D19) |
+| Mastered route | 8.85 s from the entrance (`RoomReplayTest`, three identical attempts, `ForestGladeTest` asserts it with and without the assist, the route meets no wind-up): jump the thorn root, jump on to the trunk, wait on the branch until the wolf bays, walk to the branch's end and step off on to it (a stomp on a bayed wolf, which D158 keeps lethal), run to the second thorn root and jump it, walk to the exit; 7.42 s on every collection return (the wolf stays gone with its body, D101, pinned in `RoomReplayTest`); target about 20 s (D19) |
 | First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
-| Retry cost | the most expensive death is the second thorn root after the wolf: hit at 8.15 s from the entrance for a hero who walks straight into it after the mastered route (`ForestGladeTest.aHeroWhoWalksStraightIntoTheSecondThornRootAfterTheWolfIsHit`), the whole room replayed. D105's 6 s limit is for a first meeting that is not among the first two beats: the wolf is beat 2 and the root is a known element, so neither is held to it, and 8.15 s is under the 15 s at which D105 asks for a split. The wolf's own bite on the mastered pace is a hop down off the trunk or the branch's near end in front of it: 4.27 s (hops at x 3930 to 3960, `ForestGladeTest.aHeroWhoHopsDownInFrontOfTheWolfIsBittenWithinSixSeconds`, from x 3966 on the same hop lands on it or beyond). The first thorn root at the soonest 1.17 s (a hero who walks straight on) |
+| Retry cost | the most expensive death is the second thorn root after the wolf: hit at 8.15 s from the entrance for a hero who walks straight into it after the mastered route (`ForestGladeTest.aHeroWhoWalksStraightIntoTheSecondThornRootAfterTheWolfIsHit`), the whole room replayed. D105's 6 s limit is for a first meeting that is not among the first two beats: the wolf is beat 2 and the root is a known element, so neither is held to it, and 8.15 s is under the 15 s at which D105 asks for a split. The wolf's own bite on the mastered pace is a hop down off the trunk or the branch's near end in front of it: 4.62 s, since D158 reads that jump first (hops at x 3930 to 3960, `ForestGladeTest.aHeroWhoHopsDownInFrontOfTheWolfIsBittenWithinSixSeconds`; it was 4.27 s). A hero who hurries over the branch without waiting steps off on to a chasing wolf, which since D158 is a bounce, and is bitten at 5.92 s (`ForestGladeTest.aHeroWhoHurriesOverTheBranchNoLongerStompsTheSprintingWolfAndIsBitten`). The first thorn root at the soonest 1.17 s (a hero who walks straight on) |
 | Beats | proximity-thorn@3808, wolf@4144, proximity-thorn@4360 |
 | Beat time | 8.85 (`RoomReplayTest`) |
 | First meeting | wolf: beat 2, pocket at x 3976, standing on the one-way branch (top y 272, 32 px above the wolf's floor), which does not cut its sight as the trunk's face does: it notices him, sprints under him, bays at its range end, gives up and trots on its patrol, and he is never committed to (a hero more than 24 px up is out of its reach). The thorn root (x 3808-3824) is 160 px from the wolf's span (x 3984-4192), 152 px from the pocket (`FirstMeetingPocketTest.forestGladeTheWolf`, raised pocket at y 272, acting `BAY`) |
 | Optional | none |
-| D26 | the exit is always reachable: the wolf can never hold a place. It bays for at most 1.5 s, gives up and does not notice that hero again until he has been out of its sight for 1.0 s. Every answer on its floor works (a jump, a swing, a stomp, running with the assist) and the trunk top and the branch are refuges. The floor from x 4264 on is out of its reach, and the second thorn root (x 4360) and the exit (x 4448) stand on it. The first root (x 3808) is off the wolf's floor because the trunk stands between them, the second lies beyond x 4351, the end of its reach. Both stay up in their own columns and are jumped (`ForestGladeTest`) |
+| D26 | the exit is always reachable: the wolf can never hold a place. It bays for at most 1.5 s, gives up and does not notice that hero again until he has been out of its sight for 1.0 s. The answers on its floor (a jump over the lunge, a swing while it recovers or as it lunges, a stomp on it committed or bayed, running with the assist; D158) work and the trunk top and the branch are refuges for a hero who stands on them. The floor from x 4264 on is out of its reach, and the second thorn root (x 4360) and the exit (x 4448) stand on it. The first root (x 3808) is off the wolf's floor because the trunk stands between them, the second lies beyond x 4351, the end of its reach. Both stay up in their own columns and are jumped (`ForestGladeTest`) |
 | Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
 | Landmark | the fallen trunk with its branch over the wolf's run, and the wolf baying under it |
 | Status | new, [#331](https://github.com/jlogicgames/edgard_in_kimeria/issues/331) (card approved by the author 2026-11-21: a new room, fourth in forest-2, the stomp from the branch as the mastered answer, the wall jump as the third beat, replaced on 2026-11-21 by a second thorn root after D116 removed the wall jump, #545 #546). D84 check: one screen and a third; the wolf is in view from the branch, the danger is what the wolf card draws (the breath line, the crouch), the waiting places (the branch, the trunk top) are obvious, nothing hides the wolf from a hero on the branch. Built and tested with a scripted hero (`ForestGladeTest`: the route, the stomp, the hop bite, the root, a jump from every commit gap with and without the assist, a runner with and without it, a swing, the refuges and the reach, a wait for the give-up) |
@@ -816,7 +816,7 @@ y 304 ====================================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 5 of 8 (736 px, 1.15 screens, x 4480-5216: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 5 of 9 (736 px, 1.15 screens, x 4480-5216: appended at the map's end, listed after `forest-glade` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | Meet the flying beetle from under a low ledge it cannot dive through, watch it hear the hero, fly up over the ledge and hang above him, then get away from where its dive points; a thorn root before it and a falling stone after it. |
 | Introduces | flying-beetle |
@@ -863,7 +863,7 @@ y 304 ================================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 6 of 8 (736 px, 1.15 screens, x 5216-5952: appended at the map's end, listed after `forest-roost` in the `Rooms` list, which sets the play order) |
+| Level | forest-2, play order 3, room 6 of 9 (736 px, 1.15 screens, x 5216-5952: appended at the map's end, listed after `forest-roost` in the `Rooms` list, which sets the play order) |
 | Role | variation |
 | Purpose | Meet the mosquito swarm on open floor with a stone beside the hero, find that the sword cannot kill it, then jump a low swarm head on, jump a thorn root and walk under a rising swarm while it is high. |
 | Introduces | mosquito-swarm |
@@ -903,11 +903,54 @@ y 304 ===============================================
 - `MosquitoSwarm` (id 598) x 5872, y 298 in the map, `isVertical`, `offNeg` 3: its bottom 4 to 52 px over the floor.
 - `Stone` (id 599) x 5316, y 308 in the map (resting on the floor).
 
+### forest-ridge
+
+| Field | Value |
+| --- | --- |
+| Level | forest-2, play order 3, room 7 of 9 (864 px, 1.35 screens, x 5952-6816: appended at the map's end, listed after `forest-hollow` in the `Rooms` list, which sets the play order) |
+| Role | variation |
+| Purpose | The wolf on a route: jump a thorn root, jump up to a high one-way ledge and watch the wolf leap a step and a trench between two mounds, wait until it notices him, leaps down and bays, step off on to its back; cross the mounds, jump a thorn tuft and a second thorn root to the exit. |
+| Introduces | - |
+| Develops | wolf |
+| Combines | - |
+| Repeats | proximity-thorn |
+| Mastered route | 12.55 s from the entrance (`RoomReplayTest`, three identical attempts, `ForestRidgeTest` asserts it with and without the assist and that it passes from every start moment over 12 s): jump the thorn root, jump on to the ledge, wait there until the wolf bays, walk off its far end on to it (a stomp), jump up the first mound and out of the trench, jump the tuft and the second root, walk to the exit; 7.78 s on every collection return (the wolf stays gone with its body, D101, pinned in `RoomReplayTest`); target about 20 s (D19). A faster, unsafe line exists: the same take-offs without the wait get past the live wolf in at most 7.8 s from 105 of 121 start moments and are bitten from the other 16 (`ForestRidgeTest`) |
+| First learning | not measured ([#135](https://github.com/jlogicgames/edgard_in_kimeria/issues/135)) |
+| Retry cost | the whole room, at most 11.87 s: walking into the second thorn root after the mastered route (the tuft 10.67 s, the first root 1.02 s; `ForestRidgeTest.aHeroWhoMissesAThornJumpIsHitAtTheCardsTimes`), under the 15 s at which D105 asks for a split |
+| Beats | proximity-thorn@6096, wolf@6288, proximity-thorn@6576, proximity-thorn@6696 |
+| Beat time | 12.55 (`RoomReplayTest`) |
+| First meeting | wolf: beat 2, pocket at x 6248, standing on the one-way ledge (top y 256, 48 px above the wolf's lower floor, 32 px above its mounds): from there the whole route is in view, the wolf leaps it, notices him, comes down and bays, and neither commits nor starts a move at a standing hero (`FirstMeetingPocketTest.forestRidgeTheWolfLeaps`); the first thorn root is 136 px from the pocket |
+| Optional | none |
+| D26 | the exit is always reachable: nothing in the room is one-shot, the wolf gives up after 1.5 s of bay, the stomp from the ledge needs no ammunition, and a retry rebuilds everything calm |
+| Hints | none (forest-2 has none, D33; new monsters are met in play, D100) |
+| Landmark | the two mounds with the trench between them, and the wolf leaping them under the high ledge |
+| Status | new, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525) (card and the develop approved by the author 2026-11-28: one new room for the route leap, the reactions on every wolf). Built and tested with a scripted hero. A mound is no refuge: a hero who stays on one is leapt to and bitten (`ForestRidgeTest.aHeroWhoStopsOnAMoundIsReachedAndBitten`) |
+| Decisions | D72, D100, D105, D115, D158 |
+
+Sketch (Y grows downward, floor top y 304, mound tops y 288, the ledge y 256; one character is 16 px, column 0 is x 5952; `@` the entrance, `^` a thorn, `w` the wolf's start, `#` a mound, `E` the exit):
+
+```
+col   0         1         2         3         4         5
+      012345678901234567890123456789012345678901234567890123
+y 240 |                                                    |
+y 256 |                 ====                               |
+y 272 |                                                  E |
+y 288 |  @      ^            w  ####  ####   ^      ^    E |
+y 304 ======================================================
+```
+
+- `Room` (id 1044, `leaves` none), `RoomStart` (id 1045) (5984, 256), `RoomExit` (id 1046) x 6784-6800, y 256-304, on the floor against the right wall: past the wolf's sight from its last leg.
+- Left wall `Wall` (id 1034) x 5952-5968; floor (id 1035) x 5952-6816, y 304-368, gapless; right wall (id 1039) x 6800-6816, y 0-304.
+- Mounds (untyped solids, ids 1036, 1037) x 6352-6416 and 6448-6512, y 288-304: the trench between them is 32 px wide.
+- One-way ledge `Platform` (id 1038) x 6224-6288, y 256: above the wolf's sight band from its lower leg, inside it from the mounds.
+- `Wolf` (id 1041) a polyline at x 6288, y 320 in the map (floor line y 304), points `0,0 64,0 64,-16 128,-16 160,-16 224,-16`: three legs, x 6288-6352 on the floor, 6352-6416 and 6448-6512 on the mounds; it starts at the left end. Its load checks (`Wolf.routeProblem`) pass: the entrance body 12 px outside its sight, the exit past its reach.
+- `ThornRoot` (id 1040) x 6096 and (id 1043) x 6696, y 296 in the map, `zone` 64; `ThornTuft` (id 1042) x 6576, y 304 in the map, `zone` 64.
+
 ### forest-canopy
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 7 of 8 |
+| Level | forest-2, play order 3, room 8 of 9 |
 | Role | approach |
 | Purpose | The forest's trap families one at a time before the boss. |
 | Introduces | thorn-vine, false-honey-fungus |
@@ -930,7 +973,7 @@ y 304 ===============================================
 
 | Field | Value |
 | --- | --- |
-| Level | forest-2, play order 3, room 8 of 8 |
+| Level | forest-2, play order 3, room 9 of 9 |
 | Role | boss |
 | Purpose | The Forest boss. |
 | Introduces | boss |

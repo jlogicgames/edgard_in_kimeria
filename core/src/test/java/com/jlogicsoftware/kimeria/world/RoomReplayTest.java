@@ -176,14 +176,18 @@ class RoomReplayTest {
     @Test void forestHollowRequiredRouteFitsTwentySeconds() {
         assertEquals(HOLLOW_S, measure("forest-hollow", 5, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
     }
+    /** #525 (D158): watch the wolf leap its mounds from the high ledge, step off on to it as it bays, cross the mounds and both thorns. */
+    @Test void forestRidgeRequiredRouteFitsTwentySeconds() {
+        assertEquals(RIDGE_S, measure("forest-ridge", 6, false, 0, new float[]{}), PIN_MARGIN, "the card's beat time (D105)");
+    }
     @Test void forestCanopyRequiredRouteFitsTwentySeconds() {
-        assertEquals(CANOPY_S, measure("forest-canopy", 6, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
+        assertEquals(CANOPY_S, measure("forest-canopy", 7, false, 0, new float[]{1400, FUNGUS_JUMP}), PIN_MARGIN, "the card's beat time (D105)");
     }
     @Test void forestEntryAllCollectablesFitThirtySeconds() {
         measure("forest-entry", 0, true, 40, new float[]{80, 140, 300, 535});
     }
     @Test void forestCanopyAllCollectablesFitThirtySeconds() {
-        measure("forest-canopy", 6, true, 0, new float[]{1400, 1460, 1555});
+        measure("forest-canopy", 7, true, 0, new float[]{1400, 1460, 1555});
     }
 
     /** The mastered hero stops this far short of the leg-hold's teeth when they are not shut (D128). */
@@ -194,7 +198,7 @@ class RoomReplayTest {
     private float legHoldArrival = -1;
     private static final float[] ENTRY_JUMPS = {80, 225, 345, 535}, WALLS_JUMPS = {}, ROOST_JUMPS = {4550};
     /** Required routes with zero charges, pinned within {@link #PIN_MARGIN}: the room cards' beat times (D105). */
-    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, HOLLOW_S = 10.08f, CANOPY_S = 9.48f;
+    static final float TRAPS_S = 6.00f, ESCALATORS_S = 5.48f, MOB_S = 6.75f, ENTRY_S = 8.37f, WALLS_S = 5.55f, FISSURE_S = 9.30f, GLADE_S = 8.85f, ROOST_S = 6.43f, HOLLOW_S = 10.08f, RIDGE_S = 12.55f, CANOPY_S = 9.48f;
     private static final float PIN_MARGIN = 0.1f;
     /** #327: the fissure room on a collection return, the beetle gone (8.08 s before the exit moved 16 px right). */
     private static final float FISSURE_RETURN_S = 8.25f;
@@ -202,18 +206,20 @@ class RoomReplayTest {
     private static final float GLADE_RETURN_S = 7.42f;
     /** #645: the hollow on a collection return, its swarms gone. */
     private static final float HOLLOW_RETURN_S = 6.43f;
+    /** #525: the ridge on a collection return, the wolf gone with its body. */
+    private static final float RIDGE_RETURN_S = 7.78f;
 
 
 
     @Test void repeatedCollectionReturnsReachMissedArtifactsWithRealMovementAndCannotFarm() {
         Level level = new Level(assets, game, player(), "forest-2", Rectangle::new);
-        for (int room = 0; room < 7; room++) {
+        for (int room = 0; room < 8; room++) {
             for (var o : new java.util.ArrayList<>(level.objects)) {
                 if (o instanceof Enemy<?> enemy) enemy.collidedWithActor(true);
                 if (o instanceof Collectable c && c.type() == ItemType.COIN) c.collideWithPlayer();
                 if (o instanceof Bomb bomb) { bomb.collideWithPlayer(); bomb.update(.81f); }
             }
-            if (room < 6) level.enterNextRoom(player());
+            if (room < 7) level.enterNextRoom(player());
         }
         level.prepareHealer();
         assertEquals(6, coins);
@@ -252,6 +258,10 @@ class RoomReplayTest {
             within("hollow", hollow, COLLECTION_LIMIT);
             assertEquals(HOLLOW_RETURN_S, hollow, 0.1f, "#645: the collection return walks past the thorn root only (pinned, D68)");
             level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
+            float ridge = replay(level, "forest-ridge", false, 0, new float[]{}, true);
+            within("ridge", ridge, COLLECTION_LIMIT);
+            assertEquals(RIDGE_RETURN_S, ridge, 0.1f, "#525: the collection return walks past the wolf's body (pinned, D68)");
+            level.enterNextRoom(player()); held.clear(); pressed.clear(); timeScale = 1;
             // The first trip crosses on the falling platform and the ledge; later trips find the platform collapsed and walk the floor, jumping the fungus.
             float[] jumps = trip == 0 ? new float[]{1400, 1460, 1555, 1640} : new float[]{1400, 1460, FUNGUS_JUMP, 1640};
             float canopy = replay(level, "forest-canopy", false, 0, jumps, true);
@@ -263,8 +273,8 @@ class RoomReplayTest {
             assertEquals(2, artifacts.items().size());
             assertTrue(level.canBrew());
             assertFalse(level.objects.stream().anyMatch(o -> o instanceof Enemy<?> || o instanceof Collectable));
-            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, walls %.2f s, fissure %.2f s, glade %.2f s, roost %.2f s, hollow %.2f s, canopy %.2f s%n",
-                trip + 1, entry, walls, fissure, glade, roost, hollow, canopy);
+            System.out.printf(java.util.Locale.ROOT, "Collection return %d: entry %.2f s, walls %.2f s, fissure %.2f s, glade %.2f s, roost %.2f s, hollow %.2f s, ridge %.2f s, canopy %.2f s%n",
+                trip + 1, entry, walls, fissure, glade, roost, hollow, ridge, canopy);
         }
         assertTrue(level.brewElixir());
         assertEquals(0, coins);
@@ -284,6 +294,8 @@ class RoomReplayTest {
         level.enterNextRoom(player()); // forest-roost (#330): so is its flying beetle
         secureCombatAndCoins(level);
         level.enterNextRoom(player()); // forest-hollow (#645): so are its swarms
+        secureCombatAndCoins(level);
+        level.enterNextRoom(player()); // forest-ridge (#525): so is its wolf
         secureCombatAndCoins(level);
         level.enterNextRoom(player());
         secureCombatAndCoins(level);
@@ -320,6 +332,9 @@ class RoomReplayTest {
         float hollow = replay(level, "forest-hollow", false, 0, new float[]{});
         within("hollow", hollow, REQUIRED_LIMIT);
         level.enterNextRoom(player());
+        float ridge = replay(level, "forest-ridge", false, 0, new float[]{});
+        within("ridge", ridge, REQUIRED_LIMIT);
+        level.enterNextRoom(player());
         var platform = (com.jlogicsoftware.kimeria.entity.objects.FallingPlatform) roomOwner(level, 115);
         assertNotSame(firstPlatform, platform);
         assertTrue(platform.isRemoved(), "Collection return preserves the secured collapsed platform state");
@@ -336,6 +351,7 @@ class RoomReplayTest {
         secureCombatAndCoins(freshLevel);
         freshLevel.enterNextRoom(player());
         secureCombatAndCoins(freshLevel);
+        freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
         freshLevel.enterNextRoom(player());
@@ -424,6 +440,8 @@ class RoomReplayTest {
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the roost (#330)");
         level.enterNextRoom(player());
         assertTrue(level.fallingPlatforms.isEmpty(), "nor in the hollow (#645)");
+        level.enterNextRoom(player());
+        assertTrue(level.fallingPlatforms.isEmpty(), "nor on the ridge (#525)");
         level.enterNextRoom(player());
         assertEquals(1, level.fallingPlatforms.size(), "one optional falling platform in the canopy");
         assertTrue(level.objects.stream().noneMatch(Bomb.class::isInstance), "no bomb shares the canopy room");
@@ -532,6 +550,8 @@ class RoomReplayTest {
         ForestWallsRoute wallsRoute = route.equals("forest-walls") ? new ForestWallsRoute(false) : null;
         // #645: the hollow is passed by watching the swarms: jump the low one head on, walk under the high one.
         ForestHollowRoute hollowRoute = route.equals("forest-hollow") ? new ForestHollowRoute(level) : null;
+        // #525: the ridge is passed by watching the wolf leap, waiting on its ledge until it bays, then stepping off on to it.
+        ForestRidgeRoute ridgeRoute = route.equals("forest-ridge") ? new ForestRidgeRoute(level) : null;
         // Entry collection route: get the coin behind the entrance, then return once for the ground coin.
         int phase = collect && route.equals("forest-entry") ? 0 : 1;
         for (int frame = 0; frame < 60 * COLLECTION_LIMIT; frame++) {
@@ -548,6 +568,7 @@ class RoomReplayTest {
                 else if (gladeRoute != null) gladeRoute.drive(level, held, pressed);
                 else if (wallsRoute != null) wallsRoute.drive(level, held, pressed);
                 else if (hollowRoute != null) hollowRoute.drive(level, held, pressed);
+                else if (ridgeRoute != null) ridgeRoute.drive(level, held, pressed);
                 else held.add(phase == 0 || phase == 2 ? Input.Keys.A : Input.Keys.D);
                 // D128: the leg-hold's mastered answer needs no jump: stand short of the open jaws, let them snap empty, walk over them shut.
                 if (route.equals("forest-entry") && held.contains(Input.Keys.D)) {

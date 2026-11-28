@@ -90,6 +90,28 @@ class WolfFxTest {
         assertTrue(fx.soft().count() >= 2 + 4, "two jaw glints and a puff of dust");
     }
 
+    /** D158: three wolves reading a jump, or gathering and biting in the air, throw fewer particles than three winding up. */
+    @Test void theNewMovesStayWellInsideThePools() {
+        for (float fps : RATES) {
+            WolfFx fx = new WolfFx(11);
+            float dt = 1f / fps, read = TrapWarnings.WOLF_READ_SECONDS, coil = TrapWarnings.WOLF_POUNCE_SECONDS;
+            float[] marks = new float[WOLVES], arcs = new float[WOLVES];
+            int hard = 0, soft = 0;
+            for (float t = 0; t < read + coil + TAIL; t += dt) {
+                for (int k = 0; k < WOLVES; k++) {
+                    if (t < read) { marks[k] += 40 * dt; while (marks[k] >= 1) { marks[k] -= 1; fx.mark(300 + k * 90, 200); } }
+                    if (t < coil) { arcs[k] += 60 * dt; while (arcs[k] >= 1) { arcs[k] -= 1; fx.arc(300 + k * 90 + fx.arcPoint() * 40, 150); } }
+                    else if (t - dt < coil) fx.snap(300 + k * 90, 150);
+                }
+                fx.update(dt);
+                hard = Math.max(hard, fx.hard().count());
+                soft = Math.max(soft, fx.soft().count());
+            }
+            assertTrue(hard > 0 && hard * HEADROOM <= WolfFx.HARD_CAPACITY, "hard peak " + hard);
+            assertTrue(soft > 0 && soft * HEADROOM <= WolfFx.SOFT_CAPACITY, "soft peak " + soft);
+        }
+    }
+
     /** D117 (#571): the body keeps the live wolf's palette, so its chips are wolf.grid colours (shade, coat, flank, belly). */
     private static final int[] LIVE_PALETTE = {0x2a0612, 0x4a0c22, 0x86101f, 0x9c2050, 0xb85a80, 0xc87896, 0x9a6070, 0xb07c8c};
 

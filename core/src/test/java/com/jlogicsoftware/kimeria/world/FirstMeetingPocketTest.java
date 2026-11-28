@@ -325,4 +325,16 @@ class FirstMeetingPocketTest {
         for (Wolf.State shown : new Wolf.State[]{Wolf.State.NOTICE, Wolf.State.CHASE, Wolf.State.TROT})
             assertTrue(seen.contains(shown.name()), "the pocket shows the wolf's " + shown + ": " + seen);
     }
+
+    /**
+     * The wolf's develop (#525, D158): on the one-way ledge (x 6224-6288, 48 px above the floor), the hero watches it leap the step
+     * and the trench, notice him, leap down and bay under him; it never commits and nothing starts at him.
+     */
+    @Test void forestRidgeTheWolfLeaps() {
+        Set<String> seen = pocket("forest-2", "forest-ridge", "wolf", Wolf.class, 6248, 256, "LEAP");
+        for (Wolf.State never : new Wolf.State[]{Wolf.State.WINDUP, Wolf.State.LUNGE, Wolf.State.BITE, Wolf.State.READ, Wolf.State.POUNCE})
+            assertFalse(seen.contains(never.name()), "a hero standing on the ledge is not attacked: it showed " + seen);
+        for (Wolf.State shown : new Wolf.State[]{Wolf.State.LEAP_COIL, Wolf.State.NOTICE, Wolf.State.BAY})
+            assertTrue(seen.contains(shown.name()), "the pocket shows the wolf's " + shown + ": " + seen);
+    }
 }

@@ -587,7 +587,7 @@ class RoomCardsTest {
 
     @Test void everyShippedRoomHasACardThatGivesTheEnforcedNovelty() throws IOException {
         List<Room> rooms = shippedRooms();
-        assertEquals(26, rooms.size(), "forest-0 has six rooms, forest-1 twelve, forest-2 eight: update this count with a new card");
+        assertEquals(27, rooms.size(), "forest-0 has six rooms, forest-1 twelve, forest-2 nine: update this count with a new card");
         List<String> problems = problems(shippedCards(), rooms);
         assertTrue(problems.isEmpty(), "docs/ROOM_CARDS.md is out of step with the maps (D72):\n  " + String.join("\n  ", problems));
     }

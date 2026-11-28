@@ -40,6 +40,7 @@ BOUNDS = {"jump.wav": (0.12, 0.20), "hit.wav": (0.22, 0.34), "bounce.wav": (0.17
           "spore_puff.wav": (0.26, 0.34), "puffball_burst.wav": (0.40, 0.50),
           "wolf_notice.wav": (0.18, 0.26), "wolf_windup.wav": (0.45, 0.55), "wolf_windup_long.wav": (0.70, 0.80),
           "wolf_lunge.wav": (0.14, 0.22), "wolf_bite.wav": (0.14, 0.22), "wolf_bay.wav": (0.34, 0.46), "wolf_run.wav": (0.10, 0.14),
+          "wolf_read.wav": (0.18, 0.26), "wolf_pounce.wav": (0.22, 0.28), "wolf_flinch.wav": (0.12, 0.18), "wolf_leap.wav": (0.22, 0.30),
           "handover.wav": (0.10, 0.16), "elixir.wav": (0.54, 0.64),
           "flying_beetle_notice.wav": (0.24, 0.32), "flying_beetle_windup.wav": (0.75, 0.85),
           "flying_beetle_windup_long.wav": (1.15, 1.25), "flying_beetle_dive.wav": (0.21, 0.29),
@@ -57,6 +58,7 @@ VOICE_RMS_DB = {"jump.wav": -17.0, "hit.wav": -16.5, "bounce.wav": -17.5, "colle
                 "snail_splat.wav": -18.0, "whip_crack.wav": -18.0, "boss_sweep.wav": -18.0, "boss_sweep_counter.wav": -18.0,
                 "boss_call.wav": -18.0, "boss_blow_charge.wav": -19.4, "boss_blow_charge_long.wav": -19.4, "boss_blow.wav": -17.0,
                 "wolf_notice.wav": -19.0, "wolf_windup.wav": -19.4, "wolf_windup_long.wav": -19.4, "wolf_bite.wav": -18.0,
+                "wolf_read.wav": -19.4, "wolf_pounce.wav": -19.0, "wolf_flinch.wav": -19.4,
                 "handover.wav": -19.4, "elixir.wav": -19.0,
                 "flying_beetle_notice.wav": -19.0, "flying_beetle_windup.wav": -19.4, "flying_beetle_windup_long.wav": -19.4}
 # #324: deliberately fuller than the voice set (a rare event), so it is outside the set's spread; it must stay within the
@@ -68,7 +70,7 @@ AMBIENT_RMS_DB = {"wall_rumble.wav": -20.0, "grit_fall.wav": -30.0, "bramble_rus
                   "stinger_rain.wav": -28.0, "ember_jet.wav": -23.0, "leghold_rattle.wav": -27.0, "leghold_snap.wav": -22.0, "root_thrust.wav": -21.6,
                   "fireball_fizzle.wav": -25.0, "remains_crumble.wav": -27.0, "remains_burn.wav": -25.0, "spider_leap.wav": -21.0,
                   "spider_drop.wav": -21.0, "spider_reel.wav": -27.0, "spider_snap.wav": -24.0,
-                  "flying_beetle_dive.wav": -21.0, "spore_puff.wav": -27.1, "puffball_burst.wav": -21.5, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0,
+                  "flying_beetle_dive.wav": -21.0, "spore_puff.wav": -27.1, "puffball_burst.wav": -21.5, "wolf_lunge.wav": -21.0, "wolf_bay.wav": -22.0, "wolf_run.wav": -30.0, "wolf_leap.wav": -22.0,
                   "mosquito_scatter.wav": -31.0, "mosquito_die.wav": -31.0,
                   "platform_crack.wav": -21.0}
 AMBIENT_MAX_RMS_DB = -20.0
@@ -213,7 +215,7 @@ class GenerateSoundsTest(unittest.TestCase):
                                                                     "fireball_fizzle.wav", "remains_crumble.wav", "remains_burn.wav",
                                                                     "spider_leap.wav", "spider_drop.wav", "spider_reel.wav",
                                                                     "spider_snap.wav", "wolf_lunge.wav", "wolf_bay.wav",
-                                                                    "wolf_run.wav", "platform_crack.wav"]:
+                                                                    "wolf_run.wav", "wolf_leap.wav", "platform_crack.wav"]:
             x = [v / 32768.0 for v in read(ROOT / "assets/audio" / name)[3]]
             self.assertLess(max(abs(v) for v in x[:gs.n_samples(0.002)]), 0.1 * max(abs(v) for v in x), name)
 

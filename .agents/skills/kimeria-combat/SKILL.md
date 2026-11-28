@@ -49,6 +49,11 @@ The defaults are the ordinary monster. The swarm never reacts to the hero, its c
 cast or a stone thrown that frame wins), it flies in silence, its lethal shape is the oval core inside the cloud it is drawn as (`hitboxOverlaps` overridden), and
 its load check keeps a free way past along its whole line (`MosquitoSwarm.problem`).
 
+The wolf's develop (D158, `Wolf`) is the template for a monster that answers the hero's habits: a fixed rule per habit (never a
+roll), each with its own tell in `TrapWarnings`, started only from named states, once per jump, never through a solid or off its
+floor, and off with the longer-warnings assist. A stomp that must not kill asks the state (`Wolf.stompKills`) and still bounces.
+A monster that leaps between floors takes a polyline of floor legs (`Wolf.Route`, checked by `Wolf.routeProblem`).
+
 ## A monster's body (D101)
 
 Decide on the card whether the monster leaves a body (the applies-to list in [D101](../../../docs/DECISIONS.md)): a quiet kill

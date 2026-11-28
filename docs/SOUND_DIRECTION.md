@@ -347,6 +347,16 @@ snout, the roughness and the breath through the nose do. Constants: `WOLF_*` in 
   (`Level.inCameraView`, D89, D90): a soft paw patter, a muffled double thud around 110 Hz with a faint breath. The quietest sound of
   the set, under every warning.
 
+The develop's four tells (D158, [#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525), seeds 7312-7316, 2026-11-28), in the same snout voice; generated and measured, **the
+author has not auditioned them** ([#525](https://github.com/jlogicgames/edgard_in_kimeria/issues/525)):
+
+- `wolf_read` (0.22 s, RMS -19.4 dBFS, centroid 907 Hz): a jump seen: a short low huff, then one closed, rough "hm" rising 210 to 300 Hz.
+- `wolf_pounce` (0.25 s, RMS -19.0 dBFS, centroid 989 Hz): the jump bite's tell: a sharp snarl climbing 270 to 430 Hz with the teeth's
+  hiss, ending on its peak.
+- `wolf_flinch` (0.14 s, RMS -19.4 dBFS, centroid 893 Hz): it coils away from a swing: one short surprised yelp falling 520 to 330 Hz.
+- `wolf_leap` (0.26 s, RMS -22.0 dBFS, environment level): its coil at a lip: claws scraping twice around 2.3 kHz and a breath drawn
+  in, under a tanh drive; only while it is in the camera view.
+
 Its death plays the shared kill sound `bounce`; its body reuses `remains_crumble` and `remains_burn`; the trot, the sniff, the skid, the
 twitch and the recovery are silent. The 50 sounds that existed before stay byte-identical (md5 before and after). Not verified: how the
 set sounds beside the forest-2 music and ambience, which waits for a room that places it (#331).
