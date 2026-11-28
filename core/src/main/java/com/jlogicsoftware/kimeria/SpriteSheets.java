@@ -59,8 +59,17 @@ public final class SpriteSheets {
     public static final Sheet DECOR_TRUNK = new Sheet("images/objects/decor-trunk.png", 28, 288);
     // A dead tree's snapped trunk (D122): one frame, 200 px tall, for a branch whose tree must stop below the moon.
     public static final Sheet DECOR_SNAG = new Sheet("images/objects/decor-snag.png", 28, 200);
-    // Leaf crown hung over a trunk (#421): one frame; tools/sprite_layouts.py DECOR_SHEETS.
-    public static final Sheet DECOR_CROWN = new Sheet("images/objects/decor-crown.png", 96, 40);
+    // The second trunk (#635): the trunk's bark with a hollow and a burl, so a row of trees does not repeat one shape.
+    public static final Sheet DECOR_TRUNK_KNOT = new Sheet("images/objects/decor-trunk-knot.png", 28, 288);
+    // Leaf crowns hung from the room top over a trunk (#635, D162; they replace the 96x40 crown of #421): one frame each,
+    // centred on their object, which is centred on the trunk; tools/sprite_layouts.py DECOR_SHEETS.
+    public static final Sheet DECOR_CROWN_DROOP = new Sheet("images/objects/decor-crown-droop.png", 208, 160);
+    public static final Sheet DECOR_CROWN_BROAD = new Sheet("images/objects/decor-crown-broad.png", 224, 128);
+    public static final Sheet DECOR_CROWN_ROUND = new Sheet("images/objects/decor-crown-round.png", 160, 144);
+    // The same crowns in the fine-clump style (D162): the author keeps both styles.
+    public static final Sheet DECOR_CROWN_DROOP_FINE = new Sheet("images/objects/decor-crown-droop-fine.png", 208, 160);
+    public static final Sheet DECOR_CROWN_BROAD_FINE = new Sheet("images/objects/decor-crown-broad-fine.png", 224, 128);
+    public static final Sheet DECOR_CROWN_ROUND_FINE = new Sheet("images/objects/decor-crown-round-fine.png", 160, 144);
     // The hero (#343, D79): 64x64 cells, one clip per row; tools/sprite_layouts.py HERO_SHEETS, drawn from art/hero/hero.grid.
     public static final Sheet HERO_RIGHT = new Sheet("images/hero/hero-right.png", 64, 64);
     public static final Sheet HERO_LEFT = new Sheet("images/hero/hero-left.png", 64, 64);

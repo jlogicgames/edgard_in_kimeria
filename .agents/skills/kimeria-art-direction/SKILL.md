@@ -59,6 +59,16 @@ on a trunk blends into the bark at its root (D130): its last 5 to 8 px ramp thro
 and flare into a collar, the outermost column the trunk's furrow `220e09`; put the ramp keys in `RIM_KEEP` in
 `tools/forest_trap_sprites.py`, or the moon rim draws a pale cut across the joint. Rot, cracks and break cues stay off the joint. See `docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
 
+## Trees and crowns (D162)
+
+About one tree per screen: a trunk under a big crown hung at y 0 and centred on it, no opaque crown pixel within 12 px of gameplay,
+over a solid block or play tile or outside its room; the decor contrast limits hold at every camera, mirrored crowns measured as
+drawn. Kinds, placement table and accepted gaps: `docs/ART_DIRECTION.md`, "Trees and crowns"; gates `DecorTest`,
+`check_tiled_links.py`, `validateContrast`.
+
+A leaf crown types where its leaves are, a `leaves x y w h` line under its frame, so the wind's gusts light it (D163); then run
+`python3 tools/wind_spots.py` (`validateWindSpots`).
+
 ## Viewpoint of interactive objects
 
 The author specified on 2026-10-23 that actionable world objects are seen on the

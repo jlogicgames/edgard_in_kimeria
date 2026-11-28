@@ -261,6 +261,18 @@ class ClassificationTest(unittest.TestCase):
         self.assertEqual(errors, [])
         self.assertEqual(keys, ['Trigger', 'Decor:lookalike', 'Actionable:Wall'])
 
+    def test_a_mirrored_decor_is_measured_as_drawn(self):
+        # #635: Decor.render flips a `mirror=true` decor, so the gate measures the flipped frame, not the authored one.
+        objects = ('<object type="Decor" x="0" y="0" width="208" height="160"><properties>'
+                   '<property name="kind" value="crown-droop"/><property name="mirror" type="bool" value="true"/>'
+                   '</properties></object>')
+        errors = []
+        keys = [p[1] for p in gate.placements(errors, self.roots(objects))]
+        self.assertEqual((errors, keys), ([], ['Decor:crown-droop-mirror']))
+        flipped, = gate.frames('Decor:crown-droop-mirror')
+        drawn, = gate.frames('Decor:crown-droop')
+        self.assertEqual(flipped.tobytes(), drawn.transpose(Image.Transpose.FLIP_LEFT_RIGHT).tobytes())
+
 
     # #363 (D88): a bough at (0, BOUGH_Y) with swing=left, and a mirrored one at RIGHT_X (DeadfallTrap's geometry).
     BOUGH_Y = 243.0
@@ -667,7 +679,7 @@ class TrunkSoilTest(unittest.TestCase):
     def test_shipped_trunks_are_apart_from_the_ground(self):
         errors, distances = gate.check_trunk_soil()
         self.assertEqual(errors, [])
-        self.assertEqual(set(distances), {'Decor:trunk', 'Decor:snag'})
+        self.assertEqual(set(distances), {'Decor:trunk', 'Decor:trunk-knot', 'Decor:snag'})
 
 
 class FairyTest(unittest.TestCase):

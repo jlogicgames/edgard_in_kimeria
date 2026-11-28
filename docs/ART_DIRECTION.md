@@ -312,6 +312,12 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
 | Play | 1.0 | terrain (`forest-terrain`), decor, traps, enemies, hero | floor line y 304 over a 64 px soil band (D144); one row (16 px) of deep soil past the room bottom (`deep-1` in the terrain sketch, `deep-3` under a pit, near black) and the decor layer `play-above` (1 row, `offsety` -16) carrying ropes and walls on over the room top | world | existing layers, plus `play-above` (no collision) |
 | Foreground | 1.6 (kept, third pass: see the cover-time rule in section 3); the giant leaves' own near group 2.2 ([D143](DECISIONS.md#d143-giant-out-of-focus-leaves-frame-the-forest-rooms-597-2026-11-25)) | few big, readable shapes, not a band (Hollow Knight, Dead Cells): a vine curtain (a sagging bough, vines with big pointed leaves) and a root curtain (roots of very different lengths, the deepest almost to the floor) hanging from the top, leaves and a bough in the top-left corner; big leaves, fern fronds and grass in a few low clumps on the floor line and a tuft; the tips of two tall leaves at the room end. Since D113 most rooms take near pieces from the top edge (author 2026-11-20 and 2026-11-21: right in front of the camera, big and dark, not small bushes): `near-canopy` (224x112, a leaf mass with gaps: broad tilted leaves, small turned ones, some seen edge-on, the back ones a tone lighter), `near-fern` (224x128, four fern fronds from a leafy clump above the frame) and `near-sprig` (128x112, a twig with a few leaves); rooms with a falling or thrown stone take no canopy (gated since D153), one earlier curtain or the reeds stay beside them. They are drawn by hand in `art/parallax/forest/near/`: the typed glyphs (`leaf-broad.txt`, `leaf-small.txt`, `leaf-edge.txt`, `pinna.txt`, `rachis.txt`) and placement lists (`canopy.spec`, `fern.spec`, `sprig.spec`, every position and size typed); `python3 art/parallax/forest/near/stamp.py canopy.spec fern.spec sprig.spec` copies them into rows (the later in front, the back leaves through a palette swap) and the result replaces everything after the near-pieces comment at the end of `fg.grid`. `stamp.py` only copies typed characters and slices the bleed pieces; it draws no shape, adds no noise and applies no filter (the author accepted this copy-only stamp on 2026-11-21). Tall pieces rising from the screen bottom (`rise-fern`, `rise-trunk`, `rise-reeds`, up to two thirds of the view, sprites unchanged in size) go only where no camera carries their stems over an excluded rect (none in the busy mock room; two clear runs in the calm mock room); they are open (lace) and thinnest where they cross the hero's band | modular pieces placed by hand as tile objects, `forest-fg` is a collection of images over one packed sheet, a sub-rectangle per piece (pixel defocus) | front | objectgroup `foreground` of tile objects per room, `parallaxx` and `parallaxy` 1.6, formula in Offset; every standing piece has a `-foot` under it and every hanging piece a `-top` over it (bleed) |
 
+- **Trees on the play tier, the decor tier's density ([D162](DECISIONS.md#d162-a-tree-with-a-big-crown-on-every-forest-screen-635-2026-11-28), [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635)).** Nearest the hero the forest is about
+  one tree per screen (one per 500 to 650 px where gameplay allows): a `Decor` trunk (`trunk` or `trunk-knot`, behind the play
+  tiles) under a big crown hung from the room top (`crown-droop`, `crown-broad`, `crown-round`, each also mirrored and each also
+  in a fine-clump style, `-fine`, about half the trees each), its leaves
+  down to y 119 to 156. The mid layer's 1024 px repeat is left as it is. Kinds, sizes, palette, the placement table and the
+  accepted gaps: "Trees and crowns" in "Active decor objects" below.
 - **Shared sky objects (author, 2026-11-19).** One moon and one set of clouds serve every world (Forest, Swamp, Steppe, Castle); in the
   Castle they are seen through the windows. The moon is fixed on screen (factor 0 in x and y): it never moves with the camera and sits
   at the same screen position in every room. The clouds drift continuously over time at a constant speed per cloud layer, independent of
@@ -401,7 +407,7 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   fairy 0.136 to 0.269 to 0.314 to 0.376, glints 0.179 and 0.215 to 0.323 and 0.377);
   **Cancelled (D61): will not be implemented** (original text kept): the draw-call and fill budget on mobile
   web, measured on a phone (through `NoopBatch`, the layers and the foreground of a `forest-1-mob` frame are 3 187 region draws and 9 texture
-  switches at 640 px and 3 698 and 9 at 800 px, after 4 198 and 15, and 4 866 and 21); swaying trees (deferred from #239; no sway since 2026-11-25, wind gusts of light instead: [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)). Built: the
+  switches at 640 px and 3 698 and 9 at 800 px, after 4 198 and 15, and 4 866 and 21); swaying trees (deferred from #239; no sway since 2026-11-25, wind gusts of light instead, "Wind in the crowns" below, [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)). Built: the
   parser, the renderer (`ParallaxRendererTest`, `TiledMapParallaxTest`), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame)
   and the game-map check (`python3 tools/parallax_mock.py --check --game`, `validateParallax`).
 
@@ -475,7 +481,7 @@ These are the only limits on the layers.
   along the room with open sky between them, and rising stems on the stretches with no traps, where the player only walks through:
   `MIDDLE` in `tools/parallax_game.py`. Prefer a light piece (`near-sprig`, `near-fern`); in a room with a falling or thrown stone
   never the canopy, and by a falling stone's swaying `HangingVine` objects a fern rather than a vine curtain. Leave room for the
-  trunks and crowns of [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635).
+  trees of [D162](DECISIONS.md#d162-a-tree-with-a-big-crown-on-every-forest-screen-635-2026-11-28).
   `validateParallax` (`check_middle`) fails a room with, in foreground px, more than **320** without a hanging piece, more than
   **480** without a tall rising piece, less than **96** of open sky between hanging pieces at some camera, a hanging or rising piece
   at a top y its table does not allow, or a `near-canopy` beside a stone; for a long stretch it names the piece and x that would
@@ -521,10 +527,113 @@ These are the only limits on the layers.
   (the fairy, D82). A spirit light drifts at most 8 px/s and breathes on a 3 to 5 s irregular period, never on the fungus's 2.5 s or the
   fissure's 0.5 s beat. No trails.
 - **Motion.** Clouds drift at a constant speed (sketch 3 px/s); spirit lights at most 8 px/s (fireflies keep the #472 flights); the
-  moon never moves; the foreground moves only with the camera; nothing flashes, sways fast or changes colour. The ambience stays slower
-  than the slowest trap telegraph.
+  moon never moves; the foreground moves only with the camera; nothing flashes, sways fast or changes colour, except the wind's gust
+  glints ("Wind in the crowns" below, [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)), which lighten single leaf
+  pixels as the front passes and move nothing. The ambience stays slower than the slowest trap telegraph.
 - **The light stays above the play.** The play band (the floor up to a jump's height) sits on the dark foot of every layer; the light
   sky, the moon, the clouds and the lit tree tops stay above it.
+
+### Wind in the crowns (D163, [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593))
+
+Approved by the author on 2026-11-27; on 2026-11-28, after seeing it in the game, the author chose to strengthen it, from specks of
+1 or 2 px to patches of leaf ([D163](DECISIONS.md#d163-wind-is-shown-as-gust-waves-of-light-through-the-leaves-one-shared-wind-model-593-2026-11-28)).
+Wind is shown as **gust waves of light through the leaves**. No tree, bush or sprite moves, bends or animates. There is no random
+flicker: a glint appears only where a gust front passes. Built: `world.Wind`, `effects.CrownGlintFx`, `KIND_GLINT`
+([DEVELOPMENT.md](DEVELOPMENT.md#wind-and-leaf-glints-593)).
+
+**The gust.** One model, `world.Wind`, shared with the Steppe ([#108](https://github.com/jlogicgames/edgard_in_kimeria/issues/108),
+[#109](https://github.com/jlogicgames/edgard_in_kimeria/issues/109), [#400](https://github.com/jlogicgames/edgard_in_kimeria/issues/400)).
+World X grows to the right.
+
+| Value | Number |
+| --- | --- |
+| Direction | left to right (+x) in every forest room, the way the clouds drift |
+| Front speed | 180 px/s |
+| Band width | 72 to 96 px, drawn per gust |
+| Period (start to start) | 8 to 12 s, drawn per gust; never shorter than the sweep plus 0.3 s, so a very long room stretches it |
+| First gust | starts at the room's left edge 1.5 s after the room starts |
+| Sweep | from the room's left edge until the band has left the right edge for the deepest layer and the latest spot, and 0.1 s more; 7.8 s at most in a 1120 px room, so two gusts never overlap |
+| Calm | no glint at all between gusts: a leaf beyond the room's edges never lights, and one found too late to finish within the sweep (a frame over 0.1 s) stays dark |
+
+**Envelope.** `s = 0.35 + 0.65 * sin(pi * p)`, where p (0 to 1) is the front's progress across the room. The gust enters faint, is
+brightest mid-room and dies out. s sets the share of spots that light, `0.45 + 0.30 * s` (55 % at the ends, 75 % mid-room), and
+each glint's peak alpha, `0.5 + 0.5 * s`.
+
+**Ragged front.** Every leaf spot has its own fixed delay of 0 to 0.20 s (up to 36 px of front). Which spots light is decided per
+room and per gust, so a retry shows the same gusts and two gusts differ.
+
+**One glint.** A small ragged **patch of leaf**: one of a few typed leaf-cluster masks, of which only the pixels on leaves of its
+depth are drawn, so it takes the edge of the leaves under it. It stands still for the time the band takes to pass (band width /
+speed: 0.40 to 0.53 s), fades in over the first 30 % of that, holds, and fades out over the last 50 %. Normal blending, never
+additive, no halo. A spot is looked at once per gust, as the front reaches it: a leaf the camera brings in behind the front stays
+dark.
+
+**Depth: deeper is later and bluer.** Each depth's contrast against its own leaves is comparable to the crowns' (0.109 to 0.178 on
+the mid layer against 0.109 to 0.158 on the crowns), because the mid and grove art is near black. By the author's decision of
+2026-11-28 this replaces the "deeper is weaker" part of the first card and of [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)
+(D120's colours of depth, bluer and greyer, still hold).
+
+| | Decor crowns | Mid leaf clusters | Grove spruces |
+| --- | --- | --- | --- |
+| Front delay | 0 | 0.35 s (63 px behind) | 0.70 s (126 px behind) |
+| Patch, px (median) | 27 to 38 (32 to 35 by crown), masks about 10x7 | 29 to 47 (44), masks 11x7 | 9 to 24 (17), masks 9x4 |
+| Colour | `3d5538` leaf green (OKLab L 0.42) | `0a343a` blue-teal (L 0.30) | `213d49` grey-blue (L 0.34) |
+| Fleck, one glint in 8 (the whole patch) | `545a2b` warm yellow-green (L 0.45) | `1a3626` green (L 0.31) | none |
+| Leaf pixels it may cover | the crowns' keys `m`, `l`, `n` (L 0.30 to 0.31) | leaf-cluster keys `4` to `9` (L 0.14 to 0.20) | upper-bough keys `7` to `a` (L 0.21 to 0.24), above the mist (art rows above 120) |
+| Least share of a mask on leaf | 75 % | 60 % | 50 % |
+| OKLab distance from the leaf under it, measured / limit | 0.109 to 0.158 / 0.17 | 0.109 to 0.178 / 0.18 | 0.108 to 0.138 / 0.14 |
+| Spots | one per 150 leaf px (broad 68, droop 80, round 58; fine style 88, 81, 71), at least 9 px apart | up to 7 per cluster, at least 7 px apart (37 in a 1024 px loop) | up to 7 per spruce, at least 7 px apart (42 in a 768 px loop) |
+| Live cap (most seen alive) | 64 (42) | 24 (13) | 16 (7) |
+
+Every distance stays far under the active floor of 0.28 (D76), and no colour is near the fireflies' lime `b8f23a` or the fungus
+honey `e2b25a`. The total cap is **104**. A full pool skips the new glint; it never cuts a live one short; in the shipped rooms
+none is skipped.
+
+**Crown keys.** On the crowns of D162 only the leaf green `m` and `l` and the olive tips `n` light. The lit tops `p` and `o` (L 0.35
+and 0.38) lie 0.07 and 0.04 from the leaf-green glint, which would not be seen on them; the contour `k` and the shades `d` and `q`
+lie under the glint's reach (the fleck is 0.17 to 0.23 from them); the bark never lights.
+
+**Measured on the shipped rooms (2026-11-28; `WindRoomsTest`).** At the first, middle and last camera each gust lights at least
+**11** crown or mid glints and the calm none. `forest-1-escalators` and `forest-1-climb` have no tree (D162) and no mid glint in
+view: there only the grove shows the gust, at least 10 glints per gust. A full pool skips nothing (ten seeds, three cameras;
+ceiling 2 %).
+
+**Seen in the web build (2026-11-28, still camera, frames 50 ms apart, pixels that differ by 6 or more from the same run without
+wind, in 640x360 px; captured before the fine-clump crowns of D162 returned and before the final map and calm fixes).**
+
+| Room | Changed px at the peak, first glints to patches | Lit time per gust, patches | Largest channel difference |
+| --- | --- | --- | --- |
+| `forest-walls` (two crowns) | 24 to 860 | 3.2 to 3.7 s | 49 of 255 |
+| `forest-1-spider` (two crowns) | 27 to 1,106 | 2.8 to 3.9 s | 49 |
+| `forest-1-escalators` (no tree) | 3 to 80 | 0.8 to 1.7 s (the second gust cut by the capture) | 36 |
+
+On the crowns the wave reads at 1x as leaves catching light from left to right. The mid clusters and the spruces read as quiet
+accents behind it; in a room without a tree the gust is a few strokes on one spruce and is easy to miss.
+
+**Spots.** Each grid types where its leaves are, `leaves x y w h` boxes under its frame or piece (`mid.grid`, `grove.grid`, every
+crown grid: a crown's box is its frame below row 8, the rows over the floor camera's top edge). `tools/wind_spots.py` lays the
+depth's patch masks (typed in the tool) on the art in those boxes, keeps the pixels of the allowed keys, takes patches in a fixed
+order and no closer than the spacing, and writes `assets/wind/forest-spots.txt`; a mid or grove patch stays inside one 16 px
+tile. A crown carries one patch per so many leaf pixels, so a bigger crown carries the same wave. A mirrored crown's patches are
+mirrored with it, and where two crowns overlap, the patches of the one drawn first that reach under the other's frame are dropped.
+`--check` (`validateWindSpots`) fails a stale file, a runtime sheet that differs from its grid and a glint colour over its
+distance limit on any patch pixel.
+
+**Draw order.** Grove glints directly after the `grove` layer, so the mid trunks cover them; mid glints directly after `mid`; crown
+glints after the play-tier decor drawn over the play tiles (the crowns, D162, and the bushes) and before every vine, object, trap
+and the hero. The foreground and the HUD cover all of them. A mid or grove glint moves with its layer's unsnapped vertical offset
+([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)), so it stays on
+its leaf while the camera eases up and down.
+
+**Exclusions.** No patch starts over a trap's column (the columns of the falling leaves: each trap's x range plus 24 px; on the mid
+and grove layers widened by the layer's drift during one glint, 32 and 40 px, tested at the patch's on-screen place). No crown patch
+starts within 16 px of the placed box of a lever, a lever-driven wall, an escalator, the checkpoint, a pickup or a monster (a
+route's bounds). None starts off screen.
+
+**Time.** The gust runs on the world's clock: it stops in the pause menu, the healer scene and a room change, slows with the death
+slow motion, and starts again from the beginning on every room entry, death and retry.
+
+**Where.** Maps with the map property `wind` (the forest maps). The effect shakes no leaves loose. Wind has no sound.
 
 ### 4. Value check (OKLab L, `tools/check_contrast.py` formula; throwaway script, not in the repo)
 
@@ -851,14 +960,65 @@ depends on it.
   a solid block. The grid is an original drawing in the palette above (three leaf tones); the 2026-11-16 recolour
   changed only its palette lines (D76). In a map the rectangle is 32×24,
   so `y = floor - 24` (forest-2's SpawnPoints layer is offset by -16, so its file `y` is `floor - 24 + 16`).
-- **Crown (#421).** The decor kind `crown`, `decor-crown` 96×40, one frame, from the hand-authored `art/objects/decor/crown.grid`:
-  a leaf crown hung from the room top over a `Decor:trunk` (trunk x = crown x + 40; the middle lobe hides the trunk's cap).
-  The bush's grey-green family one step lighter (contour `607660`, leaves `6e8466 / 7b9170 / 889e79`, olive tips `948f62`);
-  no ink, no violet. Since [D120](DECISIONS.md#d120-depth-palette-the-near-layers-take-dark-real-colours-the-scenery-turns-bluer-lighter-and-greyer-with-depth-236-2026-11-21): leaf green `1b291b`, leaves `202e20 / 233223 / 273627`, olive tips `2f301e` (the D112 lightness, hue 145);
-  outline 0.025 to 0.168. Measured over forest-0's `background` `4a92b8` (D92): outline 0.087, body 0.119. The bush's own palette
-  on the same grid measures outline 0.157, inside the 0.20 decor ceiling by 0.043; the lighter greens keep the crown, the
-  largest decor sprite and hung in open sky, about halfway under it. A hanging kind (`hangs` in `Decor.KINDS`): its top edge is on the
-  room's top or a solid's underside, not its bottom edge on a solid. First placed in forest-0-wall over the falling branch.
+- **Trees and crowns ([D162](DECISIONS.md#d162-a-tree-with-a-big-crown-on-every-forest-screen-635-2026-11-28), [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635), author 2026-11-28).**
+  About one tree per screen on the play tier: a trunk standing on the floor under a big leaf crown hung from the room top. The
+  crowns are large and hang low, as real trees do (author: "the crowns must be bigger and lower; it will not spoil the game"):
+  their leaves reach y 119 to 156, so the camera's top 8 px hide only a sliver and the crown fills about the top 40 % of the view.
+  Three crown shapes, one frame each, each in two styles (six kinds, below), typed grids (`art/objects/decor/crown-*.grid`):
+
+  | Kind | Frame | Lowest leaf | Look |
+  |---|---|---|---|
+  | `crown-droop` | 208×160 | y 156 | weeping: a deep leaf mass over a curtain of strands, longest at the sides; under the heart the trunk carries on as a leader and parts into two limbs |
+  | `crown-broad` | 224×128 | y 119 | a broad dome, hanging lower on the left; an open bay under the middle shows the leader and two limbs |
+  | `crown-round` | 160×144 | y 127 | tall and round, deepest over the trunk; one limb leaves the trunk on the left into the lower leaves |
+
+  Each crown may be mirrored (`mirror=true`), so six silhouettes; the trunks alternate between `trunk` and `trunk-knot` (the same
+  bark with a hollow and a burl, `art/objects/decor/trunk-knot.grid`, a trunk kind like the trunk). A crown's object is its frame's
+  size, at y 0 (forest-2's SpawnPoints file y 16), centred on its trunk: crown x = trunk x + 8 - width / 2, so mirroring keeps it
+  over the trunk. The frame's middle 23 columns cover the trunk's cap (rows 16 to 20). They replaced the 96×40 `crown` of #421
+  (retired with its grid, sheet and kind; it hung too high, its top rows under the camera, and stamped one shape).
+  **Structure (author, rounds 3 and 4):** in the running game one small clump stamped in even rows read as roof tiles and the three
+  crowns looked alike, so each crown is built from 9 to 12 big leaf masses of clearly different sizes (radius 13 to 30 px) and
+  shapes (one to three tufted lobes), at irregular offsets, with deep shadow `141f14` in the gaps between them; every mass is lit
+  on top (`35492f` toward the moon, `2e4030`), shadowed toward its underside and on its left, the side away from the moon. Each kind
+  has its own build: the broad crown three tiers of wide masses, lower on the left; the round crown a column of round masses
+  narrowing to the trunk; the droop crown a ceiling of masses over its strands (whose gaps take `1b291b`, one step lighter, where
+  its edge crosses the moon). A contour runs round every crown and a dark seam inside its left edge, so a crown in front of another
+  shows its own edge (forest-walls: the broad crown at 976 is unmirrored so the seam faces the round crown behind it). The
+  silhouettes are those of round 3, pixel for pixel, so the placement checks hold.
+  **Two styles (author, 2026-11-28, after comparing both in the game: "I like both"):** the round-3 drawing stays as three more
+  kinds, `crown-droop-fine`, `crown-broad-fine` and `crown-round-fine` (even rows of small lit leaf clumps, the art of the playtest
+  build, `art/objects/decor/crown-*-fine.grid`), with the same frames, silhouettes and limbs as their big-mass twins, so either
+  style fits any placement. About half the trees take each, neighbours alternate, and both styles show in every map; in
+  forest-walls the round crown behind is fine and the broad crown in front is big-mass (still unmirrored: its seam faces the
+  fine crown). Palette (D120 leaf
+  green, hue 145): contour `1b291b`, leaves `202e20 / 233223 / 273627`, olive tips `2f301e`, lit `2e4030` and `35492f` (toward the
+  moon, up and right), shadow `141f14` (OKLab L 0.225 to 0.381); limbs and leader in the trunk's own bark keys; no ink, no violet,
+  chroma p90 0.033. Opaque, no hole (D130).
+  **Placement** (world x of the trunk object; m: mirrored crown; fine: the fine-clump style, else big masses; `kept`: a trunk that
+  was there, carrying branches):
+
+  | Map | Trees |
+  |---|---|
+  | forest-0 | 264 droop, 976 round fine, 1728 droop m (kept, the falling branch's tree), 3256 broad fine, 3992 droop |
+  | forest-1 | 840 broad fine, 2472 droop, 3000 broad m fine, 3696 droop m, 4608 broad fine, 5292 round (kept), 5984 broad fine (kept), 6424 droop (kept), 7016 round m fine, 7320 droop; crownless kept trunks 3168, 3264 (the climbing tree) and 6588 (the hive's tree) |
+  | forest-2 | 136 round, 864 round fine (kept), 976 broad (kept), 1424 broad m fine, 2000 round m, 3152 broad fine, 3768 droop m, 4320 broad m fine, 4888 round, 5520 droop fine, 6168 broad (`forest-ridge`) |
+
+  Rules of the placement: no opaque crown pixel within 12 px of a gameplay object, its travel, patrol or fall column (traps,
+  levers, pickups, monsters, branches, hives, falling stones, ladders, lifts, exits), none over a solid block or play tile (the
+  crowns are drawn after the play tiles), the crown inside its room, the decor contrast limits at every camera; dead snags stay
+  crownless. **Accepted deviations (author, 2026-11-28):** `forest-1-escalators`, `-climb`, `-route` and `forest-boss` have no
+  tree (every spot would cover gameplay or cross the moon past the 0.20 body ceiling), so forest-1 has a 1,632 px stretch without
+  one (840 to 2472); `forest-0-platform` has none either since the build (every fitting crown covered its ceiling block, D162); the climbing tree's two trunks and the hive's trunk stay crownless (a
+  crown would cover their branches or the hive); a crown edge crosses the moon at some cameras (spider, guard, roost, bramble), as
+  the mid trunks do. Some crowns stand behind a foreground curtain (forest-1-tree, forest-entry).
+  Measured (`check_contrast.py`, every camera, mirrored crowns as drawn): outline / body at worst, limits 0.20 / 0.08 to 0.20: `crown-droop` 0.153 / 0.199 (mirrored 0.104 / 0.173), `crown-broad` 0.105 / 0.168, `crown-round` 0.194 / 0.197 (0.158 / 0.195); fine style: `crown-droop-fine` 0.077 / 0.161, `crown-broad-fine` 0.147 / 0.194 (0.138 / 0.182), `crown-round-fine` 0.193 / 0.182 (0.136 / 0.178), `trunk` 0.156 / 0.180, `trunk-knot` 0.184 / 0.179; every trunk kind 0.026 from the terrain colours (minimum 0.02); the crowns' tightest spots are where an edge crosses the moon (forest-1 7320, forest-2 4888).
+  Gates and tests: `DecorTest` (kinds, opaque frames, every shipped crown hung at y 0 over a trunk of its room with no opaque pixel
+  over a gameplay object, mirroring included), `TreeClimbTest`, `SpriteSheetContractsTest`, `test_forest_trap_sprites.py`
+  (frames, the cap covered), `check_tiled_links.py` (hanging kinds, branch roots on bark), `check_contrast.py`. Previews:
+  `docs/references/forest-traps/decor-crown-droop-preview.png`, `decor-crown-broad-preview.png`, `decor-crown-round-preview.png`,
+  their `-fine-preview.png` twins,
+  `decor-trunk-knot-preview.png`.
 - **A branch always grows from a trunk ([D122](DECISIONS.md#d122-a-branch-always-grows-from-a-trunk-555-2026-11-21)).** Every
   object drawn as a branch or hanging from a bough (the sound and rotten branches, `Platform` and `FallingPlatform` with
   `skin=branch`; `FallingBranch`; the `HangingHive`'s bough; the `Deadfall`'s bough) lays its root at least 3 px over the bark of
@@ -1580,7 +1740,7 @@ notes; the table below is history:
 | `decor-lookalike` | `6d6154`→`56555a`, `aa9c8a`→`7e7b7d`, `998b7a`→`737073`, `897b6a`→`686669`, `796c60`→`5e5c62`, `a7a194`→`7c7f84`, `958e82`→`707278`, `b4ada0`→`84868c` | 0.106 / 0.157 |
 | `decor-trunk` | `6d665e`→`565861`, `8b8379`→`6a6b72`, `9a9288`→`74757c`, `7a736a`→`5f6169`; layered forest ([#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236), 2026-11-20): →`2a2e38`, `2b2f3a`, `2d303b`, `2b2e39` (OKLab L 0.301 to 0.312, just above the ink floor); bark redraw (#236 art review, 2026-11-21, the flat pole read as a lamp post): a cool slate trunk in a grid of its own, shadow side and furrows `101116`, bark `16171d` / `1b1c23`, lit ridges `24262f` / `2f3340`, a broken moon rim `3a4258` on the right edge, a knot `0b0c10`, a snapped stub on the shadow side, roots flaring to 16 px with moss `1a2322`; the mean lightness kept at the pole's (OKLab L about 0.23) | 0.095 / 0.160; over forest-1's layers and forest-0's `2c3f66`: 0.069 to 0.197 / 0.084 to 0.194; after the redraw, over the shipped layers: outline 0.118 to 0.175, body 0.097 to 0.184 (the flat pole: outline up to 0.170, body up to 0.189) |
 | `decor-vine` | `757a67`→`5b6567`, `9d9f7b`→`757d74`, `8a8c6d`→`69716b`, `88a083`→`687e79`, `738b73`→`5a706e` | 0.130 / 0.173 |
-| `decor-crown` | `607660`→`4e6362`, `6e8466`→`576c66`, `7b9170`→`5f746c`, `889e79`→`687d72`, `948f62`→`707363` | 0.111 / 0.180 |
+| `decor-crown` (retired by D162) | `607660`→`4e6362`, `6e8466`→`576c66`, `7b9170`→`5f746c`, `889e79`→`687d72`, `948f62`→`707363` | 0.111 / 0.180 |
 
 **Decor is solid, calm and apart from the ground ([D130](DECISIONS.md#d130-decor-trees-and-bushes-are-solid-and-calm-and-a-trunk-is-apart-from-the-ground-amends-d76-and-d120-555-2026-11-24), [#555](https://github.com/jlogicgames/edgard_in_kimeria/issues/555)).** Playtest 2 F17 saw
 pale, see-through trees and bushes with the branch trap and the log hung in the air. The decor sheets are opaque (binary alpha,

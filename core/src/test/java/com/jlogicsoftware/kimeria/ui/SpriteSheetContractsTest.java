@@ -53,7 +53,13 @@ class SpriteSheetContractsTest {
         matches(SpriteSheets.DECOR_LOOKALIKE, 1, 1); // #299: static
         matches(SpriteSheets.DECOR_TRUNK, 1, 1); // #349: the tree trunk
         matches(SpriteSheets.DECOR_SNAG, 1, 1); // D122: the snapped trunk
-        matches(SpriteSheets.DECOR_CROWN, 1, 1); // #421: the leaf crown over a trunk
+        matches(SpriteSheets.DECOR_TRUNK_KNOT, 1, 1); // #635: the second trunk
+        matches(SpriteSheets.DECOR_CROWN_DROOP, 1, 1); // #635 (D162): the leaf crowns over a trunk (they replaced #421's crown)
+        matches(SpriteSheets.DECOR_CROWN_BROAD, 1, 1);
+        matches(SpriteSheets.DECOR_CROWN_ROUND, 1, 1);
+        matches(SpriteSheets.DECOR_CROWN_DROOP_FINE, 1, 1); // D162: the fine-clump style of the same crowns
+        matches(SpriteSheets.DECOR_CROWN_BROAD_FINE, 1, 1);
+        matches(SpriteSheets.DECOR_CROWN_ROUND_FINE, 1, 1);
     }
 
     /** #255: the blast is drawn standing on the stump's base, so each frame's lowest opaque row is its last row. */

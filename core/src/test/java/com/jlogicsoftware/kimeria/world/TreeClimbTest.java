@@ -171,9 +171,15 @@ class TreeClimbTest {
             assertTrue(level.collisionBlocks.stream().anyMatch(b -> b.isPlatform() && b.getX() == s.getX() && b.getY() == s.getY()),
                 "a sound branch is a one-way platform");
         }
-        assertEquals(2, level.decor.size());
-        for (Decor trunk : level.decor) {
-            assertEquals("trunk", trunk.kind());
+        // The two climbing trees, and the forest's tree at x 3000 (#635, D162), whose crown ends left of the rotten column.
+        List<Decor> trunks = level.decor.stream().filter(Decor::behindTiles).toList();
+        List<Decor> crowns = level.decor.stream().filter(d -> !d.behindTiles()).toList();
+        assertEquals(List.of(3000f, 3168f, 3264f), trunks.stream().map(Decor::getX).sorted().toList());
+        assertEquals(1, crowns.size());
+        assertEquals("crown-broad-fine", crowns.get(0).kind());
+        assertTrue(crowns.get(0).getX() + crowns.get(0).getWidth() < ROTTEN_X, "no leaf over the climb");
+        for (Decor trunk : trunks) {
+            assertTrue(trunk.kind().startsWith("trunk"), trunk.kind());
             assertFalse(trunk.brushes() || trunk.isStill(), "a trunk neither brushes nor follows the look-alike's rules");
             trunk.notice(new Rectangle(trunk.getX(), trunk.getY() + 100, 11, 22), 100f); // a hero body inside the trunk, moving
             assertFalse(trunk.playing(), "a trunk never reacts to the hero");

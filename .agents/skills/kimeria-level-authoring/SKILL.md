@@ -58,6 +58,10 @@ properties there rather than assuming libGDX's standard tiled loader behavior.
   a branch box starting at x takes the trunk object at x - 16; a `mirror` branch box starting at x takes it at x + 32.
   `check_tiled_links.py` (`check_branch_roots`) names a floating branch. A trunk that crosses the moon breaks the decor ceiling
   (`check_contrast.py`): use a snag there.
+- A new, widened or rearranged forest room gets its tree (D162): a trunk under a crown centred on it (crown x = trunk x + 8 -
+  width / 2, y 0), its leaves 12 px clear of gameplay and off solid blocks and play tiles, or an accepted gap recorded on the
+  card ([ART_DIRECTION.md](../../../docs/ART_DIRECTION.md), "Trees and crowns"); `DecorTest`, `check_tiled_links.py` and
+  `validateContrast` check it, and `WindRoomsTest` (D163) rerun, since a crown carries the wind's glints.
 - Every forest room has a foreground ([kimeria-parallax](../kimeria-parallax/SKILL.md)): a new, widened or rearranged room
   updates its lists in `tools/parallax_game.py` and runs `validateParallax`. From 736 px wide it also needs pieces in its middle
   (D153), and a room with a falling or thrown stone takes no canopy (D113).
