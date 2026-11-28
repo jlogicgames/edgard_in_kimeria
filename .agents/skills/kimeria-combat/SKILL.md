@@ -12,7 +12,7 @@ source paths and commands below are relative to the repository root.
 
 Read D2, D4, D5, D7 and D10 in [design decisions](../../../docs/DECISIONS.md), and D151 (the mosquito swarm, the
 exception to the sword and stomp rules).
-For the forest boss, also read D13 and [boss states and validation](../../../docs/BOSS.md).
+For the forest boss, also read D13, D157 and [boss states and validation](../../../docs/BOSS.md).
 Read [healer](../../../docs/HEALER.md) only when changing recipe/elixir integration.
 Use current docs and code for timing values and sprite rows; historical examples
 are not a balance specification for every future enemy. Explicitly requested
@@ -97,14 +97,22 @@ trigger radius cannot drift away from its real reach. Harm begins on active fram
 warning art alone must not damage. Check both facings and relevant frame boundaries.
 
 For the existing forest boss preserve, unless the request revises the design:
-- A player swing damages this boss once. A normal approach/attack/recovery hit
-  interrupts into recoil/counter. The orange HURT/WARNING/COUNTER/COUNTER_RECOVERY
+- A player swing damages this boss once. An approach, sweep or recovery hit outside
+  poise interrupts into recoil/counter. The orange HURT/WARNING/COUNTER/COUNTER_RECOVERY
   sequence is invulnerable to sword and fireball damage; rejected hits produce no
   landed-hit feedback or timer changes. Register a rejected sword overlap for that
   swing, and consume a contacting fireball once.
-- A same-frame interruption wins over a normal strike and its pending shake.
-  Lethal sword damage cancels remaining boss attack/body damage; a hero already
-  killed by another hazard cannot deliver a posthumous hit.
+- **Poise (D157):** from the sweep's crouch to the end of its strike (0.1556-0.4667 s)
+  and through every special (rocks, roots, blow) a hit takes its energy but causes no
+  recoil or counter; one such hit per attack, later ones are rejected
+  (`Boss.rejectsHits`). Do not "fix" it into an interruption.
+- The specials are chosen by the hero's place on a 3 s clock, never by chance; their
+  lethal areas keep off the arena's protected spans (`BossArena`); each warns for its
+  own `TrapWarnings` time. Card: [BOSS.md](../../../docs/BOSS.md).
+- A same-frame interruption wins over an unpoised normal strike and its pending shake.
+  The specials' harm resolves after the sword, so lethal damage wins: it cancels every
+  attack and the remaining body damage; a hero already killed by another hazard cannot
+  deliver a posthumous hit. After a hero's death the attack under way plays on, harmless.
 - The consumed elixir multiplies sword damage, not boss energy. Its scope and
   retry/reset lifetime follow HEALER.md; fireballs always remove exactly 2 energy,
   and artifacts alone grant no automatic bonus.
@@ -118,13 +126,14 @@ For the existing forest boss preserve, unless the request revises the design:
 ## Verify behavior and readability
 
 Tests are under `core/src/test/java/com/jlogicsoftware/kimeria/`. Select suites
-for changed behavior: `world/BossCombatTest.java`, `entity/enemy/StompTest.java`,
+for changed behavior: `world/BossCombatTest.java`, `world/BossSpecialsTest.java` and
+`world/BossFightRouteTest.java` (whole fights with real input, pinned times), `entity/enemy/StompTest.java`,
 `entity/enemy/EnemyTurnTest.java`, `entity/HitboxBoundsTest.java`,
 `physics/ShapeOverlapTest.java`, `physics/OneWayPlatformTest.java` and `physics/SolidBlockVerticalTest.java`
 (which face a body leaves a solid block by, D10).
 For example, for a boss edit:
 ```sh
-./gradlew :core:test --tests '*BossCombatTest' --tests '*ArtifactInventoryTest'
+./gradlew :core:test --tests '*Boss*' --tests '*ArtifactInventoryTest'
 ```
 
 Add regression cases for the changed interaction: strike start/end, last-frame

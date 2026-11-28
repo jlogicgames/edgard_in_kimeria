@@ -59,6 +59,9 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `whip_crack.wav` | synth, swept noise + driven crack (#447) | 0.16 s | -3.1 / -18.0 | the RedMob's whip starts its strike frame, hit or miss (D93, `RedMob`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep.wav` | synth, swept noise (#447) | 0.30 s | -7.1 / -18.0 | the boss's normal sweep starts its active frame, hit or miss (`Boss`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `boss_sweep_counter.wav` | synth, swept noise + thud (#447) | 0.40 s | -5.7 / -18.0 | the boss's counter sweep starts, hit or miss; accepted as its own sound, apart from `boss_sweep` | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
+| `boss_call.wav` | synth, voice (#625) | 0.60 s | -8.1 / -18.0 | the boss calls its falling rocks (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
+| `boss_blow_charge.wav`, `boss_blow_charge_long.wav` | synth, voice + hiss (#625) | 0.90 / 1.35 s | -4.4 / -19.4, -3.5 / -19.4 | the boss winds up its blow, the long one with the assist (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
+| `boss_blow.wav` | synth, swept noise + thud (#625) | 0.45 s | -3.7 / -17.0 | the boss's blow goes off, hit or miss (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `mosquito_scatter.wav` | synth, one wavering wing tone (#645) | 0.45 s | -23.8 / -31.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | second version, accepted by the author 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
@@ -467,6 +470,21 @@ the pointer moves across buttons. At 0.35 volume it sits about 9 dB lower. The l
 `collect` is the quietest on purpose: it plays on every coin. The level test
 (`tools/test_generate_sounds.py`, `VOICE_RMS_DB`) pins each converted sound to its target (+-0.5 dB), the peak cap and a
 spread of at most 3 dB across the set; a sound joins that table when its replacement is generated.
+
+### The boss's special attacks (#625, seeds 7901-7906, D157)
+
+The boss's own low voice, so its calls never read as the hero's. The roots reuse `root_creak` and `root_thrust` and the rocks
+land with `stone_impact` (look-alikes share a sound, D93). All sit inside the voice set's spread.
+
+- `boss_call` (0.60 s): a rough roar rising 82 -> 150 Hz from /u/ to a strained /a/: the rocks' wind-up.
+- `boss_blow_charge` (0.90 s; `_long` 1.35 s): a growl climbing 58 -> 130 Hz, chopped by pulses that quicken from 9 to 26 Hz,
+  under a hiss that grows to the end; exactly the blow's warning.
+- `boss_blow` (0.45 s): driven noise falling 2600 -> 250 Hz over a low thud.
+
+**Audition: not verified** ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)). Where they play:
+`forest-boss` in `forest-2`, stand far for the call, close for the blow. Constants: `BOSS_CALL_*`, `BOSS_CHARGE_*`,
+`BOSS_BLOW_*` in `tools/audio/generate_sounds.py`; previews `art/audio/previews/boss_call.png`, `boss_blow_charge.png`,
+`boss_blow_charge_long.png`, `boss_blow.png`.
 
 ### RedMob whip and boss sweeps (#447, seeds 7101-7104, D93)
 

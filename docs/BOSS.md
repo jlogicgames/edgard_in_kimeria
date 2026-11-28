@@ -41,6 +41,8 @@ the counter shows both preparation poses from row 2 (0.575 s each), then both st
 (approximately 0.0667 s each), then holds its extended-axe final pose during recovery (0.3 s). Orange colour
 remains throughout this uninterruptible sequence; the warning pulses. Normal attacks keep
 row 6 and ordinary recovery returns to row 5. The two attack sequences never share frames.
+The special attacks (below) each hold one of these frames: row 2 column 0 (rocks), row 6 column 3 (roots) and row 6
+column 1 (blow).
 
 ## Balance values
 
@@ -55,6 +57,10 @@ row 6 and ordinary recovery returns to row 5. The two attack sequences never sha
 | Normal duration | approximately 0.6222 s; unchanged hero is 0.7 s |
 | Normal wind-up / damaging / recovery art | 0–0.3111 / 0.3111–0.4667 / 0.4667–0.6222 s |
 | Recovery before pursuit | 0.3 s |
+| Special attack ready (D157) | 3.0 s after the wake and after the last special ended |
+| Choice of the special | rocks: hero on a platform or more than 160 px away; blow: at most 48 px; roots: between |
+| Poise (a hit lands once, no interruption) | sweep 0.1556-0.4667 s; every special, wind-up included |
+| Special warnings (`TrapWarnings`, 1.5x with the assist) | rocks 1.0 s each; roots 0.7 s; blow 0.9 s |
 | After interruption: recoil → warning → counter → recovery | 0.2 → 1.15 → 0.1333 → 0.3 s |
 | Counter escape allowance | 1.35 s from interruption before damage starts |
 | Death presentation | 0.8 s, then automatic exit at 100 px/s |
@@ -86,8 +92,8 @@ COUNTER_RECOVERY states are invulnerable to sword and fireball damage. Rejected 
 not change energy, feedback, state or timer. After counter recovery, the boss becomes
 vulnerable again and each new ordinary attack can be interrupted.
 
-Ordinary approach, normal melee and ordinary recovery all react to a landed sword hit by
-cancelling their current action and entering the recoil/counter sequence. This closes the
+Ordinary approach, normal melee outside its poise window ([D157](#special-attacks-and-poise-625-d157)) and ordinary
+recovery all react to a landed sword hit by cancelling their current action and entering the recoil/counter sequence. This closes the
 reach-boundary gap: the hero's sword can hit during WALK just before the boss starts a
 normal attack. Previously that hit was counted only as damage; the following frame began
 an uncancellable normal strike inside the already-counted player swing. Counter recovery
@@ -98,12 +104,13 @@ each fireball removes exactly 2 energy, including with the elixir active. Six la
 fireballs defeat a full-energy boss when ammunition is available. The elixir strengthens
 physical sword strikes only. Top contact snaps the player's feet onto the boss top and
 bounces at 260 px/s without damaging either actor. The solid body blocks side and underside passage without contact damage, including while swinging.
-Only the active axe strike kills the hero.
+Only the active axe strike and the three special attacks ([below](#special-attacks-and-poise-625-d157)) kill the hero.
 Ordinary mobs and the hero's animation, input and movement timing retain their rules.
 
 Sword damage resolves after the player's movement. Fireball damage resolves when its
 projectile overlaps the boss during the world update. A same-frame interruption wins over
-the normal strike or its pending completion shake. Lethal damage wins over that boss's
+the normal strike or its pending completion shake, except in the poise window, where the strike stands. A special
+attack's harm resolves after the sword too, so a lethal hit wins. Lethal damage wins over that boss's
 remaining attack/body damage. A hero already killed by another hazard cannot land a
 posthumous sword hit or fireball hit. Hits during the orange retaliation sequence are
 rejected before damage, feedback, shake or death handling; a contacting fireball is still
@@ -119,6 +126,94 @@ room horizontal shake is therefore zero; vertical shake uses the eight pixels of
 room framing. Pause, death, room transition and retry clear the effect. Boss death clears old attack
 shake; its final empowered sword hit may start its own impact shake. A
 completed counter has its own completion shake; the interrupted normal has none.
+
+## Special attacks and poise (#625, D157)
+
+**Status — 2026-11-28:** the card was approved by the author (the numbers, the choice by the hero's place, poise as one
+uninterrupting hit, existing frames as poses) and is built ([D157](DECISIONS.md#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28)).
+Checked by automated tests and by an agent in the web release build (scripted keys, screenshots; below). Nobody has yet
+played the new fight, seen it on desktop or heard the new sounds ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)).
+
+The boss keeps its walk, axe sweep and orange counter. It has three special attacks and a poise window, so neither the
+sword nor the walk-in answers everything. All numbers are first values, to be tuned by feel.
+
+### Which attack comes (deterministic, D7)
+
+- A special is **ready 3.0 s** after the boss wakes, and again 3.0 s after the previous special ends. The clock runs through
+  walking, sweeps and counters, and stops while a special runs.
+- The ready special starts on the first frame the boss is walking or idle and the hero stands on something (a jump delays
+  the choice until the landing). Where the hero stands then decides, in this order:
+
+| Where the hero is | Attack |
+| --- | --- |
+| On a platform, or more than 160 px away (body centres, horizontally) | **Rocks** |
+| On the floor, at most 48 px away | **Blow** |
+| On the floor, between the two | **Roots** |
+
+- A ready blow comes before a sweep. A special that cannot be placed (below) waits: the boss keeps fighting and it stays ready.
+
+### The three attacks
+
+Warnings are new constants of `TrapWarnings`, each its own length, sampled once when the attack starts, 1.5 times longer
+with the assist. The boss stands still and keeps facing the way it did until the attack ends, then has the ordinary 0.3 s recovery.
+
+| | Rocks | Roots | Blow |
+| --- | --- | --- | --- |
+| Wind-up | 1.0 s per rock: the Forest stone's ground shadow grows small, medium, large | 0.7 s: five root burls on the floor, lips lifting, the tip showing, soil hops | 0.9 s: pale specks born on the dome's rim are drawn in to the boss |
+| Boss pose (existing frames) | axe straight up over the horns (counter warning frames, **not** tinted orange) | axe planted in the ground | low crouch, the axe behind the heel |
+| Shape | 3 rocks, 16x16, a new one every 0.45 s, each over the hero's centre at the moment its shadow appears | 5 columns, 8 px wide and 48 px tall, at the hero's centre at the start of the wind-up and 32 and 64 px to both sides (24 px gaps) | the half ellipse in an 80x32 box on the boss's floor line, round its body centre (as the beetle's, D149) |
+| Lethal | the rock while it falls and at impact; from the ceiling to the floor (0.65 s), through one-way platforms, as the Forest stone | exactly the drawn column: up in 0.1 s, held, down in 0.2 s, 0.6 s in all | one instant, at the end of the wind-up |
+| Safe answer | keep moving: 14 px off the shadow; a platform is no shelter | stand in a gap (13 px to spare), beyond the outer roots, or on a platform (64 px up) | be more than 40 px out, or over 32 px up |
+| Boss is busy | 2.55 s (3.05 s assisted) | 1.3 s (1.65 s) | 0.9 s (1.35 s) |
+| Afterwards (seen, D93) | a cracked rock for 0.5 s, then gone; grit | the roots sink, bark chips fall | flash, halo to the rim, flung chips in yellow-green `b8bc00`, shake |
+| Wind-up sound / act sound | `boss_call` / `stone_impact` at each landing | `root_creak` / `root_thrust` (look-alikes share a sound, D93) | `boss_blow_charge` (`boss_blow_charge_long` with the assist) / `boss_blow` |
+
+- **Yellow-green** `b8bc00` (OKLab L 0.77, hue 111) is at least 0.09 in OKLab from the spore and firefly limes and farther
+  from gold, honey, the walk cue and the danger family. Only the blow uses it; its flash stays white.
+- The shake is the boss's (0.18 s, 1.25 px) and goes through `ScreenShake` (off with the option, D62).
+
+### Poise: when a hit does not interrupt
+
+- Sweep: from the crouch pose to the end of the damaging frame, **0.1556 to 0.4667 s** of the attack. The first pose and the
+  recovery after the strike stay interruptible, as do walking and idle.
+- Specials: the whole attack, wind-up included.
+- A hit landed in a poise window takes its energy and shows its blood and sound, but causes no recoil and no counter. Only
+  **one** such hit counts per attack; later ones are rejected like hits on the orange boss. The attack goes on, so a swing
+  (0.7 s lock) made into it leaves the hero inside it. A lethal hit still wins and cancels every attack.
+
+### Where no special reaches (D59)
+
+- The entrance (x 2640-2688, the hero's spawn frame) and the exit (x 2968-2992, where the portal opens): rocks are aimed at the
+  nearest place beside them, a root over them is left out, and a blow whose dome would touch them does not start. A hero
+  standing there faces the axe alone.
+- A respawned hero meets a sleeping boss on its throne. After a hero's death the attack under way plays on, harmless, so
+  what killed him stays seen (a root bites with its first pixel, then rises), and no new rock is thrown; the boss's defeat
+  removes every attack.
+- The arena runs from wall to wall (x 2576-2992, floor y 304). The load fails if its floor is not flat, a solid block stands
+  in it, or less than the blow's 80 px lies between the two spans (`BossArena`).
+
+### Unchanged
+
+Energy 12, the elixir path (2 swings), the fireball damage (2 energy), the stomp bounce (D4), the harmless solid body, the
+orange counter, the death reset and the victory walk.
+
+### Code, tests and measured times
+
+`Boss` chooses and holds the special; `BossAttacks` runs it (fixed storage), `BossArena` is the load check and
+`effects.BossFx` (one per `Level`, pools 8 and 160, measured peaks 2 and 123) its particles. The roots draw the lance
+root's sheets through `EmberFissure.Column`. Allocation: 0.0 B/frame in 3 runs
+(`AllocationBudgetTest.bossSpecialsThroughTheRealLevel`). Tests: `BossSpecialsTest`, `BossFxTest`, `BossFightRouteTest`.
+
+A scripted hero with real input only, who reads every tell, wins from the arrival at the entrance in **28.18 s** on the
+sword alone, **3.78 s** with the elixir and **11.18 s** with six fireballs (ammunition resupplied by the test); one who
+only walks in and swings dies. These are machine times, not a player's: timed fights are
+[#384](https://github.com/jlogicgames/edgard_in_kimeria/issues/384).
+
+**Web run, 2026-11-28** (release build, the served `forest-2` reordered to start in the boss room, frames stepped by script):
+the root burls and then the columns, the blow's specks on the dome's rim, its flash and its yellow-green halo, and the
+rocks' falls, landings and cracked frames were all seen, with no console error; the new sound files load. It found one
+defect, fixed here: a root froze 1-2 px high when it killed. The rocks' ground shadow (the Forest stone's art) is faint on
+this room's dark floor. Not checked: how the sounds are heard, the feel, fairness for a person, and the desktop build.
 
 ## Retry, elixir and completion
 

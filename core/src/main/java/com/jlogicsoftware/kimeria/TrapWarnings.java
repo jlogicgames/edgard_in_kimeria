@@ -11,6 +11,8 @@ public final class TrapWarnings {
     public static final float DEFAULT_WARNING_SECONDS = 0.8f;
     /** The forest spider's bite wind-up (D102): shorter than the default, since its target is locked and the dodge is one step. */
     public static final float BITE_WARNING_SECONDS = 0.5f;
+    /** The forest boss's special attacks (#625, D157): the warning of each falling rock, of the roots and of the blow. */
+    public static final float BOSS_ROCKS_WARNING_SECONDS = 1f, BOSS_ROOTS_WARNING_SECONDS = 0.7f, BOSS_BLOW_WARNING_SECONDS = 0.9f;
     private static final float ASSIST_MULTIPLIER = 1.5f;
     private boolean longer = Settings.DEFAULT_LONGER_TRAP_WARNINGS;
 

@@ -1588,6 +1588,10 @@ Reserved accent hues (active only):
 - the violet of the Bat and Mushroom pickups and of the room portal;
 - the deep amber of the level-end portal (`7a3a10 b8611c e8892e ffc277 fff0d6`, #605): more orange and redder than the honey and the gold, a slow swirl with no flicker (the torch and the fireball flicker).
 
+The forest boss's blow has a particle hue of its own, the yellow-green `b8bc00` (OKLab L 0.77, hue 111; at least 0.09 from the
+spore lime `a6e04a` and farther from the firefly lime, gold, honey, the walk cue and the danger family), on no sprite and no
+other effect ([D157](DECISIONS.md#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28)).
+
 In short: **ink and accent colour mean "interact with me"; scenery gets neither.** Contrast is necessary, not
 sufficient. The stump measured 0.39 and still read as scenery by shape and colour (F18), so D71's silhouette and
 cue rules still apply; its fix was an idle tell in the ember accent, not more contrast (#346).

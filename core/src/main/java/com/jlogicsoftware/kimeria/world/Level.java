@@ -15,6 +15,7 @@ import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
 import com.jlogicsoftware.kimeria.effects.BeetleFx;
+import com.jlogicsoftware.kimeria.effects.BossFx;
 import com.jlogicsoftware.kimeria.effects.RemainsFx;
 import com.jlogicsoftware.kimeria.effects.ParticleTextures;
 import com.jlogicsoftware.kimeria.effects.SnailFx;
@@ -47,6 +48,7 @@ import com.jlogicsoftware.kimeria.entity.enemy.Snail;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
 import com.jlogicsoftware.kimeria.entity.enemy.Spider;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
+import com.jlogicsoftware.kimeria.entity.enemy.BossArena;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.enemy.RedMob;
 import com.jlogicsoftware.kimeria.entity.enemy.Remains;
@@ -193,8 +195,10 @@ public class Level implements WorldObject {
     private float leaveClock;
     /** True from the middle of the leaving pause until the next room starts: the hero has gone into the portal (drawing only). */
     private boolean heroLeft;
+    private static final long BOSS_FX_SEED_MIX = 0x3C79AC492BA7B653L;
     private static final long BEETLE_FX_SEED_MIX = 0xBF58476D1CE4E5B9L;
     /** The beetles' wind-up specks, bursts and deaths (#327, D100): one for the level, like the blood. Cleared with the room. */
+    private final BossFx bossFx = new BossFx(TimeUtils.nanoTime() ^ BOSS_FX_SEED_MIX);
     private final BeetleFx beetleFx = new BeetleFx(TimeUtils.nanoTime() ^ BEETLE_FX_SEED_MIX);
     private static final long SPIDER_FX_SEED_MIX = 0x94D049BB133111EBL, REMAINS_FX_SEED_MIX = 0x2545F4914F6CDD1DL;
     /** Objects that move or hang, which a spider's thread must not pass through (D103 load check). */
@@ -584,7 +588,7 @@ public class Level implements WorldObject {
         game.artifacts().resetRoom();
         objects.clear(); decor.clear(); vines.clear(); collisionBlocks.clear(); escalators.clear(); triggers.clear(); ladders.clear();
         fallingPlatforms.clear(); staticPlatforms.clear();
-        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); wolfFx.clear(); remainsFx.clear();
+        pendingSpawns.clear(); pendingPickups.clear(); blood.clear(); fireballFx.clear(); pickupSparks.clear(); beetleFx.clear(); spiderFx.clear(); snailFx.clear(); wolfFx.clear(); remainsFx.clear(); bossFx.clear();
         startLeaves();
         boss = null;
         roomEnemies.clear(); roomTraps.clear(); roomStateOwners.clear();
@@ -608,6 +612,22 @@ public class Level implements WorldObject {
     /** How far above the hero's feet a block's top may sit and still be the floor under him: rounding only. */
     private static final float VICTORY_FLOOR_SLACK = .5f;
 
+    /** The boss's marker is its frame's top left; its feet stand {@value} px under it. */
+    private static final float BOSS_FEET_BELOW_MARKER = 32;
+
+    /**
+     * Where the boss of room {@code owner} may strike with its special attacks (#625, D157), checked at load: the protected
+     * spans are the hero's spawn frame at the entrance and the place of the level's exit portal (D59).
+     */
+    private BossArena bossArena(TiledObject o, int owner) {
+        RoomLayout.Room room = roomLayout.rooms.get(owner);
+        Rectangle bounds = room.bounds();
+        return BossArena.of(bounds, o.y + BOSS_FEET_BELOW_MARKER, room.entrance().x, player.size.x,
+            victoryPortalX(bounds), VICTORY_PORTAL_WIDTH, map.layer("Collisions"));
+    }
+
+    private static float victoryPortalX(Rectangle room) { return room.x + room.width - VICTORY_PORTAL_WIDTH - VICTORY_PORTAL_MARGIN; }
+
     private void placePortal() {
         Rectangle exit = roomLayout.rooms.get(currentRoom).exit();
         if (exit != null) { portal.place(exit.x, exit.y, exit.width, exit.height); return; }
@@ -620,7 +640,7 @@ public class Level implements WorldObject {
     /** The boss is dead: the amber portal opens at the right end of the room, where the victory walk leaves, on the floor there (#605). */
     private void placeVictoryPortal() {
         Rectangle room = currentRoomBounds();
-        float x = room.x + room.width - VICTORY_PORTAL_WIDTH - VICTORY_PORTAL_MARGIN;
+        float x = victoryPortalX(room);
         float floor = floorBelow(x, VICTORY_PORTAL_WIDTH, player.position.y + player.hitbox.offsetY + player.hitbox.height);
         player.setVictoryFloor(floor);
         portal.placeLevelEnd(x, floor - VICTORY_PORTAL_HEIGHT, VICTORY_PORTAL_WIDTH, VICTORY_PORTAL_HEIGHT);
@@ -693,6 +713,10 @@ public class Level implements WorldObject {
     public FireballFx fireballFx() { return fireballFx; }
     /** The spark burst and ring of every pickup (#402); {@code Collectable}'s callback fires it, tests read it. */
     public PickupSparksFx pickupSparks() { return pickupSparks; }
+    /** The forest boss's blow and root particles (#625); its attacks write into them, tests read them. */
+    public BossFx bossFx() { return bossFx; }
+    /** One of the boss's rocks lands: the falling stone's dust and chips (#625, D157). */
+    public void bossRockImpact(float centreX, float floorY, float width) { fx.stoneImpact(centreX, floorY, width); }
     /** The beetles' specks, bursts and deaths (#327); {@code Beetle} writes into them, tests read them. */
     public BeetleFx beetleFx() { return beetleFx; }
     /** The spiders' silk, leap, bite and death effects (#328); {@code Spider} writes into them, tests read them. */
@@ -752,6 +776,7 @@ public class Level implements WorldObject {
             if ("EmberFissure".equals(o.type) || "LanceRoot".equals(o.type)) checkedFissures.put(o.id, fissureFor(o, owner)); // D91, D129: every room, at load.
             if ("LegHold".equals(o.type)) legHoldFor(o, owner); // D128: every room, at load.
             if ("Beetle".equals(o.type)) validateBeetle(o, owner); // D100: every room, at load.
+            if ("Boss".equals(o.type)) bossArena(o, owner); // D157: every room, at load.
             if ("Spider".equals(o.type)) validateSpider(o, owner); // D102: every room, at load.
             if ("Snail".equals(o.type)) validateSnail(o, owner); // D106: every room, at load.
             if ("Wolf".equals(o.type)) validateWolf(o, owner); // D115: every room, at load.
@@ -1038,7 +1063,7 @@ public class Level implements WorldObject {
                     roomEnemies.put(o.id, mob);
                 }
                 case "Boss" -> {
-                    boss = new Boss(assets, game, this, o.x, o.y);
+                    boss = new Boss(assets, game, this, o.x, o.y, bossArena(o, currentRoom));
                     boss.setPlayer(player);
                     objects.add(boss);
                 }
@@ -2028,6 +2053,7 @@ public class Level implements WorldObject {
         pickupSparks.update(dt);
         portal.update(dt);
         roomRipple.update(dt);
+        bossFx.update(dt);
         beetleFx.update(dt);
         spiderFx.update(dt);
         snailFx.update(dt);
@@ -2112,6 +2138,7 @@ public class Level implements WorldObject {
         for (int i = 0; i < objects.size(); i++) objects.get(i).render(batch);
         blood.render(batch);
         fireballFx.render(batch);
+        bossFx.render(batch);
         beetleFx.render(batch);
         spiderFx.render(batch);
         snailFx.render(batch);

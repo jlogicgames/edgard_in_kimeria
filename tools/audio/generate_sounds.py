@@ -1569,6 +1569,77 @@ def boss_sweep_counter() -> list[float]:
     return finish_rms(x, BOSS_COUNTER_RMS_DB, BOSS_SWEEP_PEAK_DB)
 
 
+# ---------------------------------------------------------------- forest boss special attacks (#625, D157)
+# The boss's own low voice. boss_call: the roar that calls the falling rocks, a rough rising "ooh-AH". boss_blow_charge
+# (and _long, with the longer-warnings assist): a deep growl that climbs and is chopped by pulses that quicken, under a
+# rising hiss, exactly the blow's warning so it ends as it goes off. boss_blow: a driven burst of air that falls in pitch
+# over a low thud. Seeds 7901 to 7905.
+BOSS_CALL_VOICE = Voice(7901, 0.60, (82.0, 150.0), FORMANTS_U, FORMANTS_AA, -18.0, asp_len=0.030, asp_level=0.5,
+                        attack=0.12, tau=0.45, release=0.080, jitter=0.07, rough=0.8, rough_start=0.0, lowpass=2200.0)
+BOSS_CALL_RMS_DB = -18.0
+BOSS_CHARGE_VOICES = {0.9: Voice(7902, 0.90, (58.0, 130.0), FORMANTS_O, FORMANTS_AA, -19.4, asp_len=0.030, asp_level=0.3,
+                                 attack=0.55, tau=4.0, release=0.020, jitter=0.08, rough=0.7, rough_start=0.0,
+                                 lowpass=2000.0),
+                      1.35: Voice(7903, 1.35, (58.0, 130.0), FORMANTS_O, FORMANTS_AA, -19.4, asp_len=0.030, asp_level=0.3,
+                                  attack=0.80, tau=6.0, release=0.020, jitter=0.08, rough=0.7, rough_start=0.0,
+                                  lowpass=2000.0)}
+BOSS_CHARGE_PULSE = (9.0, 26.0)              # Hz, the pulse rate from start to end
+BOSS_CHARGE_PULSE_DEPTH = 0.65
+BOSS_CHARGE_HISS_SEED = 7904
+BOSS_CHARGE_HISS_BAND = (900.0, 3200.0)      # Hz, band-pass centre from start to end
+BOSS_CHARGE_HISS_BW = 900.0
+BOSS_CHARGE_HISS_GAIN = 0.55                 # relative to the growl, at the end; it grows as the square of the time
+BOSS_CHARGE_RMS_DB = -19.4
+BOSS_BLOW_SEED = 7905
+BOSS_BLOW_DURATION = 0.45
+BOSS_BLOW_SWEEP = (2600.0, 250.0)            # Hz, the burst falls
+BOSS_BLOW_BW = 1500.0
+BOSS_BLOW_ATTACK = 0.012
+BOSS_BLOW_TAU = 0.22
+BOSS_BLOW_DRIVE = 4.5
+BOSS_BLOW_THUD_VOICE = Voice(7906, 0.28, (95.0, 45.0), FORMANTS_UH, FORMANTS_U, -18.0, asp_len=0.012, asp_level=0.3,
+                             attack=0.014, tau=0.20, release=0.050, jitter=0.06, rough=0.8, rough_start=0.0, lowpass=900.0)
+BOSS_BLOW_THUD_GAIN = 0.9                    # relative to the burst's peak
+BOSS_BLOW_RMS_DB = -17.0
+
+
+def boss_call() -> list[float]:
+    return finish_rms(render_voice(BOSS_CALL_VOICE), BOSS_CALL_RMS_DB)
+
+
+def _boss_charge(duration: float) -> list[float]:
+    voice = render_voice(BOSS_CHARGE_VOICES[duration])
+    n = len(voice)
+    start, end = BOSS_CHARGE_PULSE
+    phase = 0.0
+    growl = []
+    for i, v in enumerate(voice):
+        phase += lerp(start, end, i / (n - 1)) / SAMPLE_RATE
+        growl.append(v * (1.0 - BOSS_CHARGE_PULSE_DEPTH * (0.5 + 0.5 * math.cos(2.0 * math.pi * phase))))
+    peak = max(abs(v) for v in growl) or 1.0
+    lo, hi = BOSS_CHARGE_HISS_BAND
+    hiss = bandpass(noise(random.Random(BOSS_CHARGE_HISS_SEED), n), lambda t: lerp(lo, hi, t), BOSS_CHARGE_HISS_BW)
+    hp = max(abs(v) for v in hiss) or 1.0
+    out = [g + BOSS_CHARGE_HISS_GAIN * peak * h / hp * (i / (n - 1)) ** 2 for i, (g, h) in enumerate(zip(growl, hiss))]
+    return finish_rms(out, BOSS_CHARGE_RMS_DB)
+
+
+def boss_blow_charge() -> list[float]:
+    return _boss_charge(0.9)
+
+
+def boss_blow_charge_long() -> list[float]:
+    return _boss_charge(1.35)
+
+
+def boss_blow() -> list[float]:
+    x = _axe_whoosh(BOSS_BLOW_SEED, BOSS_BLOW_DURATION, BOSS_BLOW_SWEEP, BOSS_BLOW_BW, BOSS_BLOW_ATTACK,
+                    BOSS_BLOW_TAU, BOSS_BLOW_DRIVE)
+    peak = max(abs(v) for v in x) or 1.0
+    _add_at(x, 0, render_voice(BOSS_BLOW_THUD_VOICE), BOSS_BLOW_THUD_GAIN * peak)
+    return finish_rms(x, BOSS_BLOW_RMS_DB, BOSS_SWEEP_PEAK_DB)
+
+
 # Spore puff (spore_puff): the puffball's release and both honey fungi's burst (#445). One sound for all three: the harmless and the
 # false fungus must not be told apart by ear (D63). A soft "fwuff": a muffled thump of the cap giving way under a breath of
 # airy noise that brightens as the cloud spreads. Quieter and longer than dust_puff, so it never reads as the hero's landing.
@@ -2009,6 +2080,8 @@ GAME_SOUNDS = {"jump.wav": jump, "hit.wav": hit, "bounce.wav": bounce, "collect.
                "snail_notice.wav": snail_notice, "snail_windup.wav": snail_windup, "snail_windup_long.wav": snail_windup_long,
                "snail_spit.wav": snail_spit, "snail_splat.wav": snail_splat,
                "whip_crack.wav": whip_crack, "boss_sweep.wav": boss_sweep, "boss_sweep_counter.wav": boss_sweep_counter,
+               "boss_call.wav": boss_call, "boss_blow_charge.wav": boss_blow_charge,
+               "boss_blow_charge_long.wav": boss_blow_charge_long, "boss_blow.wav": boss_blow,
                "spore_puff.wav": spore_puff, "puffball_burst.wav": puffball_burst,
                "wolf_notice.wav": wolf_notice, "wolf_windup.wav": wolf_windup, "wolf_windup_long.wav": wolf_windup_long,
                "wolf_lunge.wav": wolf_lunge, "wolf_bite.wav": wolf_bite, "wolf_bay.wav": wolf_bay, "wolf_run.wav": wolf_run,

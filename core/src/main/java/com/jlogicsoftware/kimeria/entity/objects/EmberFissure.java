@@ -53,7 +53,8 @@ public class EmberFissure extends Entity implements LethalHazard {
     private static final float[] SPARK_R = {1f, 0.941f, 1f}, SPARK_G = {0.824f, 0.478f, 0.957f}, SPARK_B = {0.227f, 0.102f, 0.690f};
     private static final long SEED_MIX = 0x9E3779B97F4A7C15L;
     private static final float TWO = 2f;
-    private static final int REST1 = 0, REST2 = 1, WARN1 = 2, WARN2 = 3, VENT = 4, SPENT = 5, FRAMES = 6;
+    /** The base sheet's frame order, shared with every look of the column. */
+    public static final int REST1 = 0, REST2 = 1, WARN1 = 2, WARN2 = 3, VENT = 4, SPENT = 5, FRAMES = 6;
     private static final int JET_FRAMES = 2, JET_ROWS = 16, TIP_ROWS = 8, TIP_FIRST_FRAME = 2;
     /** The map properties a fissure reads; any other key fails the load (a misspelling must not fall back to a default). */
     public static final Set<String> PROPERTIES = Set.of("period", "phase", "jet", "height");
@@ -93,13 +94,41 @@ public class EmberFissure extends Entity implements LethalHazard {
         this.height = height;
         this.floor = y + FLOOR_OFFSET;
         for (int i = 0; i < FRAMES; i++) frames[i] = base.frame(assets, i, 0);
-        SpriteSheets.Sheet sheet = column;
+        sliceColumn(assets, column, jetRows, tipRows);
+        sparks = new KimeriaParticleSystem(SPARK_CAPACITY, (Float.floatToIntBits(x) * SEED_MIX) ^ Float.floatToIntBits(y));
+        top = floor;
+    }
+
+    /** One region per row of each of a column sheet's two tiles and two tips ({@code shaft1, shaft2, top1, top2}). */
+    private static void sliceColumn(Assets assets, SpriteSheets.Sheet sheet, TextureRegion[][] jetRows, TextureRegion[][] tipRows) {
         for (int f = 0; f < JET_FRAMES; f++) {
             for (int r = 0; r < JET_ROWS; r++) jetRows[f][r] = assets.region(sheet.path(), f * sheet.width(), r, sheet.width(), 1);
             for (int r = 0; r < TIP_ROWS; r++) tipRows[f][r] = assets.region(sheet.path(), (TIP_FIRST_FRAME + f) * sheet.width(), r, sheet.width(), 1);
         }
-        sparks = new KimeriaParticleSystem(SPARK_CAPACITY, (Float.floatToIntBits(x) * SEED_MIX) ^ Float.floatToIntBits(y));
-        top = floor;
+    }
+
+    /** A column's cached rows, for whoever draws one: this trap and the forest boss's roots (#625, D157). */
+    public static final class Column {
+        private final TextureRegion[][] jetRows = new TextureRegion[JET_FRAMES][JET_ROWS], tipRows = new TextureRegion[JET_FRAMES][TIP_ROWS];
+
+        public Column(Assets assets, SpriteSheets.Sheet sheet) { sliceColumn(assets, sheet, jetRows, tipRows); }
+
+        /** Draws the column from the floor line up to {@code top} (the smaller y), the tile frame chosen by {@code clock}. */
+        public void render(Batch batch, float centreX, float floorY, float top, float clock) {
+            drawColumn(batch, jetRows, tipRows, centreX, floorY, top, clock);
+        }
+    }
+
+    private static void drawColumn(Batch batch, TextureRegion[][] jetRows, TextureRegion[][] tipRows, float centreX, float floorY,
+                                   float columnTop, float clock) {
+        int f = ((int) (clock / JET_FRAME_SECONDS)) & 1;
+        float x = centreX - JET_WIDTH / TWO;
+        int t = (int) columnTop, bottom = (int) floorY;
+        for (int y = t; y < bottom; y++) {
+            int k = y - t;
+            TextureRegion row = k < TIP_ROWS && bottom - t >= TIP_ROWS ? tipRows[f][k] : jetRows[f][Math.floorMod(y - bottom, JET_ROWS)];
+            batch.draw(row, x, y, JET_WIDTH, 1f);
+        }
     }
 
     /** Builds the object once the map's numbers are read and checked. */
@@ -335,16 +364,7 @@ public class EmberFissure extends Entity implements LethalHazard {
 
     @Override
     public void render(Batch batch) {
-        if (jetOn) {
-            int f = ((int) ((elapsed + phase) / JET_FRAME_SECONDS)) & 1;
-            float x = centerX() - JET_WIDTH / TWO;
-            int t = (int) top, bottom = (int) floor;
-            for (int y = t; y < bottom; y++) {
-                int k = y - t;
-                TextureRegion row = k < TIP_ROWS && bottom - t >= TIP_ROWS ? tipRows[f][k] : jetRows[f][Math.floorMod(y - bottom, JET_ROWS)];
-                batch.draw(row, x, y, JET_WIDTH, 1f);
-            }
-        }
+        if (jetOn) drawColumn(batch, jetRows, tipRows, centerX(), floor, top, elapsed + phase);
         batch.draw(frames[frameIndex()], position.x, position.y, size.x, size.y);
         if (sparks.count() > 0) sparks.render(batch, Shaders.whiteQuad());
     }

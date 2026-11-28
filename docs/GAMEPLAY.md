@@ -117,6 +117,9 @@ optional coin route, and the authored boss chamber. The boss starts on a throne;
 and fireball hits can defeat him. Top contact bounces safely; the solid body blocks passage
 without contact damage.
 Interrupting a normal strike triggers a flashing, uninterruptible counterattack: jump away.
+Once the boss has crouched for its sweep a hit no longer interrupts it. Every few seconds it also calls falling rocks (keep
+moving), drives roots out of the floor (stand between them) or winds up a blow round itself (get clear), chosen by where
+the hero stands ([D157](DECISIONS.md#d157-the-forest-boss-gains-rocks-roots-a-blow-and-poise-625-amends-d13-2026-11-28)).
 Victory plays the boss death and an automatic hero exit, then the healer dialogue,
 before completing/saving the level.
 The boss HUD uses twelve replaceable PNG segments, blood particles/impact sounds, and a short

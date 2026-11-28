@@ -936,9 +936,9 @@ y 304 ===============================================
 | Introduces | boss |
 | Develops | - |
 | Combines | - |
-| Mastered route | not measured: no fight time has been recorded (BOSS.md); timing three mastered fights is a deferred release check (PRE_RELEASE_TODO.md, "Boss combat, teaching and replay time"), [#384](https://github.com/jlogicgames/edgard_in_kimeria/issues/384) |
+| Mastered route | 28.18 s unempowered with no charges, 3.78 s with the elixir (`BossFightRouteTest`: a scripted hero with real input, from the arrival at the entrance to the boss's defeat; 11.18 s with six fireballs, resupplied by the test). A player's timed fights are not recorded (BOSS.md, PRE_RELEASE_TODO.md "Boss combat, teaching and replay time"), [#384](https://github.com/jlogicgames/edgard_in_kimeria/issues/384) |
 | First learning | not measured (#135) |
-| Retry cost | the fight restarts at the chamber entrance |
-| Status | D72 audit 2026-11-16: keep |
-| Decisions | BOSS.md |
+| Retry cost | the whole fight, from the chamber entrance with the boss on its throne (28.18 s scripted, unempowered) |
+| Status | D72 audit 2026-11-16: keep. 2026-11-28: the boss gained three attacks and poise (#625, D157) |
+| Decisions | BOSS.md, D157 |
 
