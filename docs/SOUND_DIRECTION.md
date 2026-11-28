@@ -64,7 +64,7 @@ and peak in dBFS. Status of every row: accepted by the author 2026-11-13, except
 | `boss_blow.wav` | synth, swept noise + thud (#625) | 0.45 s | -3.7 / -17.0 | the boss's blow goes off, hit or miss (`BossAttacks`) | not heard yet ([#625](https://github.com/jlogicgames/edgard_in_kimeria/issues/625)) |
 | `spore_puff.wav` | synth, noise + muffled thump (#445) | 0.30 s | -9.0 / -27.1 | a honey fungus bursts, the same for the harmless and the false one (`Level`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
 | `puffball_burst.wav` | synth, jet noise + rough thump and wheeze (#558) | 0.45 s | -11.2 / -21.5 | the puffball's cloud starts, only while it is in the camera view (`Level.puffballInView`), once per cloud (`Level.puffballSound`) | accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)) |
-| `platform_crack.wav` | synth, noise: snaps, grinding and crackle, no voice (#444) | 0.38 s | -10.1 / -21.0 | a falling platform, rotten log or rotten branch gives way, once, as it starts to drop (`Level.platformGaveWay`) | second version, not heard yet ([#682](https://github.com/jlogicgames/edgard_in_kimeria/issues/682)) |
+| `platform_crack.wav` | synth, noise: snaps, grinding and crackle, no voice (#444) | 0.38 s | -10.1 / -21.0 | a falling platform, rotten log or rotten branch gives way, once, as it starts to drop (`Level.platformGaveWay`) | second version, accepted by the author 2026-11-28 ([#682](https://github.com/jlogicgames/edgard_in_kimeria/issues/682)) |
 | `mosquito_scatter.wav` | synth, one wavering wing tone (#645) | 0.45 s | -23.8 / -31.0 | a sword swing scatters a swarm, once per swing (`MosquitoSwarm.hitBySword`) | second version, accepted by the author 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
 | `mosquito_die.wav` | synth, five sinking wing tones (#645) | 0.70 s | -18.1 / -31.0 | a swarm is killed by a stone, a fireball or a torch | second version, accepted by the author 2026-11-28 ([#645](https://github.com/jlogicgames/edgard_in_kimeria/issues/645)) |
 | `keepalive.wav` | synth, near-silent loop | 1.0 s | -53.8 / -65.0 | desktop only, #316: keeps the output awake; **not an effect, never restyled** | never |
@@ -425,8 +425,8 @@ Accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_
 ### Platform crack (#444, seed 7701, D93)
 
 One noise-synth sound for the `FallingPlatform` giving way: the rotten log and the rotten branch share it, since both are wood
-(the stone slab skin the issue also named was removed on 2026-11-21). Second version, 2026-11-28, not yet heard by the author
-([#682](https://github.com/jlogicgames/edgard_in_kimeria/issues/682)). The first one laid a short voiced /o/ to /u/ under the break; the author's verdict: it starts with an "oh" and
+(the stone slab skin the issue also named was removed on 2026-11-21). Second version, 2026-11-28, accepted by the author the
+same day from the wav file, not in the running game ([#682](https://github.com/jlogicgames/edgard_in_kimeria/issues/682)). The first one laid a short voiced /o/ to /u/ under the break; the author's verdict: it starts with an "oh" and
 there is nobody there to say it, so it is to be only the scraping and crackling of a broken platform. The exception to the
 voice-synth style is deliberate, as for `thorn_spring` and the bramble. Constants: `CRACK_*` in `tools/audio/generate_sounds.py`;
 preview: `art/audio/previews/platform_crack.png`. The generated sounds that existed before stay byte-identical.
