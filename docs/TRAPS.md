@@ -254,7 +254,7 @@ gone half a second after landing; it is not this trap and has its own card
 | Taught in | `forest-0-stone` with `HINT_STONE_STUMP`; again in `forest-0-traps` |
 | Load checks | `ExplosiveTrap.problem` (floor bypass); mirrored in `check_tiled_links.py` |
 | Tests | `ExplosiveTrapsTest`, `StoneLessonTest`, `TrapsLessonTest` |
-| Art and sound | `trap-stump` 16×16, eight frames (idle1..4, windup1..3, spent); active tier, idle outline 0.33 at worst (D76); `blast` 32×32 at 2x; `explosion` sound, no idle sound; a 2 px, 0.2 s shake through `ScreenShake` (off with the Screen shake option) when the hero survives the blast, at any distance, none when it kills him ([D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). Consequence (D93): `explosion` |
+| Art and sound | `trap-stump` 16×16, eight frames (idle1..4, windup1..3, spent); active tier, idle outline 0.33 at worst (D76); `blast` 32×32 at 2x; `explosion` sound, no idle sound; a 5 px, 0.35 s shake through `ScreenShake` (off with the Screen shake option) when the hero survives the blast, at any distance, none when it kills him ([D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). Consequence (D93): `explosion` |
 | Decision | D47, D48 |
 
 ### Exploding root (`ExplosiveRoot`)
@@ -285,7 +285,7 @@ Consequence (D93): `explosion`, as the stump. Decision D47, D59.
 | Taught in | `forest-0-stone` (the explosive language is taught by the stump; `forest-entry` placed the Bomb until D128) |
 | Load checks | none of its own |
 | Tests | `BombTest` |
-| Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect`, `explosion` sound; the same blast shake as the exploding stump (2 px, 0.2 s, survivors only, any distance, [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). Consequence (D93): `explosion` |
+| Art and sound | bomb sprite (D60), shader blast `BombExplosionEffect`, `explosion` sound; the same blast shake as the exploding stump (5 px, 0.35 s, survivors only, any distance, [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). Consequence (D93): `explosion` |
 | Decision | D7, D51, D60 |
 
 ### Spore puffball (`Puffball`)

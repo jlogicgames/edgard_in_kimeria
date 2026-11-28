@@ -74,11 +74,15 @@ class BlastShakeTest {
     }
 
     @Test void theBlastNumbersAreTheAuthorsAndTheHeaviestJoltInTheGame() {
-        assertEquals(2f, ScreenShake.BLAST_AMPLITUDE_PX, 0);
-        assertEquals(.2f, ScreenShake.BLAST_SECONDS, 0);
+        assertEquals(5f, ScreenShake.BLAST_AMPLITUDE_PX, 0);
+        assertEquals(.35f, ScreenShake.BLAST_SECONDS, 0);
+        assertEquals(3.5f, ScreenShake.BURST_AMPLITUDE_PX, 0);
+        assertEquals(.25f, ScreenShake.BURST_SECONDS, 0);
         for (float other : new float[]{ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.LEVER_AMPLITUDE_PX,
             ScreenShake.STONE_AMPLITUDE_PX, ScreenShake.BURST_AMPLITUDE_PX})
             assertTrue(other < ScreenShake.BLAST_AMPLITUDE_PX);
+        for (float lighter : new float[]{ScreenShake.BOSS_AMPLITUDE_PX, ScreenShake.LEVER_AMPLITUDE_PX, ScreenShake.STONE_AMPLITUDE_PX})
+            assertTrue(lighter < ScreenShake.BURST_AMPLITUDE_PX, "a beetle's burst is the second heaviest");
     }
 
     @Test void theStumpAndTheRootShakeForASurvivorNearAndFar() {

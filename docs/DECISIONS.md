@@ -5153,25 +5153,33 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D156. Every blast the hero survives shakes the camera, at any distance ([#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448), 2026-11-28, amends D93, D136)
 
-- **Status:** Decided by the author, 2026-11-28. Built and tested headless; the look and the feel in the running game are not
-  yet checked ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+- **Status:** Decided by the author, 2026-11-28. Built and tested headless; the author checked the shake with the raised
+  values in the running game and accepted it, 2026-11-28 ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
 - **Problem:** the bomb and the exploding stump and root are the biggest blasts and did not shake the screen, while the falling
   stone, a lever wall, the beetles' bursts and the boss did (audit [D93](#d93-principle-4-measured-a-hazards-own-act-is-seen-and-heard-hit-or-miss-388-2026-11-17)).
 - **Decision:**
-  - The stump, the root and the bomb shake **2 px for 0.2 s** (`ScreenShake.BLAST_AMPLITUDE_PX`, `BLAST_SECONDS`), the heaviest
-    jolt in the game. The beetles keep 1.5 px for 0.15 s.
+  - The stump, the root and the bomb shake **5 px for 0.35 s** (`ScreenShake.BLAST_AMPLITUDE_PX`, `BLAST_SECONDS`), the heaviest
+    jolt in the game; both beetles' bursts shake **3.5 px for 0.25 s** (`BURST_AMPLITUDE_PX`, `BURST_SECONDS`). Raised by the
+    author the same day: the first values (2 px for 0.2 s, the beetles 1.5 px for 0.15 s) were barely noticeable. Part of the
+    reason is the room clamp: on the floor the camera sits at the bottom of a 368 px room, so only the upward half of the
+    vertical wobble shows, and a room as wide as the view has no horizontal one. The clamp is unchanged.
   - **One rule for all five** (`Level.shakeAfterBlast`): a hero who survives feels it **at any distance**; a blast that kills him
     starts none, because `Level.playerDied` clears the camera effects and the death beat (D81) is that blast's feedback. "At any
     distance" removes the 160 px range of D136 for both beetles (`Beetle.SHAKE_RANGE` is gone).
   - Only through `ScreenShake`, so the Screen shake option (D62) turns it off. The stronger running shake still wins.
 - **Code:** `ExplosiveTrap` now runs `onBlast` after its kill test (the "explosion" sound therefore follows "hit" on a lethal
   frame) and draws the blast frames without making a `Rectangle` each frame (`blastBox()` did).
-- **Parallax:** the largest shake grew from 1.5 to 2 px, so `check_bleed`'s margin (`parallax_mock.SHAKE`) is 2 (1 + f) px. Eight
-  low clumps placed at top y 292 (D143's raised ones) ended 2 px short of it (last drawn row at screen y 364, needs 366): they
-  moved down to y 294 (`tools/parallax_game.py`), their `-foot` partners with them. The formula and its limits are unchanged.
+- **Parallax:** at 2 px, eight low clumps placed at top y 292 (D143's raised ones) ended 2 px short of `check_bleed`'s margin
+  and moved down to y 294 (`tools/parallax_game.py`), their `-foot` partners with them; they stay there. At 5 px the old
+  margin, `SHAKE` (1 + f) at every camera top, failed 26 foot pieces for a cut that cannot happen: the shake is clamped to the
+  room (`ScreenShakeTest.theRoomClampIsHonoured`), so at the floor camera it never moves the view down. **Changed gate, by the
+  author's choice** (rather than lowering the pieces by up to 7 px): the margin at each camera top is
+  `min(SHAKE, travel left to the room edge)` (1 + f) px (`parallax_mock.bleed_margin`). It carries nothing away: the dropped
+  part asked for art where the camera never looks. No art or map changed for 5 px.
 - **Tests:** `BlastShakeTest` (stump, root and bomb: full amplitude on the detonation frame for a far and a near survivor, none
   during the warning or on a lethal blast, 0.2 s, zero offset with the option off), `FlyingBeetleTest` (a far survivor, a lethal
-  burst), `AllocationBudgetTest.blastShakeThroughTheRealLevel` (0.0 B/frame, ceiling 8).
+  burst), `AllocationBudgetTest.blastShakeThroughTheRealLevel` (0.0 B/frame, ceiling 8), `BleedCheckTest` in
+  `tools/test_parallax_game.py` (the clamped margin, and `SHAKE` equal to the game's largest amplitude).
   **Changed test, by the decision:** `BeetleTest.aFarHeroFeelsNoShake` is now `aFarHeroFeelsTheShakeToo` (it asserted the 160 px
   range). No tolerance changed.
 

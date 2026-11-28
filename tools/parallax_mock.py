@@ -167,9 +167,10 @@ ORIGIN_Y = CAMERA_TOP
 ROOM_H = ROWS * TILE
 # Bleed (D111): the camera top lies in 0..ORIGIN_Y, so a layer of vertical factor f trails the camera by at most
 # f * ORIGIN_Y px (12.8 at the foreground's 1.6), and the screen shake moves the camera by up to SHAKE px after the view was
-# taken, which a layer of factor f shows as up to SHAKE * (1 + f) px. A factor-1 layer needs no art past the room (0 px), the others
-# at most 12.8 + 3.2 px (SHAKE * 1.6 at the foreground); every layer gets one tile row (16 px) of margin, which covers all of it.
-SHAKE = 2.0                             # px, the largest camera shake (ScreenShake.BLAST_AMPLITUDE_PX); conservative: it is clamped to the room, so it never carries the view past the room's top or bottom
+# taken, but never past the room (ScreenShake.offset clamps it, ScreenShakeTest.theRoomClampIsHonoured): at camera top c it
+# goes up by at most c px and down by at most ORIGIN_Y - c px. The margin counts that travel as (1 + f) times, conservatively
+# (bleed_margin). Every layer gets one tile row (16 px) of bleed art past the room.
+SHAKE = 5.0                             # px, the largest camera shake (ScreenShake.BLAST_AMPLITUDE_PX)
 BLEED_ROWS = 1                          # play layer rows past the room bottom (16 px of deep soil)
 MAP_ROWS = ROWS + BLEED_ROWS            # the rows of every layer that starts at the room top
 PLAY_ABOVE = 1                          # rows of the `play-above` layer (16 px over the room top)
@@ -821,10 +822,17 @@ def drawn_rows(image):
     return None if box is None else (box[BOX_TOP], box[BOX_BOTTOM])
 
 
+def bleed_margin(factor, room_left):
+    """Screen px a layer of vertical factor `factor` must run past an edge for the camera shake, when the camera has
+    `room_left` px of room beyond that edge of the view: the shake is clamped to the room (D156), so it travels no further."""
+    return math.ceil(min(SHAKE, room_left) * (1 + factor))
+
+
 def check_bleed(scene, out=print):
     """No layer shows a cut edge at any camera top from 0 to ORIGIN_Y (the whole range the camera moves in, D111), with the
     camera shake on top, and no bleed piece is missing. A cut is a drawn first row above the screen's top or a drawn last row
-    above its bottom, by the margin its factor needs (SHAKE * (1 + f), conservative: the shake is clamped to the room).
+    above its bottom, by the margin its factor needs at that camera top (`bleed_margin`: the shake is clamped to the room, so
+    none is needed below the floor camera or above the top one).
     - Every layer of LAYERS is present (`play-above` too; `play-below` in the game map, where the deep soil is its own layer).
     - A tile layer whose art touches its first image row must start above the screen; the last DRAWN row of a strip layer (sky,
       far, grove, mid) must end below the screen.
@@ -839,14 +847,15 @@ def check_bleed(scene, out=print):
         out(f'{scene.source.name} {text}')
         ok = False
     def edges(label, top_y, rows, factor, top_edge, bottom_edge):
-        margin = math.ceil(SHAKE * (1 + factor))
         for cam_top in range(ORIGIN_Y + 1):
             top = game_screen_y(top_y + rows[0], factor, cam_top)
+            margin = bleed_margin(factor, cam_top)
             if top_edge and top > -margin:
                 fail(f'{label}: its first drawn row is at screen y {top:g} at camera top {cam_top} (needs {-margin} or less)')
                 break
         for cam_top in range(ORIGIN_Y + 1):
             bottom = game_screen_y(top_y + rows[1], factor, cam_top)
+            margin = bleed_margin(factor, ORIGIN_Y - cam_top)
             if bottom_edge and bottom < VIEW[1] + margin:
                 fail(f'{label}: its last drawn row ends at screen y {bottom:g} at camera top {cam_top} (needs {VIEW[1] + margin} or more)')
                 break

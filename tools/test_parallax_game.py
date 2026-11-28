@@ -2,10 +2,13 @@
 import contextlib
 import io
 import itertools
+import math
+import re
 import subprocess
 import sys
 import unittest
 import xml.etree.ElementTree as ET
+from pathlib import Path
 import numpy
 import parallax_game as game
 import parallax_mock as pm
@@ -409,6 +412,19 @@ class BleedCheckTest(unittest.TestCase):
         """D154: the game does not snap the vertical offset, so the bleed is checked where the game draws, not a rounded pixel off."""
         self.assertAlmostEqual(pm.game_screen_y(0, 1.6, 0), -pm.ORIGIN_Y + 12.8)
         self.assertEqual(pm.screen_y(0, 1.6, 0), -pm.ORIGIN_Y + 13)
+
+    def test_the_shake_margin_stops_at_the_room(self):
+        """D156: the shake is clamped to the room, so the margin is what the camera can still travel, never more than SHAKE."""
+        self.assertEqual(pm.bleed_margin(1.6, 0), 0)
+        self.assertEqual(pm.bleed_margin(1.6, 3), 8)
+        self.assertEqual(pm.bleed_margin(1.6, pm.ORIGIN_Y), 13)
+        self.assertEqual(pm.bleed_margin(1.6, pm.ORIGIN_Y), math.ceil(pm.SHAKE * 2.6))
+        self.assertEqual(pm.bleed_margin(1.0, pm.SHAKE), 10)
+
+    def test_the_checked_shake_is_the_games_largest(self):
+        java = (Path(pm.__file__).parent.parent / 'core/src/main/java/com/jlogicsoftware/kimeria/effects/ScreenShake.java').read_text()
+        largest = max(float(v) for v in re.findall(r'_AMPLITUDE_PX = (\d*\.?\d+)f', java))
+        self.assertEqual(pm.SHAKE, largest)
 
     def run_bleed(self, scene, mutate):
         original = pm.tile_images
