@@ -354,8 +354,10 @@ with an ordered 4x4 pattern, so the gradients are smooth with no visible band; t
   (D111): the camera top lies between the room top (0, with the follow focus at y 200 or higher) and 8 (at y 208 or lower, so on the floor). The focus is the top of the
   hero's box with 24 px of slack upward, and the camera eases to it ([D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)), so a jump from the floor leaves the top at 8. The top also moves during
   a room change, so a layer of factor f is seen at most 8 f px off its authored place (12.8 px at the foreground's 1.6), and the screen
-  shake (at most `ScreenShake.BLAST_AMPLITUDE_PX`, 2 px, clamped to the room so it never carries the view
-  past the room's top or bottom) would add up to 2 (1 + f) px: the margin counts it anyway, conservatively. The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
+  shake (at most `ScreenShake.BLAST_AMPLITUDE_PX`, 5 px, clamped to the room so it never carries the view
+  past the room's top or bottom) travels only as far as the camera has room left: at each camera top the margin counts that
+  travel (1 + f) times, conservatively, and nothing below the floor camera or above the top one
+  ([D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). The bleed art is trimmed to that plus one tile row (D111): far and grove 16 px below the room, mid
   32 above (`offsety` -32) and 16 below (far and grove `offsety` -16, D144), `play-above` 1 row and the deep soil 1 row (the ground's bottom row on the room's last row
   becomes its buried variant, tile ids 61 to 63 become 70 to 72 of the terrain sketch: no nubs, graded `2f2117` to `150e0a` into the
   deep soil), the sky 24 rows. Over a hanging piece its `-top` (2 tile rows, room y -24 to 7) draws what it hangs from, open; under a
@@ -773,7 +775,7 @@ depends on it.
   `EnvironmentFx.stoneImpact(centerX, floorY, width)` from the `Level` impact callback: 10 dust puffs (`KIND_SMOKE`, 4 px,
   0.35 to 0.6 s) along the stone's width, 8 stone chips (`KIND_GRIT`, 1.5 to 2.5 px, 0.25 to 0.45 s) that fly out and drop to the
   floor, and 6 specks of debris that lie on the floor 2 to 3 s and fade (`KIND_GRIT`, linear alpha). The cracked stone frame
-  stays. A 1.5 px, 0.15 s shake through `ScreenShake` (off with the Screen shake option, D62; dust and debris stay). Everything
+  stays. A 3.5 px, 0.25 s shake through `ScreenShake` (off with the Screen shake option, D62; dust and debris stay). Everything
   rests on the floor line (`y + h` of the stone; Y grows downward), pinned by `FallingTrapsTest`. Pool sizes grew (D73): dust 24 to
   32, grit 32 to 48 slots. The warning (the growing ground shadow) was checked in the capture and reads before the fall. Checked in
   playtest 2 (2026-11-21, web build, [PLAYTEST_2.md](PLAYTEST_2.md)): the look on the real forest-0 tiles raised no remark,
@@ -786,11 +788,11 @@ depends on it.
   vine sway. Measured peaks in `EnvironmentFxTest`: with the lever burst of `forest-0-wall` 39 of 48 grit, with a stone 29 grit and
   22 of 32 dust; the pools are unchanged. A branch, a stone and a lever burst at once would ask for 53 grit and drop the oldest 5:
   no shipped room has a stone beside a branch.
-- **Blast shake (#448, [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136); the author, 2026-11-28).** The exploding stump and root and the bomb shake **2 px
-  for 0.2 s** when they go off, the beetles' bursts 1.5 px for 0.15 s, through `ScreenShake` only (off with the Screen shake
+- **Blast shake (#448, [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136); the author, 2026-11-28).** The exploding stump and root and the bomb shake **5 px
+  for 0.35 s** when they go off, the beetles' bursts 3.5 px for 0.25 s, through `ScreenShake` only (off with the Screen shake
   option, D62; the blast frames, the shader blast and the sounds stay). One rule for all five (`Level.shakeAfterBlast`): felt at
-  any distance by a hero who survives, none when the blast kills him, whose feedback is the death beat (D81). Not yet looked at
-  in the running game ([#368](https://github.com/jlogicgames/edgard_in_kimeria/issues/368)).
+  any distance by a hero who survives, none when the blast kills him, whose feedback is the death beat (D81). Accepted by the
+  author in the running game, 2026-11-28 (the first values, 2 px for 0.2 s, were barely noticeable).
 - **Which shared texture is needed.** Only the two that exist: `SoftDot` (dust) and the 1×1 white quad
   (grit). No new image, no `fx-dust-puff`/`fx-grit` sheet, nothing in `tools/sprite_layouts.py`.
 - **Life cycle.** Both systems advance only in `Level.update(dt)` (pause freezes them), render
@@ -1246,7 +1248,7 @@ The body is an authored sprite; every effect is a particle on `KimeriaParticleSy
   it); 26 white and pale droplets 1 to 3 px (`KIND_FLAME`); 14 embers (`KIND_FLAME`, 2 px, `ff6b57`, one in three white)
   and 8 shell chips (`KIND_GRIT`, `86101f` and `9c2050`, 2 to 3 px) flung to the floor; 10 grey steam puffs (`KIND_SMOKE`, 4 to 7 px, `d8d6e8`, `9a97ad`, `5b5870`) rising up to
   16 px over 0.40 to 0.60 s. Every particle is born and ends inside the dome, the droplets, embers and steam cut 2 px inside its
-  rim, so its upper corners stay empty (tested). A 1.5 px, 0.15 s shake through `ScreenShake` for a hero who survives, at any distance (off with the
+  rim, so its upper corners stay empty (tested). A 3.5 px, 0.25 s shake through `ScreenShake` for a hero who survives, at any distance (off with the
   Screen shake option; [D156](DECISIONS.md#d156-every-blast-the-hero-survives-shakes-the-camera-at-any-distance-448-2026-11-28-amends-d93-d136)). No shader, no `RingPool`; no new hue.
 - **Death** (a fireball or a stone): it flips onto its back (`dead`, a 4 px hop over 0.2 s) and stays as a body (D101). 0.08 s after
   the hit, once the fireball's flash is spent, 12 puffs in a ring (two pale `d8d6e8` to one grey `9a97ad`, 5 to 8 px, 0.4 to

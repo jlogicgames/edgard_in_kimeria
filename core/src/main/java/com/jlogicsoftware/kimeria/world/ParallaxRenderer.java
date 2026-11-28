@@ -31,14 +31,14 @@ import com.jlogicsoftware.kimeria.tiled.TiledMapData;
  * map-wide layer holds its place only while the rooms share a floor camera top, as every forest room does (rooms of 368 px at y 0, top
  * 8; {@code ParallaxRendererTest.everyForestRoomSharesOneFloorCameraTop} pins it); a room with another floor camera top would shift them
  * on the change, which {@code RoomFade} would hide. Horizontally they never jump (origin 0). The cull rectangle is the view grown by one
- * tile on every side, because the screen shake moves the camera by up to 2 px after {@code visibleWorldRect} was taken.
+ * tile on every side, because the screen shake moves the camera by up to 5 px after {@code visibleWorldRect} was taken.
  *
  * <p>Nothing here allocates per frame: regions are resolved at load, loops are indexed.
  */
 public final class ParallaxRenderer {
     private static final double HALF_UP = 0.5;
     private static final float SAME_ROOM_X = 0.5f;
-    /** Tiles drawn past each edge of the view: the camera's shake (up to 2 px) is applied after the view rectangle is taken. */
+    /** Tiles drawn past each edge of the view: the camera's shake (up to 5 px) is applied after the view rectangle is taken. */
     private static final int CULL_TILES = 1;
     private final TiledMapData map;
     /** Accumulated drift in px per scenery layer, kept below the layer's wrap length. */
