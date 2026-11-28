@@ -5296,8 +5296,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 
 ## D162. A tree with a big crown on every forest screen (#635, 2026-11-28)
 
-- **Status:** Accepted (author, 2026-11-28: crowns in round 3, the placement and its gaps). Built; the check in the running game is
-  a box of [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635).
+- **Status:** Accepted (author, 2026-11-28: crowns in round 3, the placement and its gaps). Built, then checked in the running
+  game by the author on desktop and web (2026-11-28, [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635)).
 - **Context:** the tier nearest the hero was thin: one tree every 1,500 to 4,000 px, two crowns in the whole forest, one 96×40
   crown sprite hung so high that the camera hid its top rows. The author on round 1: the crowns were too small and too high, "trees
   are not like that"; on round 2: the clumps did not read, "add volume". References for proportion and shape only (nothing traced):
@@ -5345,7 +5345,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D163. Wind is shown as gust waves of light through the leaves; one shared wind model (#593, 2026-11-28)
 
 - **Status:** Accepted (author: no sway, 2026-11-25; the card, 2026-11-27; "strengthen now", 2026-11-28, after seeing the game).
-  Built; the check in the running game is a box of [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593).
+  Built, then checked in the running game by the author on desktop and web (2026-11-28,
+  [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593)).
 - **Context:** nothing in the forest showed wind. The author ruled out sway, sprite distortion, animated crown frames and glints at
   random spots: random flicker reads as sparkle, not wind. Wind is the Steppe's leading mechanic (D17, #108, #109, #400).
 - **Decision:**
