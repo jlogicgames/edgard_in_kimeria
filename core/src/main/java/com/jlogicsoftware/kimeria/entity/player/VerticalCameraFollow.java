@@ -11,7 +11,7 @@ import com.badlogic.gdx.math.MathUtils;
 final class VerticalCameraFollow {
 
     /** How far (px) the hero may rise above the focus before it follows. A full jump from the floor stays inside it. */
-    static final float RISE_SLACK = 24f;
+    static final float RISE_SLACK = 24f * Player.PROPORTION;
     /** How hard the camera is drawn to its target (1/s) by a critically damped spring. */
     static final float STIFFNESS = 8f;
     /** Closer than this (px) and slower than this (px/s) the camera is on its target. */

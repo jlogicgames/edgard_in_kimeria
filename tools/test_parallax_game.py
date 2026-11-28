@@ -300,7 +300,7 @@ class MiddleCheckTest(unittest.TestCase):
 
     def test_a_stretch_of_the_limit_passes_and_one_pixel_more_fails(self):
         for room, piece, x, edge, limit, top in (('forest-1-spider', 'near-sprig', 888, 788, pm.HANG_BARE_MAX, 0),
-                                                 ('forest-1-guard', 'rise-reeds', 408, 96, pm.RISE_BARE_MAX, 128)):
+                                                 ('forest-1-guard', 'rise-reeds', 408, 96, pm.RISE_BARE_MAX, 130)):
             with self.subTest(room=room):
                 passed, report = self.middle(room, drop=((piece, x),), add=((piece, edge + limit, top),))
                 self.assertTrue(passed, report)
@@ -358,7 +358,7 @@ class MiddleCheckTest(unittest.TestCase):
         self.assertIn('without a hanging piece', report)
         passed, report = self.middle('forest-1-guard', drop=(('rise-reeds', 408),), add=(('rise-reeds', 408, 380),))
         self.assertFalse(passed)
-        self.assertIn('rise-reeds at x 408 has its top at y 380, not at 128', report)
+        self.assertIn('rise-reeds at x 408 has its top at y 380, not at 130', report)
         self.assertIn('without a tall rising piece', report)
 
     def test_a_long_room_without_its_middle_hanging_pieces_fails_where_one_fits(self):

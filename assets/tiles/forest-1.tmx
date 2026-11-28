@@ -875,8 +875,8 @@
   <object id="914" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
   <object id="915" name="near-canopy" gid="3255" x="540" y="112" width="224" height="112"/>
   <object id="916" name="near-canopy-top" gid="3256" x="508" y="8" width="288" height="32"/>
-  <object id="917" name="rise-reeds" gid="3242" x="168" y="352" width="96" height="224"/>
-  <object id="918" name="rise-reeds-foot" gid="3254" x="136" y="384" width="160" height="32"/>
+  <object id="917" name="rise-reeds" gid="3242" x="168" y="354" width="96" height="224"/>
+  <object id="918" name="rise-reeds-foot" gid="3254" x="136" y="386" width="160" height="32"/>
   <object id="919" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
   <object id="920" name="clump-mixed-foot" gid="3247" x="-128" y="384" width="272" height="32"/>
   <object id="921" name="clump-fern" gid="3231" x="80" y="344" width="176" height="48"/>
@@ -896,10 +896,10 @@
   <object id="932" name="vine-curtain-top" gid="3250" x="88" y="8" width="352" height="32"/>
   <object id="933" name="near-sprig" gid="3259" x="536" y="112" width="128" height="112"/>
   <object id="934" name="near-sprig-top" gid="3260" x="504" y="8" width="192" height="32"/>
-  <object id="935" name="rise-reeds" gid="3242" x="-43" y="352" width="96" height="224"/>
-  <object id="936" name="rise-reeds-foot" gid="3254" x="-75" y="384" width="160" height="32"/>
-  <object id="937" name="rise-reeds" gid="3242" x="864" y="352" width="96" height="224"/>
-  <object id="938" name="rise-reeds-foot" gid="3254" x="832" y="384" width="160" height="32"/>
+  <object id="935" name="rise-reeds" gid="3242" x="-43" y="354" width="96" height="224"/>
+  <object id="936" name="rise-reeds-foot" gid="3254" x="-75" y="386" width="160" height="32"/>
+  <object id="937" name="rise-reeds" gid="3242" x="864" y="354" width="96" height="224"/>
+  <object id="938" name="rise-reeds-foot" gid="3254" x="832" y="386" width="160" height="32"/>
   <object id="939" name="clump-fern" gid="3231" x="-96" y="352" width="176" height="48"/>
   <object id="940" name="clump-fern-foot" gid="3245" x="-128" y="384" width="240" height="32"/>
   <object id="941" name="clump-leaves" gid="3230" x="53" y="352" width="192" height="48"/>
@@ -921,8 +921,8 @@
   <object id="954" name="near-canopy-top" gid="3256" x="508" y="8" width="288" height="32"/>
   <object id="955" name="vine-curtain" gid="3238" x="56" y="208" width="288" height="208"/>
   <object id="956" name="vine-curtain-top" gid="3250" x="24" y="8" width="352" height="32"/>
-  <object id="957" name="rise-reeds" gid="3242" x="240" y="352" width="96" height="224"/>
-  <object id="958" name="rise-reeds-foot" gid="3254" x="208" y="384" width="160" height="32"/>
+  <object id="957" name="rise-reeds" gid="3242" x="240" y="354" width="96" height="224"/>
+  <object id="958" name="rise-reeds-foot" gid="3254" x="208" y="386" width="160" height="32"/>
   <object id="959" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
   <object id="960" name="clump-mixed-foot" gid="3247" x="-128" y="384" width="272" height="32"/>
   <object id="961" name="clump-fern" gid="3231" x="80" y="344" width="176" height="48"/>
@@ -946,8 +946,8 @@
   <object id="976" name="vine-curtain-top" gid="3250" x="468" y="-8" width="352" height="32"/>
   <object id="977" name="near-sprig" gid="3259" x="888" y="112" width="128" height="112"/>
   <object id="978" name="near-sprig-top" gid="3260" x="856" y="8" width="192" height="32"/>
-  <object id="979" name="rise-reeds" gid="3242" x="144" y="352" width="96" height="224"/>
-  <object id="980" name="rise-reeds-foot" gid="3254" x="112" y="384" width="160" height="32"/>
+  <object id="979" name="rise-reeds" gid="3242" x="144" y="354" width="96" height="224"/>
+  <object id="980" name="rise-reeds-foot" gid="3254" x="112" y="386" width="160" height="32"/>
   <object id="981" name="rise-fern" gid="3240" x="1272" y="352" width="320" height="240"/>
   <object id="982" name="rise-fern-foot" gid="3252" x="1240" y="384" width="384" height="32"/>
   <object id="983" name="clump-fern" gid="3231" x="-96" y="352" width="176" height="48"/>
@@ -969,8 +969,8 @@
   <object id="996" name="near-canopy-top" gid="3256" x="508" y="8" width="288" height="32"/>
   <object id="997" name="roots-curtain" gid="3239" x="72" y="288" width="240" height="304"/>
   <object id="998" name="roots-curtain-top" gid="3251" x="40" y="-8" width="304" height="32"/>
-  <object id="999" name="rise-reeds" gid="3242" x="72" y="352" width="96" height="224"/>
-  <object id="1000" name="rise-reeds-foot" gid="3254" x="40" y="384" width="160" height="32"/>
+  <object id="999" name="rise-reeds" gid="3242" x="72" y="354" width="96" height="224"/>
+  <object id="1000" name="rise-reeds-foot" gid="3254" x="40" y="386" width="160" height="32"/>
   <object id="1001" name="clump-fern" gid="3231" x="-48" y="352" width="176" height="48"/>
   <object id="1002" name="clump-fern-foot" gid="3245" x="-80" y="384" width="240" height="32"/>
   <object id="1003" name="clump-leaves" gid="3230" x="101" y="342" width="192" height="48"/>
@@ -988,8 +988,8 @@
   <object id="1012" name="near-sprig-top" gid="3260" x="508" y="8" width="192" height="32"/>
   <object id="1013" name="vine-curtain" gid="3238" x="544" y="208" width="288" height="208"/>
   <object id="1014" name="vine-curtain-top" gid="3250" x="512" y="8" width="352" height="32"/>
-  <object id="1015" name="rise-reeds" gid="3242" x="576" y="352" width="96" height="224"/>
-  <object id="1016" name="rise-reeds-foot" gid="3254" x="544" y="384" width="160" height="32"/>
+  <object id="1015" name="rise-reeds" gid="3242" x="576" y="354" width="96" height="224"/>
+  <object id="1016" name="rise-reeds-foot" gid="3254" x="544" y="386" width="160" height="32"/>
   <object id="1017" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
   <object id="1018" name="clump-mixed-foot" gid="3247" x="-128" y="384" width="272" height="32"/>
   <object id="1019" name="clump-fern" gid="3231" x="80" y="344" width="176" height="48"/>
@@ -1007,8 +1007,8 @@
   <object id="1028" name="near-canopy-top" gid="3256" x="816" y="8" width="288" height="32"/>
   <object id="1029" name="near-canopy" gid="3255" x="448" y="112" width="224" height="112"/>
   <object id="1030" name="near-canopy-top" gid="3256" x="416" y="8" width="288" height="32"/>
-  <object id="1031" name="rise-reeds" gid="3242" x="-9" y="352" width="96" height="224"/>
-  <object id="1032" name="rise-reeds-foot" gid="3254" x="-41" y="384" width="160" height="32"/>
+  <object id="1031" name="rise-reeds" gid="3242" x="-9" y="354" width="96" height="224"/>
+  <object id="1032" name="rise-reeds-foot" gid="3254" x="-41" y="386" width="160" height="32"/>
   <object id="1033" name="rise-fern" gid="3240" x="816" y="352" width="320" height="240"/>
   <object id="1034" name="rise-fern-foot" gid="3252" x="784" y="384" width="384" height="32"/>
   <object id="1035" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
@@ -1026,10 +1026,10 @@
   <object id="1044" name="near-fern-top" gid="3258" x="712" y="8" width="288" height="32"/>
   <object id="1045" name="vine-curtain" gid="3238" x="280" y="192" width="288" height="208"/>
   <object id="1046" name="vine-curtain-top" gid="3250" x="248" y="-8" width="352" height="32"/>
-  <object id="1047" name="rise-reeds" gid="3242" x="408" y="352" width="96" height="224"/>
-  <object id="1048" name="rise-reeds-foot" gid="3254" x="376" y="384" width="160" height="32"/>
-  <object id="1049" name="rise-reeds" gid="3242" x="0" y="352" width="96" height="224"/>
-  <object id="1050" name="rise-reeds-foot" gid="3254" x="-32" y="384" width="160" height="32"/>
+  <object id="1047" name="rise-reeds" gid="3242" x="408" y="354" width="96" height="224"/>
+  <object id="1048" name="rise-reeds-foot" gid="3254" x="376" y="386" width="160" height="32"/>
+  <object id="1049" name="rise-reeds" gid="3242" x="0" y="354" width="96" height="224"/>
+  <object id="1050" name="rise-reeds-foot" gid="3254" x="-32" y="386" width="160" height="32"/>
   <object id="1051" name="rise-fern" gid="3240" x="696" y="352" width="320" height="240"/>
   <object id="1052" name="rise-fern-foot" gid="3252" x="664" y="384" width="384" height="32"/>
   <object id="1053" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
@@ -1049,8 +1049,8 @@
   <object id="1064" name="near-fern-top" gid="3258" x="-120" y="8" width="288" height="32"/>
   <object id="1065" name="near-sprig" gid="3259" x="540" y="112" width="128" height="112"/>
   <object id="1066" name="near-sprig-top" gid="3260" x="508" y="8" width="192" height="32"/>
-  <object id="1067" name="rise-reeds" gid="3242" x="248" y="352" width="96" height="224"/>
-  <object id="1068" name="rise-reeds-foot" gid="3254" x="216" y="384" width="160" height="32"/>
+  <object id="1067" name="rise-reeds" gid="3242" x="248" y="354" width="96" height="224"/>
+  <object id="1068" name="rise-reeds-foot" gid="3254" x="216" y="386" width="160" height="32"/>
   <object id="1069" name="rise-fern" gid="3240" x="552" y="352" width="320" height="240"/>
   <object id="1070" name="rise-fern-foot" gid="3252" x="520" y="384" width="384" height="32"/>
   <object id="1071" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
@@ -1072,8 +1072,8 @@
   <object id="1084" name="near-fern-top" gid="3258" x="508" y="8" width="288" height="32"/>
   <object id="1085" name="roots-curtain" gid="3239" x="40" y="288" width="240" height="304"/>
   <object id="1086" name="roots-curtain-top" gid="3251" x="8" y="-8" width="304" height="32"/>
-  <object id="1087" name="rise-reeds" gid="3242" x="192" y="352" width="96" height="224"/>
-  <object id="1088" name="rise-reeds-foot" gid="3254" x="160" y="384" width="160" height="32"/>
+  <object id="1087" name="rise-reeds" gid="3242" x="192" y="354" width="96" height="224"/>
+  <object id="1088" name="rise-reeds-foot" gid="3254" x="160" y="386" width="160" height="32"/>
   <object id="1089" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
   <object id="1090" name="clump-mixed-foot" gid="3247" x="-128" y="384" width="272" height="32"/>
   <object id="1091" name="clump-fern" gid="3231" x="80" y="352" width="176" height="48"/>
@@ -1093,8 +1093,8 @@
   <object id="1102" name="near-sprig-top" gid="3260" x="508" y="8" width="192" height="32"/>
   <object id="1103" name="vine-curtain" gid="3238" x="120" y="208" width="288" height="208"/>
   <object id="1104" name="vine-curtain-top" gid="3250" x="88" y="8" width="352" height="32"/>
-  <object id="1105" name="rise-reeds" gid="3242" x="360" y="352" width="96" height="224"/>
-  <object id="1106" name="rise-reeds-foot" gid="3254" x="328" y="384" width="160" height="32"/>
+  <object id="1105" name="rise-reeds" gid="3242" x="360" y="354" width="96" height="224"/>
+  <object id="1106" name="rise-reeds-foot" gid="3254" x="328" y="386" width="160" height="32"/>
   <object id="1107" name="clump-mixed" gid="3233" x="-96" y="352" width="208" height="48"/>
   <object id="1108" name="clump-mixed-foot" gid="3247" x="-128" y="384" width="272" height="32"/>
   <object id="1109" name="clump-fern" gid="3231" x="80" y="352" width="176" height="48"/>

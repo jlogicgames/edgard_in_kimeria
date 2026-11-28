@@ -52,7 +52,7 @@ column 1 (blow).
 | Normal sword damage / hits required | 1 / 12 distinct swings |
 | Consumed elixir sword damage / hits required | 10 / 2 distinct swings |
 | Fireball damage with or without elixir / hits required | 2 / 6 landed fireballs |
-| Pursuit speed | 65 px/s; player remains 100 px/s |
+| Pursuit speed | 65 px/s; the player runs at 129 px/s (D164) |
 | Wake threshold | 160 px horizontal body-centre distance, with vertical body overlap |
 | Normal duration | approximately 0.6222 s; unchanged hero is 0.7 s |
 | Normal wind-up / damaging / recovery art | 0–0.3111 / 0.3111–0.4667 / 0.4667–0.6222 s |
@@ -63,7 +63,7 @@ column 1 (blow).
 | Special warnings (`TrapWarnings`, 1.5x with the assist) | rocks 1.0 s each; roots 0.7 s; blow 0.9 s |
 | After interruption: recoil → warning → counter → recovery | 0.2 → 1.15 → 0.1333 → 0.3 s |
 | Counter escape allowance | 1.35 s from interruption before damage starts |
-| Death presentation | 0.8 s, then automatic exit at 100 px/s |
+| Death presentation | 0.8 s, then automatic exit at 129 px/s (D164) |
 | Completed attack shake | 0.18 s; at most 1.25 world pixels, decaying |
 | Strike sounds (#447, D93) | `boss_sweep` at the start of the normal sweep's damaging frame (0.3111 s), `boss_sweep_counter` at the start of the counter strike; one cue per strike, hit or miss; none when the wind-up is cancelled or after `abandonAttack` |
 
@@ -103,7 +103,7 @@ Sword swings and landed fireballs reduce energy. A sword swing can hit this boss
 each fireball removes exactly 2 energy, including with the elixir active. Six landed
 fireballs defeat a full-energy boss when ammunition is available. The elixir strengthens
 physical sword strikes only. Top contact snaps the player's feet onto the boss top and
-bounces at 260 px/s without damaging either actor. The solid body blocks side and underside passage without contact damage, including while swinging.
+bounces at the hero's jump speed, 335.4 px/s (D164), without damaging either actor. The solid body blocks side and underside passage without contact damage, including while swinging.
 Only the active axe strike and the three special attacks ([below](#special-attacks-and-poise-625-d157)) kill the hero.
 Ordinary mobs and the hero's animation, input and movement timing retain their rules.
 
@@ -163,7 +163,7 @@ with the assist. The boss stands still and keeps facing the way it did until the
 | Boss pose (existing frames) | axe straight up over the horns (counter warning frames, **not** tinted orange) | axe planted in the ground | low crouch, the axe behind the heel |
 | Shape | 3 rocks, 16x16, a new one every 0.45 s, each over the hero's centre at the moment its shadow appears | 5 columns, 8 px wide and 48 px tall, at the hero's centre at the start of the wind-up and 32 and 64 px to both sides (24 px gaps) | the half ellipse in an 80x32 box on the boss's floor line, round its body centre (as the beetle's, D149) |
 | Lethal | the rock while it falls and at impact; from the ceiling to the floor (0.65 s), through one-way platforms, as the Forest stone | exactly the drawn column: up in 0.1 s, held, down in 0.2 s, 0.6 s in all | one instant, at the end of the wind-up |
-| Safe answer | keep moving: 14 px off the shadow; a platform is no shelter | stand in a gap (13 px to spare), beyond the outer roots, or on a platform (64 px up) | be more than 40 px out, or over 32 px up |
+| Safe answer | keep moving: 16 px off the shadow (D164); a platform is no shelter | stand in a gap (10 px to spare), beyond the outer roots, or on a platform (64 px up) | be more than 40 px out, or over 32 px up |
 | Boss is busy | 2.55 s (3.05 s assisted) | 1.3 s (1.65 s) | 0.9 s (1.35 s) |
 | Afterwards (seen, D93) | a cracked rock for 0.5 s, then gone; grit | the roots sink, bark chips fall | flash, halo to the rim, flung chips in yellow-green `b8bc00`, shake |
 | Wind-up sound / act sound | `boss_call` / `stone_impact` at each landing | `root_creak` / `root_thrust` (look-alikes share a sound, D93) | `boss_blow_charge` (`boss_blow_charge_long` with the assist) / `boss_blow` |
@@ -204,8 +204,8 @@ orange counter, the death reset and the victory walk.
 root's sheets through `EmberFissure.Column`. Allocation: 0.0 B/frame in 3 runs
 (`AllocationBudgetTest.bossSpecialsThroughTheRealLevel`). Tests: `BossSpecialsTest`, `BossFxTest`, `BossFightRouteTest`.
 
-A scripted hero with real input only, who reads every tell, wins from the arrival at the entrance in **28.18 s** on the
-sword alone, **3.78 s** with the elixir and **11.18 s** with six fireballs (ammunition resupplied by the test); one who
+A scripted hero with real input only, who reads every tell, wins from the arrival at the entrance in **27.12 s** on the
+sword alone, **3.37 s** with the elixir and **10.90 s** with six fireballs (ammunition resupplied by the test); one who
 only walks in and swings dies. These are machine times, not a player's: timed fights are
 [#384](https://github.com/jlogicgames/edgard_in_kimeria/issues/384).
 

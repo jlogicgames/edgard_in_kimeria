@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.objects.Escalator;
 import com.jlogicsoftware.kimeria.entity.objects.Ladder;
 import com.jlogicsoftware.kimeria.testsupport.HeadlessLevelHarness;
@@ -25,7 +26,7 @@ class VerticalCameraRideTest {
     private static final float SHORTEST_SCROLL_SECONDS = .3f;
     private static final float SETTLE_SECONDS = 1.5f, RIDE_LIMIT_SECONDS = 6f;
     /** The hero's box: its body centre and its feet, from the top left corner. */
-    private static final float BODY_CENTRE_X = 23.5f, FEET = 48f;
+    private static final float BODY_CENTRE_X = HeroBody.CENTRE, FEET = 48f;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
     private Level level;

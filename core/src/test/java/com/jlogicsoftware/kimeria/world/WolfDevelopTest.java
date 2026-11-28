@@ -1,6 +1,8 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
+import com.jlogicsoftware.kimeria.entity.player.Player;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
@@ -27,8 +29,8 @@ class WolfDevelopTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float FLOOR = 320, UPPER = 304;
     private static final int SECOND = 60;
-    /** The hero's frame x is his body's left edge less this; his frame's height. */
-    private static final float BODY_LEFT = 18, HERO_FRAME = 48, HERO_WIDTH = 11;
+    /** The hero's frame height, and his body's width and run speed. */
+    private static final float HERO_FRAME = 48, HERO_WIDTH = HeroBody.W, RUN = Player.MOVE_SPEED;
 
     private final HeadlessLevelHarness harness = new HeadlessLevelHarness();
 
@@ -65,7 +67,7 @@ class WolfDevelopTest {
 
     /** Stands the hero (body centre at {@code x}) on the floor line {@code floor}, still, facing right. */
     private void stand(Level level, float x, float floor) {
-        level.player.position.set(x - BODY_LEFT - HERO_WIDTH / 2, floor - HERO_FRAME);
+        level.player.position.set(x - HeroBody.CENTRE, floor - HERO_FRAME);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         level.player.setOnGround(true);
@@ -74,7 +76,7 @@ class WolfDevelopTest {
 
     /** The hero in the air: body centre at {@code x}, feet {@code up} px above the floor, moving ({@code vx}, {@code vy}), steering so. */
     private void leapHero(Level level, float x, float up, float vx, float vy) {
-        level.player.position.set(x - BODY_LEFT - HERO_WIDTH / 2, FLOOR - up - HERO_FRAME);
+        level.player.position.set(x - HeroBody.CENTRE, FLOOR - up - HERO_FRAME);
         level.player.velocity().set(vx, vy);
         level.player.setOnGround(false);
         steer(vx);
@@ -102,7 +104,7 @@ class WolfDevelopTest {
     /** Drops the hero on to the wolf from 4 px above its body; true when it died. The hero bounces either way. */
     private boolean stomp(Level level, Wolf w) {
         Rectangle body = w.hitboxBounds();
-        level.player.position.set(body.x + body.width / 2 - BODY_LEFT - HERO_WIDTH / 2, body.y - 1 - HERO_FRAME);
+        level.player.position.set(body.x + body.width / 2 - HeroBody.CENTRE, body.y - 1 - HERO_FRAME);
         level.player.velocity().set(0, 200);
         level.player.setOnGround(false);
         harness.held.clear();
@@ -209,14 +211,15 @@ class WolfDevelopTest {
         Level level = open();
         Wolf w = chasing(level);
         float from = w.centreX() - 140;
-        leapHero(level, from, 40, 100, -100);
+        leapHero(level, from, 40, RUN, -100);
         frame(level);
         float locked = w.readTargetX();
-        float t = (100 + (float) Math.sqrt(100 * 100 + 2 * 588 * 40)) / 588;
-        float spot = from + 100 * t;
+        float g = level.player.gravityPerSecond();
+        float t = (100 + (float) Math.sqrt(100 * 100 + 2 * g * 40)) / g;
+        float spot = from + RUN * t;
         float muzzle = locked + (spot > w.centreX() ? 47 : -1);
         assertEquals(spot + (spot > w.centreX() ? -1 : 1) * (HERO_WIDTH / 2 + Wolf.READ_STAND_OFF), muzzle, 3f, "36 px short of the landing");
-        for (int f = 0; f < 20; f++) { steer(-100); frame(level); assertEquals(locked, w.readTargetX(), .001f); }
+        for (int f = 0; f < 20; f++) { steer(-RUN); frame(level); assertEquals(locked, w.readTargetX(), .001f); }
     }
 
     @Test void aHeroWhoLandsInTheLungeBoxAfterAReadMeetsAFullWindUp() {

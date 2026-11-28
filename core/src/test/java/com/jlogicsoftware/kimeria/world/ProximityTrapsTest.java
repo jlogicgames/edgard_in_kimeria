@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -111,7 +112,7 @@ class ProximityTrapsTest {
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     /** Stands the hero (body right edge at {@code right}) on the floor, still. */
-    private void place(Level level, float right) { level.player.position.set(right - 29, 272); level.player.velocity().setZero(); held.clear(); }
+    private void place(Level level, float right) { level.player.position.set(right - HeroBody.RIGHT, 272); level.player.velocity().setZero(); held.clear(); }
     private void retry(Level level) { level.resetCurrentRoom(new Player(assets, game, 0, 0)); settle(level, 2); }
 
     private void step(Level level, boolean right, boolean jump) {
@@ -185,11 +186,11 @@ class ProximityTrapsTest {
     @Test void theZoneReachesPastTheTrapToTheOtherSideToo() {
         // The root's zone ends at x=384. The body's left edge is its x + 18.
         Level inside = fresh();
-        inside.player.position.x = 383.5f - 18;
+        inside.player.position.x = 383.5f - HeroBody.LEFT;
         frame(inside);
         assertEquals(ThornTrap.Phase.WARNING, root(inside).phase(), "body left edge 0.5 px inside the right end");
         Level beyond = fresh();
-        beyond.player.position.x = 384.5f - 18;
+        beyond.player.position.x = 384.5f - HeroBody.LEFT;
         settle(beyond, 5);
         assertEquals(ThornTrap.Phase.DORMANT, root(beyond).phase(), "0.5 px outside it");
     }
@@ -240,7 +241,7 @@ class ProximityTrapsTest {
         // canLeaveRoom() is false while dying/resetting/arriving or after the checkpoint: the same guard as the
         // Deadline, enemy contact and the bomb's trigger in Player.checkGameplayOverlaps.
         Level level = fresh();
-        place(level, ROOT_X + 11);
+        place(level, ROOT_X + HeroBody.W);
         settle(level, 60 * 2);
         assertFalse(alive(level));
         assertFalse(level.player.canLeaveRoom(), "dying");
@@ -273,7 +274,7 @@ class ProximityTrapsTest {
 
     @Test void nothingKillsBeforeTheWarningEndsEvenWithTheHeroStandingInTheColumn() {
         Level level = fresh();
-        place(level, ROOT_X + 11); // body spans 293..304: straight over the column
+        place(level, ROOT_X + HeroBody.W); // body spans 290..304: straight over the column
         int frames = 0;
         while (alive(level) && frames < 60 * 3) { frame(level); frames++; }
         assertFalse(alive(level), "the hero in the column is killed once it rises");
@@ -289,7 +290,7 @@ class ProximityTrapsTest {
         settle(beside, 60 * 5);
         assertTrue(alive(beside));
         Level past = fresh();
-        place(past, 299.1f + 11);
+        place(past, 299.1f + HeroBody.W);
         settle(past, 60 * 3);
         assertEquals(ThornTrap.Phase.ARMED, root(past).phase());
         assertTrue(alive(past), "just right of the column");
@@ -317,7 +318,7 @@ class ProximityTrapsTest {
 
     @Test void retryRestartAndRoomReentryResetTheTrapToHidden() {
         Level level = fresh();
-        place(level, ROOT_X + 11);
+        place(level, ROOT_X + HeroBody.W);
         settle(level, 60 * 2);
         assertFalse(alive(level));
         assertEquals(ThornTrap.Phase.ARMED, root(level).phase());

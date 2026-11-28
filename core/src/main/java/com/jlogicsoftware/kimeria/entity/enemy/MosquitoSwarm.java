@@ -70,8 +70,11 @@ public class MosquitoSwarm extends Enemy<MosquitoSwarm.State> {
     private static final int FED_EVERY = 4;
     private static final int NO_SWING = -1;
 
-    /** Load checks: a way under needs the oval this far above the floor, a way over its top at most this high with this headroom. */
-    public static final float UNDER_CLEARANCE = 24, OVER_TOP = 32, OVER_HEADROOM = 80;
+    /**
+     * Load checks: a way under needs the cloud this far above the floor (2 px over the 28 px hero, D164; 24 before it), a way
+     * over its top at most this high with this headroom.
+     */
+    public static final float UNDER_CLEARANCE = 30, OVER_TOP = 32, OVER_HEADROOM = 80;
     /** A vertical line leaves one of the two ways open at least this long in every cycle (seconds). */
     public static final float MIN_OPEN_SECONDS = .75f;
     /** The load check samples the floor under the sweep in columns this wide. */

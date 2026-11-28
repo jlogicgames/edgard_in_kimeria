@@ -3,6 +3,7 @@ package com.jlogicsoftware.kimeria.entity.objects;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.Entity;
+import com.jlogicsoftware.kimeria.entity.player.Player;
 
 import java.util.function.BooleanSupplier;
 import java.util.function.Supplier;
@@ -25,8 +26,9 @@ public abstract class FallingTrap extends Entity {
 
     /** Fall acceleration in px/s^2: a 80 px drop takes 0.42 s, a 288 px drop 0.8 s. */
     public static final float GRAVITY = 900f;
-    /** The hero's body box as {@code Player} defines it (offset in its 48x48 frame, then size); a test pins these. */
-    public static final float HERO_BODY_OFFSET_X = 18, HERO_BODY_OFFSET_Y = 26, HERO_BODY_WIDTH = 11, HERO_BODY_HEIGHT = 22;
+    /** The hero's body box as {@code Player} defines it (offset in its 48x48 frame, then size). */
+    public static final float HERO_BODY_OFFSET_X = Player.BODY_OFFSET_X, HERO_BODY_OFFSET_Y = Player.BODY_OFFSET_Y,
+        HERO_BODY_WIDTH = Player.BODY_WIDTH, HERO_BODY_HEIGHT = Player.BODY_HEIGHT;
     /** Shortest flight a trap may be authored with (s); a shorter drop could not be run or jumped away from. */
     public static final float MIN_FLIGHT_SECONDS = 0.3f;
 

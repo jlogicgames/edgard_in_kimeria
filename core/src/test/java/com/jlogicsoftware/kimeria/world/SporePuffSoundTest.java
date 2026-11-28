@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.math.Rectangle;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.objects.FalseHoneyFungus;
 import com.jlogicsoftware.kimeria.entity.objects.FungusTrap;
 import com.jlogicsoftware.kimeria.entity.objects.HoneyFungus;
@@ -23,7 +24,7 @@ class SporePuffSoundTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final String PUFF = "spore_puff", BURST = "puffball_burst";
     /** The hero's body box as the game defines it (HoneyFungusTest): offset 18 in a 48 px frame, 11 wide, so the right edge is 29 in. */
-    private static final float BODY_RIGHT_OFFSET = 29, STAND_Y = 272, VIEW_W = 640, VIEW_H = 360, PERIOD = 4f, CLOUD = 1f, NEAR = 0.1f, HERO_RIGHT_OF_ZONE = 8;
+    private static final float BODY_RIGHT_OFFSET = HeroBody.RIGHT, STAND_Y = 272, VIEW_W = 640, VIEW_H = 360, PERIOD = 4f, CLOUD = 1f, NEAR = 0.1f, HERO_RIGHT_OF_ZONE = 8;
     private static final int SECONDS = 60;
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();
 

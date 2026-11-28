@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -119,7 +120,7 @@ class TrapsLessonTest {
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     private boolean atEnd(Level level) { return alive(level) && !level.player.canLeaveRoom(); }
-    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 256); settle(level, 2); }
+    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - HeroBody.RIGHT, 256); settle(level, 2); }
 
     private void retry(Level level) { level.resetCurrentRoom(new Player(assets, game, 0, 0)); settle(level, 2); }
 

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria;
 
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -337,7 +338,7 @@ class AllocationBudgetTest {
     private static final int HERO_STATE_FRAMES = 12, HERO_FACING_FRAMES = 5, HERO_PULL_FRAMES = 7;
     private static final int FUNGUS_CYCLES = 10, FUNGUS_CYCLE_FRAMES = 150, FUNGUS_ENTER_FRAME = 40, FUNGUS_SPACING = 200, FUNGUS_FAR_X = 5000;
     private static final float FUNGUS_FLOOR = 320, FUNGUS_WIDTH = 24, FUNGUS_HEIGHT = 16, FUNGUS_ZONE = 64, TRAP_TILE = 16, ROOT_HEIGHT = 24;
-    private static final float HERO_WIDTH = 11, HERO_HEIGHT = 22;
+    private static final float HERO_WIDTH = HeroBody.W, HERO_HEIGHT = HeroBody.H;
     /** #361: the hero walks under a new branch every 90 frames (a 0.8 s warning, then about 0.3 s of fall); 17 cover warm-up and measure. */
     private static final int BRANCH_CYCLES = 17, BRANCH_CYCLE_FRAMES = 90;
     private static final float BRANCH_Y = 240, BRANCH_WIDTH = 32, BRANCH_HEIGHT = 16;
@@ -626,15 +627,15 @@ class AllocationBudgetTest {
     }
     /** The puffball cycles every 4 s (240 frames) from phase 2.52 s (since #500, D110): the swell has 29 frames left, cloud 29-89, calm 89-221, the next swell from 221; the attack starts at frame 120 and takes 48 frames, so it ends at 168, before that swell. */
     private static final int GUARD_CYCLE_FRAMES = 240, CALM_FRAME = 120;
-    /** forest-1-guard: the hero's hitbox centre sits 23.5 px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2208, 272) since #500 (D110). */
-    private static final float HERO_CENTRE_OFFSET_X = 23.5f, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2208, ENTRANCE_Y = 272;
+    /** forest-1-guard: the hero's hitbox centre sits {@code HeroBody.CENTRE} px right of {@code position.x}; the guard's whip reaches x 2394-2400 on the floor, so a hero centred at x 2390 is in it; the entrance is (2208, 272) since #500 (D110). */
+    private static final float HERO_CENTRE_OFFSET_X = HeroBody.CENTRE, HERO_AT_WHIP_X = 2390, ENTRANCE_X = 2208, ENTRANCE_Y = 272;
 
     /** The route room with the hero standing on the lift the whole time, so the rider path of {@code Player} runs every frame (it allocated a {@code Vector2} each frame before the #187 review). */
     @Test void forest1RouteRoomRidingTheLift() {
         Level level = harness.roomOf("forest-1", 8);
         Rectangle view = new Rectangle(level.currentRoomBounds());
         var lift = level.escalators.get(0);
-        level.player.position.set(lift.getX() + 3, lift.getY() - 48);
+        level.player.position.set(lift.getX() + lift.getWidth() / 2 - HeroBody.CENTRE, lift.getY() - 48); // centred: clear of the exit ledge beside it
         for (int i = 0; i < 5; i++) level.update(STEP);
         org.junit.jupiter.api.Assertions.assertSame(lift, level.player.currentEscalator(), "the scene must have the hero riding");
         double bytes = AllocationProbe.bytesPerFrame(i -> {
@@ -1017,9 +1018,9 @@ class AllocationBudgetTest {
     private static final int BEETLE_CYCLE_FRAMES = 120, BEETLE_HEARD_FRAME = 5, BEETLE_ESCAPE_FRAME = 45, BEETLE_KILL_FRAME = 55, BEETLE_SETTLE_FRAMES = 60;
     /** D101: the hero walks up to an odd beetle's body (it rocks), then the body is crumbled or burnt. */
     private static final int BEETLE_PUSH_FRAME = 70, BEETLE_FINISH_FRAME = 95, BEETLE_KINDS = 4, BEETLE_BURNT = 3;
-    private static final float HERO_AT_BODY_X = 254 - 29;
+    private static final float HERO_AT_BODY_X = 254 - HeroBody.RIGHT;
     private static final float BEETLE_LEFT_END = 256, BEETLE_Y = 304, BEETLE_W = 24, BEETLE_H = 16, BEETLE_RANGE_TILES = 8;
-    private static final float HERO_TOUCHING_X = 250 - 29, HERO_CLEAR_X = 200 - 29, HERO_FAR_X = 600 - 29, HERO_Y = 272;
+    private static final float HERO_TOUCHING_X = 250 - HeroBody.RIGHT, HERO_CLEAR_X = 200 - HeroBody.RIGHT, HERO_FAR_X = 600 - HeroBody.RIGHT, HERO_Y = 272;
 
     /**
      * Beetles in turn through the real {@code Level} of beetle-test.tmx (#327, D100): each crawls a few frames, then hears the hero, notices (0.5 s), finds
@@ -1069,7 +1070,7 @@ class AllocationBudgetTest {
     private static final float PASSER_AWAY_X = 900, PASSER_SPEED = 50;
     private static final int BODY_CYCLE_FRAMES = 130, BODY_KILL_FRAME = 20, BODY_PUSH_FRAME = 90, BODY_FINISH_FRAME = 108, BODY_MONSTERS = 3;
     /** Where the three monsters of #478 start (the bat in the air over the floor), and the hero beside the place their bodies come to lie. */
-    private static final float BODY_X_PLACE = 400, BAT_Y_PLACE = 240, MOB_Y_PLACE = 288, HERO_BESIDE_OFFSET = 27;
+    private static final float BODY_X_PLACE = 400, BAT_Y_PLACE = 240, MOB_Y_PLACE = 288, HERO_BESIDE_OFFSET = HeroBody.RIGHT - 2;
 
     /**
      * The three inherited monsters in turn through the real {@code Level} of bat-test.tmx (#478, D101): the bat, the red mob and
@@ -1147,8 +1148,8 @@ class AllocationBudgetTest {
     /** A ledge past the places this scene flies to, so every frame reads a route with something to fly over (D146). */
     private static final float FLYING_LEDGE_X = 400, FLYING_LEDGE_W = 16;
     /** Hero positions (entity x): under the platform beside the line's end, in the open beside it, far to the left of its blast. */
-    private static final float HERO_UNDER_ROOF_X = 230 - 23.5f, HERO_IN_THE_OPEN_X = 300 - 23.5f, HERO_LEFT_X = 80 - 23.5f,
-        HERO_FROM_BODY = 26;
+    private static final float HERO_UNDER_ROOF_X = 230 - HeroBody.CENTRE, HERO_IN_THE_OPEN_X = 300 - HeroBody.CENTRE, HERO_LEFT_X = 80 - HeroBody.CENTRE,
+        HERO_FROM_BODY = HeroBody.RIGHT - 3;
 
     /**
      * Flying beetles in turn through the real {@code Level} of flying-beetle-roof.tmx (#330, D145): each flies a few frames,
@@ -1252,7 +1253,7 @@ class AllocationBudgetTest {
     private static final int SPIDER_PUSH_FRAME = 125, SPIDER_FINISH_FRAME = 140, SPIDER_KINDS = 4, SPIDER_BURNT = 3;
     private static final float SPIDER_LEFT_END = 256, SPIDER_Y = 304, SPIDER_W = 32, SPIDER_H = 16, SPIDER_RANGE_TILES = 8;
     /** Hero positions (x of the 64 px frame): in its hearing and pounce box; clear of the locked bite; beside the body. */
-    private static final float HERO_POUNCED_X = 330 - 29, HERO_STEPPED_X = 360 - 29, HERO_BESIDE_SPIDER_X = 310 - 29;
+    private static final float HERO_POUNCED_X = 330 - HeroBody.RIGHT, HERO_STEPPED_X = 360 - HeroBody.RIGHT, HERO_BESIDE_SPIDER_X = 310 - HeroBody.RIGHT;
 
     /**
      * Spiders in turn through the real {@code Level} of spider-test.tmx (#328, D102): each skitters a few frames, hears the hero,
@@ -1303,7 +1304,7 @@ class AllocationBudgetTest {
     private static final int SNAIL_KILL_FRAME = 100, SNAIL_PUSH_FRAME = 220, SNAIL_FINISH_FRAME = 260, SNAIL_KINDS = 4, SNAIL_ODD = 3, SNAIL_AT_END = 3;
     private static final float SNAIL_X = 320, SNAIL_Y = 304, SNAIL_W = 24, SNAIL_H = 16, SNAIL_OFF_NEG = 3, SNAIL_OFF_POS = 4;
     /** Hero positions (x of the 64 px frame): ahead in the snail's line; the feet 12 px up, above the line; beside the body. */
-    private static final float HERO_IN_LINE_X = 250 - 29, HERO_LIFT = 12, HERO_BESIDE_SNAIL_X = 318 - 29;
+    private static final float HERO_IN_LINE_X = 250 - HeroBody.RIGHT, HERO_LIFT = 12, HERO_BESIDE_SNAIL_X = 318 - HeroBody.RIGHT;
 
     /**
      * Snails in turn through the real {@code Level} of snail-test.tmx (#329, D106): each crawls a few frames, sees the hero ahead
@@ -1400,7 +1401,7 @@ class AllocationBudgetTest {
             if (f == WOLF_SEEN_FRAME) level.player.position.set(WOLF_HERO_AHEAD_X, HERO_Y);
             Wolf.State st = wolf.state();
             if (st == Wolf.State.CHASE && !turned[k] && wolf.speed() > 100) {   // he jumps behind it as it runs: it must skid and turn
-                level.player.position.set(wolf.position.x + 148 - 29, HERO_Y);
+                level.player.position.set(wolf.position.x + 148 - HeroBody.RIGHT, HERO_Y);
                 turned[k] = true;
             }
             if (st == Wolf.State.LUNGE && !missed[k]) {
@@ -1414,7 +1415,7 @@ class AllocationBudgetTest {
                 if (wolf.state() == Wolf.State.TROT) { done[k] = true; level.player.position.set(WOLF_HERO_FAR_X, HERO_Y); }
                 else { level.player.position.set(WOLF_HERO_AHEAD_X, HERO_Y - WOLF_LIFT); level.player.velocity().setZero(); }
             }
-            if (killedAt[k] > 0 && f == killedAt[k] + WOLF_PUSH_AFTER_KILL) level.player.position.set(wolf.position.x + 8 - 29, HERO_Y);
+            if (killedAt[k] > 0 && f == killedAt[k] + WOLF_PUSH_AFTER_KILL) level.player.position.set(wolf.position.x + 8 - HeroBody.RIGHT, HERO_Y);
             if (killedAt[k] > 0 && f == killedAt[k] + WOLF_FINISH_AFTER_KILL) { if (k % WOLF_KINDS == WOLF_BURNT) wolf.burnUp(); else wolf.crumble(); }
             if (!wolf.isRemoved()) {
                 wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true;
@@ -1467,21 +1468,21 @@ class AllocationBudgetTest {
             var hero = level.player;
             try {
                 if (f == 0) { step[0] = 0; held[0] = 0; attacking.setBoolean(hero, false); hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.setOnGround(true); }
-                if (f == DEVELOP_SEEN_FRAME) { hero.position.set(DEVELOP_HERO_X - 23.5f, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); }
+                if (f == DEVELOP_SEEN_FRAME) { hero.position.set(DEVELOP_HERO_X - HeroBody.CENTRE, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); }
                 Wolf.State st = wolf.state();
                 if (st == Wolf.State.CHASE && step[0] == 0 && wolf.speed() > 100) {          // a jump far from it: read
-                    hero.position.set(wolf.centreX() - DEVELOP_READ_AWAY - 23.5f, HERO_Y - DEVELOP_UP);
+                    hero.position.set(wolf.centreX() - DEVELOP_READ_AWAY - HeroBody.CENTRE, HERO_Y - DEVELOP_UP);
                     hero.velocity().set(0, DEVELOP_RISE); hero.setOnGround(false); step[0] = 1;
                 } else if (step[0] == 1 && st == Wolf.State.CHASE) {                          // he lands, then jumps right by it: the jump bite
                     hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); step[0] = 2;
                 } else if (step[0] == 2 && st == Wolf.State.CHASE) {
-                    hero.position.set(wolf.centreX() - DEVELOP_POUNCE_AWAY - 23.5f, HERO_Y - DEVELOP_UP);
+                    hero.position.set(wolf.centreX() - DEVELOP_POUNCE_AWAY - HeroBody.CENTRE, HERO_Y - DEVELOP_UP);
                     hero.velocity().set(0, DEVELOP_RISE); hero.setOnGround(false); step[0] = 3;
                 } else if (step[0] == 3 && st == Wolf.State.POUNCE) {                         // gone as it leaps: a miss
                     hero.position.set(WOLF_HERO_FAR_X, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true); step[0] = 4;
                 } else if (step[0] >= 4 && st == Wolf.State.CHASE) {                           // in reach again
                     attacking.setBoolean(hero, false);
-                    hero.position.set(wolf.jawFrontX() - DEVELOP_SWING_GAP - 29, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true);
+                    hero.position.set(wolf.jawFrontX() - DEVELOP_SWING_GAP - HeroBody.RIGHT, HERO_Y); hero.velocity().setZero(); hero.setOnGround(true);
                     hero.facingRight = true;
                 } else if (step[0] >= 4 && st == Wolf.State.WINDUP && !attacking.getBoolean(hero) && step[0] < 6) { // a swing at it
                     attacking.setBoolean(hero, true);
@@ -1526,7 +1527,7 @@ class AllocationBudgetTest {
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             int k = i / LEAP_CYCLE_FRAMES, f = i % LEAP_CYCLE_FRAMES;
             Wolf wolf = wolves[k];
-            if (f == 0) level.player.position.set(LEAP_HERO_X + 110 - 23.5f, HERO_Y);
+            if (f == 0) level.player.position.set(LEAP_HERO_X + 110 - HeroBody.CENTRE, HERO_Y);
             level.player.velocity().setZero();
             level.player.setOnGround(true);
             if (!wolf.isRemoved()) { wolf.update(STEP); wolf.render(batch); seen[wolf.state().ordinal()] = true; }
@@ -1543,8 +1544,8 @@ class AllocationBudgetTest {
         Spider.State.LEAP, Spider.State.BITE, Spider.State.RECOVER, Spider.State.DEAD, Spider.State.BURN};
     private static final int ROUTE_CYCLE_FRAMES = 300, ROUTE_HEARD_FRAME = 5, ROUTE_KILL_FRAME = 140, ROUTE_FINISH_FRAME = 220;
     private static final int DROP_ASIDE_FRAME = 80, DROP_AGAIN_FRAME = 250, CLIMB_DOWN_FRAME = 110, CLIMB_KILL_FRAME = 120;
-    private static final float ROUTE_HERO_FAR_X = 3, DROP_UNDER_X = 460 - 29, DROP_ASIDE_X = 480 - 29;
-    private static final float CLIMB_LEDGE_X = 430 - 29, CLIMB_LEDGE_Y = 224 - 48, CLIMB_BELOW_X = 250 - 29;
+    private static final float ROUTE_HERO_FAR_X = 3, DROP_UNDER_X = 460 - HeroBody.RIGHT, DROP_ASIDE_X = 480 - HeroBody.RIGHT;
+    private static final float CLIMB_LEDGE_X = 430 - HeroBody.RIGHT, CLIMB_LEDGE_Y = 224 - 48, CLIMB_BELOW_X = 250 - HeroBody.RIGHT;
 
     /** The route of a fixture's spider, traced over its solids as {@code Level} does (built before the probe). */
     private static Spider.Route route(float[] points, Rectangle... solids) { return Spider.Route.trace(points, java.util.List.of(solids)); }
@@ -1777,7 +1778,7 @@ class AllocationBudgetTest {
     @Test void decorBrushThroughTheRealLevel() {
         Level level = harness.roomOf("forest-0", 0);
         com.jlogicsoftware.kimeria.entity.objects.Decor bush = level.decor.get(0);
-        Rectangle hero = new Rectangle(bush.getX(), bush.getY(), 11, 22);
+        Rectangle hero = new Rectangle(bush.getX(), bush.getY(), HeroBody.W, HeroBody.H);
         boolean[] played = new boolean[1];
         double bytes = AllocationProbe.bytesPerFrame(i -> {
             if (i % BURST_CYCLE_FRAMES == 0) bush.notice(hero, 100);

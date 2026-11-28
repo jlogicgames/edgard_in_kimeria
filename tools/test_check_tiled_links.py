@@ -841,7 +841,7 @@ class MosquitoSwarmLinksTest(unittest.TestCase):
         return check(tmx(swarm, collisions=collisions).replace('<objectgroup name="Spawn', rooms + '<objectgroup name="Spawn', 1))
 
     def test_low_high_and_vertical_lines_pass(self):
-        for swarm in (self.swarm(), self.swarm(y=302), self.swarm(y=278), self.swarm(y=298, neg=3, pos=0, vertical=True)):
+        for swarm in (self.swarm(), self.swarm(y=302), self.swarm(y=272), self.swarm(y=298, neg=3, pos=0, vertical=True)):
             self.assertEqual([], self.run_map(swarm), swarm)
 
     def test_no_free_way_past(self):
@@ -849,7 +849,7 @@ class MosquitoSwarmLinksTest(unittest.TestCase):
         ceiling = self.FLOOR + '<object id="12" x="200" y="220" width="240" height="24"/>'
         self.assertIn('no way past', self.run_map(self.swarm(), collisions=ceiling)[0])
         self.assertEqual([], self.run_map(self.swarm(y=270), collisions=ceiling))
-        self.assertIn('no way past open', self.run_map(self.swarm(y=274, neg=0, pos=0.625, vertical=True))[0])
+        self.assertIn('no way past open', self.run_map(self.swarm(y=268, neg=0, pos=0.625, vertical=True))[0])
 
     def test_numbers_room_solids_standing_places_and_floor(self):
         self.assertIn('offNeg', self.run_map(self.swarm(neg=-1))[0])

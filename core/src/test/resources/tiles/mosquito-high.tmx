@@ -10,7 +10,7 @@
  <objectgroup name="SpawnPoints">
   <object id="1" type="Player" x="32" y="272" width="48" height="48"/>
   <object id="5" name="Deadline" type="Deadline" x="-1000" y="368" width="2640" height="16"/>
-  <object id="10" name="mosquito swarm" type="MosquitoSwarm" x="309" y="278" width="22" height="18">
+  <object id="10" name="mosquito swarm" type="MosquitoSwarm" x="309" y="272" width="22" height="18">
    <properties>
     <property name="offNeg" type="float" value="0"/>
     <property name="offPos" type="float" value="0"/>

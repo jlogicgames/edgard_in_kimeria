@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -375,7 +376,7 @@ class LadderLessonTest {
         for (boolean lowered : new boolean[]{false, true}) {
             if (ladder(level).isLowered() != lowered) ladder(level).performAction();
             settle(level, 60);
-            for (float standY : new float[]{256, 256 - 58, 160, 160 - 58, 130})
+            for (float standY : new float[]{256, 256 - 77, 160, 160 - 77, 130})
                 for (float x = 600; x <= 1432; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -417,7 +418,7 @@ class LadderLessonTest {
         for (boolean lowered : new boolean[]{false, true}) {
             if (ladder(level).isLowered() != lowered) ladder(level).performAction();
             settle(level, 60);
-            for (float standY : new float[]{256, 256 - 58, 160, 160 - 58, 130})
+            for (float standY : new float[]{256, 256 - 77, 160, 160 - 77, 130})
                 for (float x = 600; x <= 1432; x += 4) {
                     level.player.position.set(x - 24, standY);
                     settle(level, 2);
@@ -528,7 +529,7 @@ class LadderLessonTest {
         frame(level);
     }
 
-    private void placeBodyRight(Level level, float right) { level.player.position.set(right - 11 - 18, 256); settle(level, 2); }
+    private void placeBodyRight(Level level, float right) { level.player.position.set(right - HeroBody.RIGHT, 256); settle(level, 2); }
 
     /** The hero stands with the body's right edge at {@code takeOff}, presses Right + Jump at once and runs on; returns true when alive well past the root. */
     private boolean jumpFrom(float takeOff, boolean waitForTheThornsFirst) {

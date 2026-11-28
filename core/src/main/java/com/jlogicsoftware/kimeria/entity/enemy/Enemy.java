@@ -14,8 +14,8 @@ import com.jlogicsoftware.kimeria.world.Level;
 /** Port of Dart's {@code Enemy} base class. */
 public abstract class Enemy<S extends Enum<S>> extends Actor<S> implements GravityBody {
     protected static final float TILE_SIZE = 16f;
-    /** Upward speed the player gets from stomping an enemy. */
-    protected static final float BOUNCE_HEIGHT = 260f;
+    /** Upward speed the player gets from stomping an enemy: his own jump's, so it grew with him (D164). */
+    protected static final float BOUNCE_HEIGHT = Player.JUMP_SPEED;
     /** How far (px) the player's feet may sit below the enemy's top on the previous frame and still count as above it. */
     private static final float STOMP_TOLERANCE = 2f;
     /** Height of the body, from the top, where a sword hit lands: the same fraction as the boss's. */

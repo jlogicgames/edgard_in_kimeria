@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.GridPoint2;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -205,14 +206,14 @@ class HeroFrameTest {
         if (!level.ladders.get(0).isLowered()) level.ladders.get(0).performAction();
         for (int i = 0; i < 120; i++) frame(level);
         Player hero = level.player;
-        hero.position.set(LADDER_CENTRE - 23.5f, FLOOR - 48);
+        hero.position.set(LADDER_CENTRE - HeroBody.CENTRE, FLOOR - 48);
         for (int i = 0; i < 5; i++) frame(level);
         int up = 0, hold = 0, down = 0;
         for (int i = 0; i < 40; i++) { held.clear(); held.add(Input.Keys.W); frame(level); up += ladderRow(hero, LADDER_UP_ROW); }
         for (int i = 0; i < 20; i++) { held.clear(); frame(level); hold += ladderRow(hero, LADDER_HOLD_ROW); }
         for (int i = 0; i < 20; i++) { held.clear(); held.add(Input.Keys.S); frame(level); down += ladderRow(hero, LADDER_DOWN_ROW); }
         assertTrue(up > 20 && hold == 20 && down == 20, "up " + up + " hold " + hold + " down " + down);
-        assertTrue(Math.abs(hero.position.x + 23.5f - LADDER_CENTRE) < STEP_X, "on the ladder's axis");
+        assertTrue(Math.abs(hero.position.x + HeroBody.CENTRE - LADDER_CENTRE) < STEP_X, "on the ladder's axis");
     }
 
     private int ladderRow(Player hero, int expectedRow) {

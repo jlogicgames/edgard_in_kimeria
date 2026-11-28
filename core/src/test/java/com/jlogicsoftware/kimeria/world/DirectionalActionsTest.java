@@ -168,8 +168,8 @@ class DirectionalActionsTest {
         first = new CountingSwitch("first"); second = new CountingSwitch("second");
         level.objects.add(first); level.objects.add(second);
         // Exact overlap, reverse list order: the lower authored ID must win.
-        level.triggers.add(new com.jlogicsoftware.kimeria.entity.items.Trigger(9, 32, 272, 64, 48, "second"));
-        level.triggers.add(new com.jlogicsoftware.kimeria.entity.items.Trigger(7, 32, 272, 64, 48, "first"));
+        level.triggers.add(new com.jlogicsoftware.kimeria.entity.items.Trigger(9, 32, 268, 64, 48, "second"));
+        level.triggers.add(new com.jlogicsoftware.kimeria.entity.items.Trigger(7, 32, 268, 64, 48, "first"));
         level.objects.add(new com.jlogicsoftware.kimeria.entity.items.Carryable(level, 21,
             com.jlogicsoftware.kimeria.entity.items.Carryable.Kind.TORCH, 60, 308));
         level.objects.add(new com.jlogicsoftware.kimeria.entity.items.Carryable(level, 20,
@@ -696,7 +696,7 @@ class DirectionalActionsTest {
     @Test void aSwordMissAnAlreadyDefeatedMobAndARetryResetSprayNothing() {
         scene(false); level.objects.removeIf(o -> o instanceof com.jlogicsoftware.kimeria.entity.items.Carryable);
         var mob = blood_mob(100); frames(2);
-        level.player.position.set(400, 272); swing(); frames(20);
+        level.player.position.set(200, 272); swing(); frames(20); // on room one's floor, far from the mob
         assertFalse(mob.isDefeated()); assertEquals(0, level.bloodParticles().count(), "a swing that touches nothing");
         swordBeside(mob, -1); frames(1); swing();
         int burst = level.bloodParticles().count();

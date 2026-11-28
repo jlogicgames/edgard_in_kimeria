@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.SpriteSheets;
 import com.jlogicsoftware.kimeria.entity.Collidable;
@@ -39,7 +40,7 @@ class DecorTest {
 
     private Decor bush() { return new Decor(harness.assets(), "bush", 100, 296, 32, 24, false); }
 
-    private static Rectangle hero(float x) { return new Rectangle(x, 270, 11, 22 + 26); }
+    private static Rectangle hero(float x) { return new Rectangle(x, 270, HeroBody.W, HeroBody.H + HeroBody.TOP); }
 
     private static TiledObject object(String kind) {
         TiledObject o = new TiledObject();
@@ -103,13 +104,13 @@ class DecorTest {
         assertFalse(d.playing(), "touching the right edge of the body, still beside it");
         d.notice(hero(100 + 32), 100);
         assertFalse(d.playing(), "in the empty right margin of the frame");
-        d.notice(hero(100 + Decor.BODY_INSET_LEFT - 11), 100);
+        d.notice(hero(100 + Decor.BODY_INSET_LEFT - HeroBody.W), 100);
         assertFalse(d.playing(), "touching the left edge of the body");
-        d.notice(hero(100 - 11 - 6), 100);
+        d.notice(hero(100 - HeroBody.W - 6), 100);
         assertFalse(d.playing(), "6 px to the left, where the old widened zone started the shake");
-        d.notice(new Rectangle(110, 296 + 24, 11, 22), 100);
+        d.notice(new Rectangle(110, 296 + 24, HeroBody.W, HeroBody.H), 100);
         assertFalse(d.playing(), "below the floor line");
-        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - 22, 11, 22), 100);
+        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - HeroBody.H, HeroBody.W, HeroBody.H), 100);
         assertFalse(d.playing(), "above the top of the body");
     }
 
@@ -118,10 +119,10 @@ class DecorTest {
         d.notice(hero(100 + 32 - Decor.BODY_INSET_RIGHT - 1), 100);
         assertTrue(d.playing(), "one pixel into the body from the right");
         d = bush();
-        d.notice(hero(100 + Decor.BODY_INSET_LEFT - 11 + 1), -100);
+        d.notice(hero(100 + Decor.BODY_INSET_LEFT - HeroBody.W + 1), -100);
         assertTrue(d.playing(), "one pixel into the body from the left");
         d = bush();
-        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - 22 + 1, 11, 22), 100);
+        d.notice(new Rectangle(110, 296 + Decor.BODY_INSET_TOP - HeroBody.H + 1, HeroBody.W, HeroBody.H), 100);
         assertTrue(d.playing(), "the hero's feet one pixel into the body from above");
     }
 
@@ -191,7 +192,7 @@ class DecorTest {
         Level level = harness.roomOf("forest-0", 0);
         int count = level.decor.size();
         assertTrue(count > 0);
-        level.decor.get(0).notice(new Rectangle(level.decor.get(0).getX(), level.decor.get(0).getY(), 11, 22), 100);
+        level.decor.get(0).notice(new Rectangle(level.decor.get(0).getX(), level.decor.get(0).getY(), HeroBody.W, HeroBody.H), 100);
         assertTrue(level.decor.get(0).playing());
         level.resetCurrentRoom(new com.jlogicsoftware.kimeria.entity.player.Player(harness.assets(), harness.game(), 0, 0));
         assertEquals(count, level.decor.size(), "cleared and respawned, not accumulated");

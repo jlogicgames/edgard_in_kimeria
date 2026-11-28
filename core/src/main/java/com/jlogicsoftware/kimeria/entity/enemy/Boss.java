@@ -296,7 +296,7 @@ public final class Boss extends Enemy<Boss.State> implements CollideBody {
         if (!body.overlaps(hero)) return;
         if (isStomp(player.velocity.y, player.previousFeetY(), body.y)) {
             player.position.y = body.y - player.hitbox.offsetY - player.hitbox.height;
-            player.velocity.y = -260f;
+            player.velocity.y = -BOUNCE_HEIGHT;
             player.setOnGround(false);
             if (game.playSounds()) game.playSound("bounce");
         } else if (player.velocity.y < 0 && player.previousFeetY() - hero.height >= body.y + body.height - 2f) {

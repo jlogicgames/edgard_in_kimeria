@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.entity;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 
 import com.badlogic.gdx.math.Rectangle;
 import org.junit.jupiter.api.Test;
@@ -56,12 +57,12 @@ class HitboxBoundsTest {
         assertEquals(body.x - 8f, p.boundsOf(whip).x);
     }
 
-    /** The player's sword (9..46 beside an 18..29 body): same reach in front whichever way it faces. */
+    /** The player's sword (5..53 beside a 17..31 body, D164): same reach in front whichever way it faces. */
     @Test
     void anOffCentreBodyStillGetsEqualReachBothWays() {
         Probe p = new Probe();
-        p.hitbox = Hitbox.rect(18, 26, 11, 22);
-        Hitbox sword = Hitbox.rect(9, 12, 37, 36);
+        p.hitbox = Hitbox.rect(HeroBody.LEFT, HeroBody.TOP, HeroBody.W, HeroBody.H);
+        Hitbox sword = Hitbox.rect(5, 2, 48, 46);
         Rectangle body = p.hitboxBounds();
 
         Rectangle facingRight = p.boundsOf(sword);
@@ -70,7 +71,7 @@ class HitboxBoundsTest {
         Rectangle facingLeft = p.boundsOf(sword);
         float reachLeft = body.x - facingLeft.x;
 
-        assertEquals(17f, reachRight);
+        assertEquals(22f, reachRight);
         assertEquals(reachRight, reachLeft);
     }
 

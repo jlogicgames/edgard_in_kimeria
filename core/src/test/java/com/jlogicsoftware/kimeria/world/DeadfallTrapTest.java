@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.jlogicsoftware.kimeria.TrapWarnings;
@@ -32,7 +33,7 @@ class DeadfallTrapTest {
     private static final float ROOM_X = 4960, ROOM_END = 5600, START_X = 4992, EXIT_X = 5536, FLOOR = 304;
     private static final float P_X = 5232, P_Y = 236, VINE_LEFT = 5112, VINE_RIGHT = 5128;
     /** Player hitbox offset and size (Player.hitbox): body left = position.x + 18, body bottom = position.y + 48. */
-    private static final float BODY_OFFSET_X = 18, BODY_W = 11, BODY_H = 22, BODY_BOTTOM = 48, VIEW_W = 640;
+    private static final float BODY_OFFSET_X = HeroBody.LEFT, BODY_W = HeroBody.W, BODY_H = HeroBody.H, BODY_BOTTOM = 48, VIEW_W = 640;
     private static final float HEAD = FLOOR - BODY_H;
 
     private final HeadlessLevelHarness h = new HeadlessLevelHarness();

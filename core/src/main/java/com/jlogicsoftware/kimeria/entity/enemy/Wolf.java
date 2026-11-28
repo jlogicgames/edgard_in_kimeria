@@ -128,7 +128,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
     /** Scales {@code s * (1 - s)} so a leap's arc peaks at {@link #LEAP_LIFT}. */
     private static final float PARABOLA = 4;
     /** A hero whose feet fall no faster than this stands (a walk off a ledge passes it on the second frame). */
-    private static final float STANDING_FALL = 25;
+    private static final float STANDING_FALL = 25 * Player.PROPORTION;
     /** Another leg wins over the one the hero was last on only by this much, so a hero at a link does not make it dither. */
     private static final float LEG_HYSTERESIS = 4;
     private static final float ARC_PER_SECOND = 60, MARK_PER_SECOND = 40, PATH_STEPS = 8;
@@ -752,7 +752,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
 
     /** The landing read: where his feet come back to its floor at this speed, and where it wants its body for that. */
     private void startRead(Rectangle hero, float feetAbove) {
-        float g = gravityPerSecond(), vy = player.velocity.y;
+        float g = player.gravityPerSecond(), vy = player.velocity.y;
         float t = (-vy + (float) Math.sqrt(vy * vy + SIDES * g * feetAbove)) / g;
         readSpotX = hero.x + hero.width / 2f + player.velocity.x * t;
         float way = readSpotX >= centreX() ? 1 : -1;
@@ -789,7 +789,7 @@ public class Wolf extends Enemy<Wolf.State> implements CollideBody, Remains {
      * meet a solid, land off its floor or leave its range by more than its reach.
      */
     private void startPounce(Rectangle hero) {
-        float total = tell(TrapWarnings.WOLF_POUNCE_SECONDS), t = total + POUNCE_SECONDS, g = gravityPerSecond(), floor = floorY();
+        float total = tell(TrapWarnings.WOLF_POUNCE_SECONDS), t = total + POUNCE_SECONDS, g = player.gravityPerSecond(), floor = floorY();
         float x = hero.x + hero.width / 2f + player.velocity.x * t;
         float feet = Math.min(floor, hero.y + hero.height + player.velocity.y * t + g * t * t / SIDES);
         float aim = MathUtils.clamp(feet - hero.height / 2f, floor - POUNCE_HIGH, floor - (FRAME_HEIGHT - JAW_CENTRE_Y));

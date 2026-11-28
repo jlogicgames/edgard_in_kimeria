@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -127,7 +128,7 @@ class Forest2TrapsTest {
     private boolean dead(Level l) { return l.touchesDeadline(l.player.hitboxBounds()) || l.player.isGotHit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */
-    private void place(Level l, float right) { l.player.position.set(right - 29, 256); settle(l, 3); }
+    private void place(Level l, float right) { l.player.position.set(right - HeroBody.RIGHT, 256); settle(l, 3); }
     private void retry(Level l) { l.resetCurrentRoom(player()); settle(l, 2); }
 
     private boolean mobAhead(Level l) {

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.enemy.Enemy;
 import com.jlogicsoftware.kimeria.entity.items.Collectable;
@@ -36,7 +37,7 @@ class ForestWallsTest {
 
     /** Stands the hero with the body centre at {@code x} on a surface whose top is {@code top}, still, facing right. */
     private void place(Level level, float x, float top) {
-        level.player.position.set(x - 23.5f, top - 48);
+        level.player.position.set(x - HeroBody.CENTRE, top - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         h.held.clear();

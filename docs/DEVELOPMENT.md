@@ -276,8 +276,11 @@ instead of libGDX's `gdx-tiled` extension, specifically to avoid that extension'
 row-flipping (which assumes the same Y-up convention) and keep tile/object coordinates
 identical to the source file.
 
+The hero's body is 14x28 at offset (17, 20) in his 48x48 box, bottom on the floor line; its size, run speed, gravity and jump
+are constants of `Player` ([D164](DECISIONS.md#d164-the-heros-body-is-1428-and-he-runs-and-jumps-in-proportion-705-2026-11-28-amends-d79-d98-d151-d154)), mirrored by `tools/check_tiled_links.py` and `tools/parallax_mock.py`. The monsters keep `GravityBody`'s values.
+
 The follow camera (`Player.updateCameraPosition`) is clamped to the current room. Sideways its focus has a dead zone three hitbox
-widths wide. Vertically the focus has slack upward only, and the camera eases to it (`VerticalCameraFollow`, [D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
+widths (42 px) wide. Vertically the focus has slack upward only, and the camera eases to it (`VerticalCameraFollow`, [D154](DECISIONS.md#d154-the-camera-eases-up-and-down-with-slack-above-the-hero-678-2026-11-27-amends-d24-d111)).
 Room changes cut under black; a respawn pans (D3).
 
 ### Scenery layers and the foreground (parallax, [#236](https://github.com/jlogicgames/edgard_in_kimeria/issues/236))

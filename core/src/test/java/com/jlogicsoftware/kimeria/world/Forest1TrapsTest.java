@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -138,7 +139,7 @@ class Forest1TrapsTest {
     private boolean won(Level l) { return l.atRoomExit(); }
     private void settle(Level l, int frames) { for (int i = 0; i < frames; i++) frame(l); }
     /** Body right edge at {@code right}, standing on the floor, hero facing right. */
-    private void place(Level l, float right) { l.player.position.set(right - 29, 256); settle(l, 3); }
+    private void place(Level l, float right) { l.player.position.set(right - HeroBody.RIGHT, 256); settle(l, 3); }
     private void retry(Level l) { l.resetCurrentRoom(player()); settle(l, 2); }
 
     /** What the scripted hero does about the traps; the early lever, block and wall part is the same for all. */

@@ -55,6 +55,10 @@ with Action never climbs ([D28](DECISIONS.md#d28-vertical-ladders)).
 | Gamepad | Left stick/D-pad horizontal/vertical; A jump, X/B Action, Y Ranged | Right stick horizontal/vertical; D-pad Down jump, Left/Right Action, Up Ranged |
 | Touch | Two-axis stick left, three buttons right | Stick right, buttons left |
 
+Edgard's body is 14×28 px. He runs at 129 px/s, a standing jump lifts his feet about 77 px and lasts 0.9 s, the sword
+reaches 22 px ahead of him and he picks things up from 4 px
+([D164](DECISIONS.md#d164-the-heros-body-is-1428-and-he-runs-and-jumps-in-proportion-705-2026-11-28-amends-d79-d98-d151-d154)).
+
 Removed (2026-11-20, [D111](DECISIONS.md#d111-look-up-and-down-are-removed-the-camera-no-longer-pans-for-a-look-d25-d29-superseded-513)): there is no standing look. Holding Up or Down while standing still does
 nothing by itself; Up and Down keep every other use (ladders, Up picks up and uses, Down puts down, the touch stick, menus). The
 camera follows the hero and the room clamp only: sideways with a dead zone, up and down with a slack above the hero and an

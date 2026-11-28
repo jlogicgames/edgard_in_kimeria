@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
@@ -208,7 +209,7 @@ class Forest1HiveTest {
             Level level = room();
             HangingHive floor = hives(level).get(0);
             Carryable stone = level.objects.stream().filter(Carryable.class::isInstance).map(Carryable.class::cast).findFirst().orElseThrow();
-            level.player.position.set(stone.getX() - 18, 256);
+            level.player.position.set(stone.getX() - HeroBody.LEFT, 256);
             level.player.velocity().setZero();
             level.player.facingRight = true;
             settle(level, 10);
@@ -235,7 +236,7 @@ class Forest1HiveTest {
         for (int lead = 6; lead <= 30; lead += 2) {
             Level level = room();
             HangingHive floor = hives(level).get(0);
-            level.player.position.set(6360 - 29, 256);
+            level.player.position.set(6360 - HeroBody.RIGHT, 256);
             level.player.velocity().setZero();
             level.player.facingRight = true;
             settle(level, 20);

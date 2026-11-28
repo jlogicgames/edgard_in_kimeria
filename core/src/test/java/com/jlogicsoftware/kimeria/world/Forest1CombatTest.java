@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.RangedStock;
 import com.jlogicsoftware.kimeria.entity.enemy.Beetle;
@@ -97,8 +98,8 @@ class Forest1CombatTest {
     private boolean dead(Level level) { return level.player.isGotHit(); }
     private void alive(Level level) { assertFalse(dead(level), "died at " + level.player.position + " guard " + theMob.getState() + " cloud " + puff(level).currentPhase()); }
     private boolean onFloor(Level level) { return feet(level) > FLOOR - 2 && !level.player.onLadder(); }
-    /** The hero's hitbox centre is 23.5 px right of position.x (hitbox offset 18, width 11). */
-    private void putHero(Level level, float cx, float y) { level.player.position.set(cx - 23.5f, y); level.player.velocity.setZero(); }
+    /** Puts the hero's body centre at {@code cx}. */
+    private void putHero(Level level, float cx, float y) { level.player.position.set(cx - HeroBody.CENTRE, y); level.player.velocity.setZero(); }
     private boolean guardUntouched() { return theMob.getState() == RedMob.State.IDLE && theMob.getX() == GUARD_X; }
 
     /** A live enemy on the hero's row, ahead of him and closer than {@code within} px (body to body). */
@@ -285,7 +286,7 @@ class Forest1CombatTest {
         float guardLeft = theMob.hitboxBounds().x;
         for (int gap = 7; gap <= 17; gap++) {
             Level l = room(0);
-            putHero(l, guardLeft - gap - 5.5f, 256);
+            putHero(l, guardLeft - gap - HeroBody.HALF, 256);
             for (int i = 0; i < 40; i++) { frame(l); assertTrue(!l.player.isGotHit() || puff(l).currentPhase() == Puffball.Phase.CLOUD, "gap " + gap); }
             assertTrue(guardUntouched(), "gap " + gap);
         }
@@ -316,7 +317,7 @@ class Forest1CombatTest {
         // Sword reach: 17 px past the hero's body; whip: 6 px past the guard's. A hero stands at a gap of 7 to 17 px (and fractions between).
         int covered = 0, tried = 0;
         for (float gap = 7; gap <= 17; gap += 0.5f) {
-            Rectangle body = new Rectangle(guard.x - gap - 11, FLOOR - 22, 11, 22);
+            Rectangle body = new Rectangle(guard.x - gap - HeroBody.W, FLOOR - HeroBody.H, HeroBody.W, HeroBody.H);
             tried++;
             if (puff.cloudBounds().overlaps(body)) covered++;
         }
@@ -332,7 +333,7 @@ class Forest1CombatTest {
         for (boolean inCloud : new boolean[]{true, false}) {
             Level l = room(0);
             while ((puff(l).currentPhase() == Puffball.Phase.CLOUD) != inCloud) frame(l);
-            putHero(l, guard.x - 12 - 5.5f, 256);
+            putHero(l, guard.x - 12 - HeroBody.HALF, 256);
             frame(l); frame(l);
             assertEquals(inCloud, dead(l), "standing in the band, cloud out: " + inCloud);
         }
@@ -634,7 +635,7 @@ class Forest1CombatTest {
                             int initial = stock.count();
                             if (taken) refill(level).collideWithPlayer();
                             settle(level, phase);
-                            float[][] at = {{START_X + 23.5f, 256}, {LADDER_CENTRE, 256}, {2330, 256}, {LADDER_CENTRE, DECK - 48 - 1}, {2450, DECK - 48 - 1}, {2600, DECK - 48 - 1}, {2480, 256}};
+                            float[][] at = {{START_X + HeroBody.CENTRE, 256}, {LADDER_CENTRE, 256}, {2330, 256}, {LADDER_CENTRE, DECK - 48 - 1}, {2450, DECK - 48 - 1}, {2600, DECK - 48 - 1}, {2480, 256}};
                             putHero(level, at[where][0], at[where][1]);
                             settle(level, 2);
                             try { recover(level); } catch (AssertionError e) { throw new AssertionError(ctx + ": " + e.getMessage(), e); }

@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -119,7 +120,7 @@ class ExplosiveTrapsTest {
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing right. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, 272);
+        level.player.position.set(right - HeroBody.RIGHT, 272);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         held.clear();
@@ -206,7 +207,7 @@ class ExplosiveTrapsTest {
         frame(level);
         assertEquals(ExplosiveTrap.Phase.WINDUP, stump(level).phase(), "overlapping it by half a pixel does");
         Level beyond = fresh();
-        place(beyond, TRIGGER_RIGHT + 11 + .5f); // body left edge half a pixel past the box
+        place(beyond, TRIGGER_RIGHT + HeroBody.W + .5f); // body left edge half a pixel past the box
         settle(beyond, 60 * 3);
         assertEquals(ExplosiveTrap.Phase.IDLE, stump(beyond).phase());
         Level above = fresh();
@@ -277,7 +278,7 @@ class ExplosiveTrapsTest {
         for (Level l : new Level[]{inside, left, right}) assertTrue(stump(l).igniteFromAfar());
         place(inside, BLAST_LEFT + .5f); // body right edge half a pixel into the square
         place(left, BLAST_LEFT - .1f);
-        place(right, BLAST_RIGHT + 11 + .1f); // body left edge just past the square
+        place(right, BLAST_RIGHT + HeroBody.W + .1f); // body left edge just past the square
         int warningFrames = (int) (WARNING * 60) - 4;
         for (int i = 0; i < warningFrames; i++) { frame(inside); frame(left); frame(right); }
         assertTrue(alive(inside), "inside the square but the warning has not ended: nothing hurts yet");

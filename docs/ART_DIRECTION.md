@@ -423,17 +423,17 @@ These are the only limits on the layers.
   are checked at the steady camera (camera top 8), where heights are exact: the hero walks and stands there.
 - **Cover time (extends rule B, author, 2026-11-19, third pass; tightened in its review).** The foreground may cover the hero
   where there is no trap or enemy, but never hides him (near) fully where he stands, and never for more than 0.5 s of walking. Hidden
-  means 85 % or more of his figure (an 11x31 px rect: the hitbox, `Player` `Hitbox.rect(18, 26, 11, 22)`, x 18 to 29 of the 48 px
-  box, 31 px up from the floor line) lies under foreground pixels of alpha 128 or more (128, not 200: the dark fringe at alpha 192
+  means 85 % or more of his figure (a 14x31 px rect: the body's width, x 17 to 31 of the 48 px box (`Player.BODY_WIDTH`, D164), and the drawn
+  figure's 31 px up from the floor line) lies under foreground pixels of alpha 128 or more (128, not 200: the dark fringe at alpha 192
   hides the dark hero as well as the solid body). The camera is the game's steady camera: the box centre (box x + 24,
   `Player.centerX`) minus half the view, clamped to the room. Two rules, both in `python3 tools/parallax_mock.py --check`:
   - *Standing:* at every box x of his floor route (1 px apart, from the RoomStart box to where he triggers the RoomExit) he is
     never hidden.
-  - *Walking:* walking that route at 100 px/s (`Player.MOVE_SPEED`), on the floor and at a jump's apex (60 px up), the longest
+  - *Walking:* walking that route at 129 px/s (`Player.MOVE_SPEED`), on the floor and at a jump's apex (77 px up), the longest
     hidden run is at most 0.5 s.
 
-  Sideways, the game's camera follows a focus kept in a dead zone 33 px wide (`Player.DEAD_ZONE_WIDTH_FACTOR` 3 x the 11 px hitbox) around
-  the box centre, so while he walks it lags him by up to 16.5 px; replaying the walk with the dead zone and the camera's chase
+  Sideways, the game's camera follows a focus kept in a dead zone 42 px wide (`Player.DEAD_ZONE_WIDTH_FACTOR` 3 x the 14 px body) around
+  the box centre, so while he walks it lags him by up to 21 px (D164; the replay below was run at the old 11 px body); replaying the walk with the dead zone and the camera's chase
   changed the longest hidden run by at most 0.01 s, so the check uses the centred camera. Measured on the mocks after the review
   pass: standing hidden at 0 of 665 box x in the calm room (39 before: by the reeds at x 138 to 159 and the trunk at x 411 to 427)
   and 0 of 1145 in the busy room; walking 0 s on the floor and 0.19 s at the apex in the calm room (0.22 and 0.20 s before), 0 s in

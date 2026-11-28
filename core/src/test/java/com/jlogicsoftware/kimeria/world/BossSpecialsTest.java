@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
 import com.badlogic.gdx.math.Rectangle;
@@ -30,7 +31,7 @@ class BossSpecialsTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
     private static final float FLOOR = 304, PLATFORM = 240;
     /** The hero's body: 11x22, its centre this far right of the frame's left edge and its feet this far under the top. */
-    private static final float HERO_CENTRE = 23.5f, HERO_FEET = 48, HERO_HALF = 5.5f;
+    private static final float HERO_CENTRE = HeroBody.CENTRE, HERO_FEET = 48, HERO_HALF = HeroBody.HALF;
     /** The boss's body centre, right of its frame's left edge. */
     private static final float BOSS_CENTRE = 16;
     /** The centre of the lower left platform, x 2688-2720 at y 240. */
@@ -268,7 +269,7 @@ class BossSpecialsTest {
         assertFalse(hit());
     }
 
-    @Test void fourteenPixelsOffTheShadowAreSafe() {
+    @Test void sixteenPixelsOffTheShadowAreSafe() {
         chosen(2920, 2740, FLOOR);
         int interval = Math.round(BossAttacks.ROCK_INTERVAL / STEP);
         frames(interval + 2);
@@ -276,7 +277,7 @@ class BossSpecialsTest {
         assertEquals(3, attacks().rocksLaunched());
         float last = attacks().rockBounds(2).x + 8;
         assertEquals(2740, last, .01f, "the hero has not moved: all three share a column");
-        place(last - 14, FLOOR);
+        place(last - 16, FLOOR); // the 16 px rock and the 14 px body clear each other from 15 px (D164)
         framesWhile(boss::isSpecial, 300);
         assertFalse(hit());
     }
@@ -379,7 +380,7 @@ class BossSpecialsTest {
 
     private void startSweep() {
         fight(2860, 2760);
-        place(2860 - 28.5f, FLOOR);
+        place(2860 - HeroBody.RIGHT + 0.5f, FLOOR);
         level.player.facingRight = true;
         framesWhile(() -> boss.getState() != Boss.State.NORMAL, 3);
     }

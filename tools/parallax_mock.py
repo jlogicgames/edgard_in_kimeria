@@ -33,9 +33,9 @@ of a red mob, the travel of a lift, the route of a spider and the parts the game
 and fails (exit 1) when a foreground pixel with alpha > 24 lies over any of them on screen (plus 16 px, none under what stands on the
 floor) at any camera x of the room (every 4 px, steady camera), or over the hero's figure above the waist (31 to 15 px above the floor of the box,
 plus 16 px) in the RoomStart and RoomExit boxes. Elsewhere the foreground may cover the hero and the walk edge, even fully (rule B,
-author 2026-11-19), but never hide him where he stands nor for long (cover time, third pass and its review): his 11x31 px figure
+author 2026-11-19), but never hide him where he stands nor for long (cover time, third pass and its review): his 14x31 px figure
 counts as hidden when 85 % or more of it lies under foreground pixels of alpha 128 or more; standing at any x of his route from the
-start to the exit, with the game's steady camera, he is never hidden, and walking that route at 100 px/s (on the floor and at a
+start to the exit, with the game's steady camera, he is never hidden, and walking that route at 129 px/s (on the floor and at a
 jump's apex) he is hidden at most 0.5 s in a row; the check prints the hidden standing spots and the longest run of each mock. Hints are drawn by the HUD after the world, so the foreground never covers them and the check ignores them.
 With `--game` the check also holds each room of the game maps to the giant-leaf rules (D143) and to the middle of long rooms
 (`check_middle`, D153).
@@ -99,17 +99,17 @@ COVER_ALPHA = 24
 # Standing: at every box x of his floor route (1 px apart), with the steady camera there (Player.cameraTarget: the box
 # centre minus half the view, clamped to the room), he is never hidden. Walking: from his start to the exit at MOVE_SPEED
 # with that camera, on the floor and at a jump's apex, never hidden for more than HIDDEN_MAX s in a row.
-# The game's camera follows a focus kept within a dead zone (Player.DEAD_ZONE_WIDTH_FACTOR 3 x the 11 px hitbox = 33 px)
-# around the box centre, so it lags his centre by up to 16.5 px while he walks; the check uses the centred camera, and
+# The game's camera follows a focus kept within a dead zone (Player.DEAD_ZONE_WIDTH_FACTOR 3 x the 14 px hitbox = 42 px)
+# around the box centre, so it lags his centre by up to 21 px while he walks; the check uses the centred camera, and
 # replaying the walk with the dead zone and the camera's chase changed the longest hidden run by at most 0.01 s.
-MOVE_SPEED = 100                        # px/s, Player.MOVE_SPEED
-HERO_FIGURE_W = 11                      # the hitbox width (Player: Hitbox.rect(18, 26, 11, 22)); the figure is HERO_H tall
-HERO_FIGURE_DX = 18                     # the figure's left edge, px right of the box x (the hitbox offsetX)
+MOVE_SPEED = 129                        # px/s, Player.MOVE_SPEED (D164)
+HERO_FIGURE_W = 14                      # the hitbox width (Player.BODY_WIDTH, D164); the figure is HERO_H tall
+HERO_FIGURE_DX = 17                     # the figure's left edge, px right of the box x (the hitbox offsetX)
 HERO_CAMERA_DX = 24                     # the camera follows the box centre (Player.centerX: box x + 48 / 2)
 HIDDEN_ALPHA = 128
 HIDDEN_FRACTION = 0.85
 HIDDEN_MAX = 0.5
-HERO_LIFTS = (0, 60)                    # his feet on the floor line and at a jump's apex (59.67 px, JumpFrameRateTest)
+HERO_LIFTS = (0, 77)                    # his feet on the floor line and at a jump's apex (76.97 px, JumpFrameRateTest)
 MARGIN = 16
 # The giant near leaves (D143, #597) lie in their own nearer group per room, `foreground-near-<room>`, drawn after
 # `foreground-<room>` at NEAR_FACTOR. On top of rule B they have two rules of their own: they never come within MARGIN of an open
@@ -130,7 +130,7 @@ FG_PAD = 640                            # px of canvas left of x 0 for foregroun
 LONG_ROOM = VIEW[0] + 6 * TILE
 # piece: the top y it may hang at. A suggestion names the first that fits, so the lighter pieces come first.
 HANGING = {'near-sprig': (0,), 'near-fern': (0,), 'near-canopy': (0,), 'vine-curtain': (0, -TILE), 'roots-curtain': (0, -TILE)}
-RISING = {'rise-reeds': (128,), 'rise-fern': (112,)}   # the tall pieces standing on the bottom, and their top y
+RISING = {'rise-reeds': (130,), 'rise-fern': (112,)}   # the tall pieces standing on the bottom, and their top y
 RISING_UNASKED = {'rise-trunk': (112,)}   # counts as a tall rising piece but is never asked for: the near tier's trunks are #635's
 SKETCH_ONLY = ('hang-leaves-l', 'trunk-near')   # drawn for a sketch's top-left corner (cut at its side): not counted, not asked for
 HANG_BARE_MAX = 320                     # the longest stretch with no hanging piece, where one would fit

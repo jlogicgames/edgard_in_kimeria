@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.entity.items.Carryable;
 import com.jlogicsoftware.kimeria.entity.items.Fireball;
@@ -34,7 +35,7 @@ class LegHoldProjectilesTest {
 
     /** Picks up the stone, walks until the body's right edge reaches {@code from} (outside the zone, which starts at x 204) and throws it. */
     private void throwStoneFrom(Level level, float from) {
-        level.player.position.set(108 - 29, 272);
+        level.player.position.set(108 - HeroBody.RIGHT, 272);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         h.held.clear(); frame(level); h.held.add(Input.Keys.W); frame(level); // Up alone interacts (D126)
@@ -73,7 +74,7 @@ class LegHoldProjectilesTest {
     @Test void aFireballFliesOverTheFlatLitterAndNeverSnapsIt() {
         Level level = room();
         level.rangedStock.restore(3);
-        level.player.position.set(140 - 29, 272);
+        level.player.position.set(140 - HeroBody.RIGHT, 272);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         settle(level, 20);

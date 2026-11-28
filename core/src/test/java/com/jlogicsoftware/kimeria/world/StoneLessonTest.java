@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Files;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Graphics;
@@ -135,7 +136,7 @@ class StoneLessonTest {
     private float bodyRight(Level level) { Rectangle b = level.player.hitboxBounds(); return b.x + b.width; }
     private boolean alive(Level level) { return !level.touchesDeadline(level.player.hitboxBounds()) && !level.player.isGotHit(); }
     /** Stands the hero with the body's right edge at x. */
-    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - 11 - 18, 256); settle(level, 2); }
+    private void place(Level level, float bodyRight) { level.player.position.set(bodyRight - HeroBody.RIGHT, 256); settle(level, 2); }
 
     private void parkPlatformAt(Level level, float x, boolean running) {
         platform(level).restore(new Escalator.Snapshot(x, 304, 1, true, running ? Escalator.State.RUN : Escalator.State.IDLE, true, 0, false));
@@ -298,7 +299,7 @@ class StoneLessonTest {
             for (float x = ROOM_X + 508; x <= (stop == LIP ? LIP + 32 - 4 : LIP + 4); x += 6) {
                 Level level = freshRoom();
                 parkPlatformAt(level, stop, false);
-                level.player.position.set(x - 18, 256);
+                level.player.position.set(x - HeroBody.LEFT, 256);
                 settle(level, 3);
                 if (!alive(level)) continue;
                 for (int i = 0; i < 60 * 4 && alive(level); i++) {
@@ -317,7 +318,7 @@ class StoneLessonTest {
         for (float stop = LIP; stop <= PLATFORM_END; stop += 8) for (float onPlatform : new float[]{stop + 2, stop + 21}) {
             Level level = freshRoom();
             parkPlatformAt(level, stop, false);
-            level.player.position.set(onPlatform - 18, 256);
+            level.player.position.set(onPlatform - HeroBody.LEFT, 256);
             settle(level, 20);
             if (!alive(level)) continue;
             boolean right = (FAR - (stop + 32)) < (stop - LIP);
@@ -519,7 +520,7 @@ class StoneLessonTest {
             parkPlatformAt(level, stop, running);
             float stand = Math.min(stop + 8, FAR - 1);
             giveStoneAt(level, stand + 11);
-            if (stop > LIP) { level.player.position.set(stop + 8 - 18, 256); settle(level, 2); }
+            if (stop > LIP) { level.player.position.set(stop + 8 - HeroBody.LEFT, 256); settle(level, 2); }
             held.clear(); frame(level); held.add(Input.Keys.S); frame(level); held.clear(); // Down alone puts down (D126)
             rest(level);
             String where = "stop " + stop + " running " + running;
@@ -678,7 +679,7 @@ class StoneLessonTest {
                     settle(level, 1); upAction(level);
                 }
                 if (!carrying && level.player.carriedObject() != null) level.resetCurrentRoom(new Player(assets, game, 0, 0));
-                level.player.position.set(x - 11 - 18, standY);
+                level.player.position.set(x - HeroBody.RIGHT, standY);
                 settle(level, 2);
                 String zone = level.player.zoneHint(), context = level.player.contextHint();
                 if (zone.isEmpty() || context.isEmpty()) continue;

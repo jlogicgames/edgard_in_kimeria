@@ -218,7 +218,7 @@ public class FallingPlatform extends Actor<FallingPlatform.State> implements Col
 
     // ---- Tree branches (#349, D80): the two load checks of a rotten branch, mirrored in tools/check_tiled_links.py ----
 
-    /** A support may be at most this much higher than the one the hero jumps from (a jump rises about 58 px, D35). */
+    /** A support may be at most this much higher than the one the hero jumps from (a jump rises about 77 px, D164; this check stays at its D80 value, the stricter side). */
     public static final float BRANCH_JUMP_RISE = 48f;
     /** The widest horizontal gap between two supports that the check lets a jump or a drop cross. */
     public static final float BRANCH_JUMP_GAP = 32f;

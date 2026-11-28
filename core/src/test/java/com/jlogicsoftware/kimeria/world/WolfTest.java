@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.math.Rectangle;
 import com.jlogicsoftware.kimeria.TrapWarnings;
 import com.jlogicsoftware.kimeria.entity.enemy.Wolf;
@@ -48,7 +49,7 @@ class WolfTest {
 
     /** Stands the hero (body right edge at {@code right}) on the floor, still, facing right. */
     private void place(Level level, float right) {
-        level.player.position.set(right - 29, FLOOR - 48);
+        level.player.position.set(right - HeroBody.RIGHT, FLOOR - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         harness.held.clear();
@@ -131,14 +132,14 @@ class WolfTest {
         Level level = level();
         Wolf w = wolf(level);
         float behind = w.position.x + 23 + Wolf.HEAR_RADIUS + 20;   // centre 20 px outside the circle, behind it
-        place(level, behind + 5.5f);
+        place(level, behind + HeroBody.HALF);
         settle(level, 30);
         assertEquals(Wolf.State.TROT, w.state(), "a hero behind it, beyond its hearing, is not noticed");
         assertTrue(harness.sounds.isEmpty());
 
         Level heard = level();
         Wolf h = wolf(heard);
-        place(heard, h.position.x + 23 + Wolf.HEAR_RADIUS - 4 + 5.5f);   // centre 4 px inside the circle, behind it
+        place(heard, h.position.x + 23 + Wolf.HEAR_RADIUS - 4 + HeroBody.HALF);   // centre 4 px inside the circle, behind it
         frame(heard);
         assertEquals(Wolf.State.NOTICE, h.state(), "a hero within 64 px is heard, whichever side he is on");
         assertTrue(h.facingRight, "it turns to face him");
@@ -514,7 +515,7 @@ class WolfTest {
         Level level = level();
         Wolf w = inState(level, Wolf.State.RECOVER);
         harness.held.clear();
-        level.player.position.set(w.centreX() - 5.5f - 18, 222);   // feet 32 px above its body's top, falling onto it
+        level.player.position.set(w.centreX() - HeroBody.CENTRE, 222);   // feet 32 px above its body's top, falling onto it
         level.player.velocity().setZero();
         boolean bounced = false;
         for (int f = 0; f < SECOND && !w.isDefeated(); f++) frame(level);
@@ -604,7 +605,7 @@ class WolfTest {
 
     /** The hero stands on the 32 px ledge (a one-way platform at y 288, x 448..512), his body centred at x 480. */
     private void onLedge(Level level) {
-        level.player.position.set(480 - 5.5f - 18, 288 - 48);
+        level.player.position.set(480 - HeroBody.CENTRE, 288 - 48);
         level.player.velocity().setZero();
         level.player.facingRight = true;
         harness.held.clear();
@@ -669,7 +670,7 @@ class WolfTest {
         float lowest = 0;
         boolean lunged = false;
         for (int f = 0; f < SECOND * 6; f++) {
-            level.player.position.set(851 - 29, FLOOR - 48);
+            level.player.position.set(851 - HeroBody.RIGHT, FLOOR - 48);
             level.player.velocity().setZero();
             frame(level);
             lowest = Math.max(lowest, w.position.y);
@@ -686,7 +687,7 @@ class WolfTest {
         Wolf w = wolf(level);
         boolean lunged = false;
         for (int f = 0; f < SECOND * 6; f++) {
-            level.player.position.set(831 - 29, FLOOR - 48);   // his body x 820..831, just past the wall
+            level.player.position.set(831 - HeroBody.RIGHT, FLOOR - 48);   // his body x 820..831, just past the wall
             level.player.velocity().setZero();
             frame(level);
             if (w.state() == Wolf.State.WINDUP) assertEquals(760, w.lungeTargetX(), 2.1f, "its line ends against the wall");

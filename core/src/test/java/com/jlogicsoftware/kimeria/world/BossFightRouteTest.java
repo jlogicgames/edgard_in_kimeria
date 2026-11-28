@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Input;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.jlogicsoftware.kimeria.entity.enemy.Boss;
 import com.jlogicsoftware.kimeria.entity.enemy.BossAttacks;
 import com.jlogicsoftware.kimeria.entity.player.Player;
@@ -21,9 +22,9 @@ import static org.junit.jupiter.api.Assertions.*;
  */
 class BossFightRouteTest {
     private static final float STEP = HeadlessLevelHarness.STEP;
-    private static final float HERO_CENTRE = 23.5f, HERO_HALF = 5.5f, BOSS_CENTRE = 16, BOSS_HALF = 9;
+    private static final float HERO_CENTRE = HeroBody.CENTRE, HERO_HALF = HeroBody.HALF, BOSS_CENTRE = 16, BOSS_HALF = 9;
     /** Body centres: the sword reaches at this distance; the counter and the blow are escaped beyond these. */
-    private static final float SWORD_REACH = 29f, COUNTER_ESCAPE = 44f, BLOW_ESCAPE = 40 + HERO_HALF + 3;
+    private static final float SWORD_REACH = 35.5f, COUNTER_ESCAPE = 44f, BLOW_ESCAPE = 40 + HERO_HALF + 3;
     private static final float SHOT_DISTANCE = 70;
     /** A hero this close to the wall behind them stands and shoots. */
     private static final float CORNER = 24;
@@ -173,5 +174,5 @@ class BossFightRouteTest {
         assertTrue(boss.energy() > 0);
     }
 
-    private static final float UNEMPOWERED_SECONDS = 28.18f, ELIXIR_SECONDS = 3.78f, FIREBALL_SECONDS = 11.18f;
+    private static final float UNEMPOWERED_SECONDS = 27.12f, ELIXIR_SECONDS = 3.37f, FIREBALL_SECONDS = 10.90f;
 }

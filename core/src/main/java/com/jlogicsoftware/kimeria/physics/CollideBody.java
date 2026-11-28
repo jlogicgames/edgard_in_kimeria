@@ -116,7 +116,7 @@ public interface CollideBody extends GravityBody {
             CollisionBlock block = blocks.get(b);
             if (!block.isActive()) continue;
             if (block.isPlatform()) {
-                if (CollisionUtils.checkCollision(this, block)) {
+                if (CollisionUtils.checkCollision(this, block) || fellThrough(block, dt)) {
                     if (velocity().y > 0) {
                         velocity().y = 0;
                         position().y = block.getY() - hitbox().height - hitbox().offsetY;
@@ -139,6 +139,20 @@ public interface CollideBody extends GravityBody {
                 if (velocity().y != 0 && CollisionUtils.checkCollision(this, block) && leaveSolid(blocks, block, dt)) break;
             }
         }
+    }
+
+    /**
+     * True when this step carried a falling body's feet from above a one-way platform's top to at or below its bottom: a fall
+     * longer than the platform is thick (the hero at his top speed in a long frame, D164) still lands on it.
+     */
+    default boolean fellThrough(CollisionBlock block, float dt) {
+        float vy = velocity().y;
+        if (vy <= 0) return false;
+        float feet = position().y + hitbox().offsetY + hitbox().height;
+        float travel = vy * dt + gravityPerSecond() * dt * Math.max(0f, REFERENCE_STEP - dt) / 2f;
+        float left = position().x + facingAwareOffsetX();
+        return feet >= block.getY() + block.getHeight() && feet - travel <= block.getY()
+            && left < block.getX() + block.getWidth() && left + hitbox().width > block.getX();
     }
 
     /**

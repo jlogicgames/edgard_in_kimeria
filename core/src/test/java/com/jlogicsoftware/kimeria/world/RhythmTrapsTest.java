@@ -1,6 +1,7 @@
 package com.jlogicsoftware.kimeria.world;
 
 import com.badlogic.gdx.Application;
+import com.jlogicsoftware.kimeria.testsupport.HeroBody;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.backends.headless.HeadlessPreferences;
 import com.badlogic.gdx.files.FileHandle;
@@ -258,7 +259,7 @@ class RhythmTrapsTest {
     @Test void aHeroBesideTheMushroomSurvivesEveryPhase() {
         Level level = room(PUFF);
         Puffball p = puffball(level);
-        level.player.position.set(p.getX() - 20 - 11 - 18, 272); // body ends 20 px left of the mushroom, outside the cloud
+        level.player.position.set(p.getX() - 20 - HeroBody.RIGHT, 272); // body ends 20 px left of the mushroom, outside the cloud
         run(level, 12f);
         assertTrue(alive(level), "next to it through three whole cycles");
     }
