@@ -2846,10 +2846,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   - A clocked hazard is heard only while it is in the camera view (D89, D90).
   - Look-alikes share their sound: a sound never tells which of a D63 pair kills.
 - **Audit (measured from the code, not in the running game):** complete for the falling stone, the deadfall, the bramble,
-  the hive, the thorn root and tuft ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446): `thorn_spring`, awaiting its audition, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)), the exploding stump and root and the bomb; none needed for the thorn vine (D46) and for a pit's warning (static
+  the hive, the thorn root and tuft ([#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446): `thorn_spring`, accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)), the exploding stump and root and the bomb; none needed for the thorn vine (D46) and for a pit's warning (static
   geometry, D3). Gaps, one issue each: the falling branch's landing [#443](https://github.com/jlogicgames/edgard_in_kimeria/issues/443); the falling platform and its log and
-  branch skins [#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444); the puffball and the honey fungi [#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445) (delivered: `spore_puff`); the thorn root and tuft [#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446) (done); the RedMob's and
-  the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447) (delivered: `whip_crack`, `boss_sweep` and `boss_sweep_counter` play once per strike, hit or miss; awaiting the author's audition, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448). Enemy warnings (notice beats, wind-ups under the assist) are
+  branch skins [#444](https://github.com/jlogicgames/edgard_in_kimeria/issues/444); the puffball and the honey fungi [#445](https://github.com/jlogicgames/edgard_in_kimeria/issues/445) (delivered: `spore_puff`, and `puffball_burst` for the puffball since D125; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); the thorn root and tuft [#446](https://github.com/jlogicgames/edgard_in_kimeria/issues/446) (done); the RedMob's and
+  the boss's strikes [#447](https://github.com/jlogicgames/edgard_in_kimeria/issues/447) (delivered: `whip_crack`, `boss_sweep` and `boss_sweep_counter` play once per strike, hit or miss; accepted by the author 2026-11-28, [#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)); whether blasts shake [#448](https://github.com/jlogicgames/edgard_in_kimeria/issues/448). Enemy warnings (notice beats, wind-ups under the assist) are
   [#240](https://github.com/jlogicgames/edgard_in_kimeria/issues/240). The table: STYLE_SYSTEM.md, "Known gaps"; the trap cards' "Art and sound" rows in TRAPS.md.
 - **Gate:** `TrapCatalogTest.everyTrapCardStatesTheConsequenceOfItsAct` (`:core:test`): the card of every catalogue trap
   holds exactly one `Consequence (D93):` statement, and it is one of three forms: sound names in backticks, each a file in
@@ -4324,7 +4324,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 ## D125. The spore puffball is redrawn as a crimson sac with particle spores and its own sound ([#558](https://github.com/jlogicgames/edgard_in_kimeria/issues/558), 2026-11-22)
 
 - **Status:** Accepted by the author, 2026-11-22 (every recommendation of the proposal), from playtest F19 ([PLAYTEST_2.md](PLAYTEST_2.md)).
-  Built; the look and the sound await the author's eye and ear in the running game.
+  Built; checked by the author since (see **Verified** below).
 - **Context:** in the second external playtest the "killer mushroom" did not read as dangerous. The author described a white cap with a yellow
   ooze that keeps pouring out and drawing back: the shipped puffball (a pale cap on a stem, drawn like the harmless fungi) and its three-frame
   sprite cloud that grew and shrank every 0.25 s. D71 asks a trap to be visible before it acts, D93 that its act is seen and heard.
@@ -4346,7 +4346,8 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
 - **Tests:** `PuffballFxTest` (containment on every frame at 30, 60 and 144 fps, the whole rectangle speckled on the first lethal frame, nothing
   outliving the hitbox, the leak only in the swell's second half, pool headroom, determinism, pause), `SporePuffSoundTest` (the puffball plays
   `puffball_burst`, never `spore_puff`), `SpriteSheetContractsTest` (6 frames).
-- **Not verified:** the sprites, the spores and the sound in the running game, desktop and web; the author's audition ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
+- **Verified:** the sprites, the spores and the release seen and heard in the running game, desktop and web, checked by the author (their word)
+  2026-11-24 ([#558](https://github.com/jlogicgames/edgard_in_kimeria/issues/558)); the sound accepted by the author 2026-11-28 ([#520](https://github.com/jlogicgames/edgard_in_kimeria/issues/520)).
 - **References:** [TRAPS.md](TRAPS.md) (the card), [ART_DIRECTION.md](ART_DIRECTION.md), [SOUND_DIRECTION.md](SOUND_DIRECTION.md).
 
 ## D126. Up and Down interact, no two-button chords ([#548](https://github.com/jlogicgames/edgard_in_kimeria/issues/548), 2026-11-22)
