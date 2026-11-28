@@ -3732,7 +3732,7 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   is read apart (`SceneryLayer`: factors, offsets, opacity, `driftx`, `wrapx`, regions resolved at load) and never feeds collision or the
   play layer; (2) the foreground is an object group per room (`foreground-<room>`, `roomx`, tile objects relative to the room, factor 1.6),
   drawn only in that room; (3) the maths is the card's, in whole pixels as Java's `Math.round` (half up): `x - round(f * (camX - originX))` and
-  `(y - originY) - round(f * (camTop - originY))` (vertically not rounded since D154), `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
+  `(y - originY) - round(f * (camTop - originY))` (neither rounded since D154), `originX` 0 for a map-wide layer and the room's x for the foreground, `originY` the room's
   floor camera top; clouds drift by accumulated time, not by the camera; the moon is a factor-0 layer; (4) draw order: scenery, play layer,
   objects and hero, fairy, foreground, HUD; (5) a layer is only as wide as its factor needs; (6) forest-1 uses the terrain sketch as its own
   play tileset (`ForestTerrain.tsx`); forest-0, forest-2 and other worlds keep theirs (forest-0 and forest-2: superseded by D112); (7) the parser is strict: a foreground group needs
@@ -3742,10 +3742,10 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   whose tiles are sub-rectangles of one packed sheet (896 x 1696), the cull rectangle is the view plus one tile (the shake moves the camera
   up to 1.5 px after `visibleWorldRect`), the batch holds 8191 sprites (the libGDX maximum); a frame of `forest-1-mob` with the 640 px view
   went from 4 198 region draws and 15 texture switches to 3 187 and 9 (800 px view: 4 866 and 21 to 3 698 and 9), measured through `NoopBatch`
-  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`) by a fractional, unsnapped offset (the world is drawn at screen resolution, so the drift glides; the camera parallax stays whole pixels, horizontally only since D154), the two copies `wrapx` apart so the seam stays closed: they
+  with `ParallaxRenderer` alone (play layer, objects and the HUD not counted); (9) the clouds drift with game time (`Level.update`) by a fractional, unsnapped offset (the world is drawn at screen resolution, so the drift glides; the camera parallax stayed whole pixels until D154), the two copies `wrapx` apart so the seam stays closed: they
   stop in the pause, a room fade and after black in a death fade, and slow with the death slow motion; "map-wide layers never jump at a
   room change" holds while the rooms share a floor camera top (`everyForestRoomSharesOneFloorCameraTop`).
-- **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, half-up rounding, per-room origin,
+- **Gate:** `TiledMapParallaxTest` (the split, factors, foreground groups), `ParallaxRendererTest` (the maths, unsnapped since D154, per-room origin,
   cloud drift, the moon, draw order in a real frame, the cull slack, the batch colour, the shared floor camera top), `AllocationBudgetTest.forest1ParallaxLayersAndForeground` (0.0 B/frame, ceiling 8),
   `python3 tools/parallax_mock.py --check --game` (`validateParallax`: rule B and cover time of every room with a foreground,
   against the game map), `tools/test_parallax_game.py` (the installed map equals what the installer writes).
@@ -5110,8 +5110,22 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   foreground (1.6, 2.2) stepped, plain to see at the ease's 23 px a second. The floor camera draws exactly what it drew before;
   at another camera top a layer lies within half a pixel of its old place. `parallax_mock.py` still draws and checks cover in
   whole pixels; its bleed check, whose margins are only a fraction of a pixel wider than needed, now uses the game's exact
-  offset (same margins, every shipped room passes). Sideways the offsets stay snapped. `ParallaxRendererTest.everyLayerGlidesWhileTheCameraMovesVertically` pins
+  offset (same margins, every shipped room passes). `ParallaxRendererTest.everyLayerGlidesWhileTheCameraMovesVertically` pins
   it; the one older pin it changes is the 0.4 layer at camera top 0, 3.2 px instead of 3.
+- **Parallax sideways (added 2026-11-28 on the author's word, amends D108):** the horizontal offset is not snapped either: a point
+  sits at `x - f * (camX - originX)` on screen with the camera's true left edge. Snapped, a layer moved with the world and jumped
+  by a whole world pixel as the rounded camera x changed, so the fixed moon wobbled sideways by 1 px while the hero walked. A
+  factor of 1 still draws exactly on the play layer. `parallax_mock.py` keeps its whole pixels and whole
+  camera positions: a layer in the game is never more than half a pixel past the places the gate checks at the two whole
+  camera x around it, so rule B's 16 px of clearance is at least 15.5 px in the game (the gate's margin and limits are
+  unchanged; the foreground pieces sit against that margin, so a gate 2 px wider would fail 22 of 27 rooms). Pins changed: the three tests of the removed rounding (`snap`, `shift`) became
+  `theHorizontalOffsetIsTheFactorTimesTheCameraFromTheOriginNotSnapped` (0.4 layer at camera 1 and 2: 0.4 and 0.8 px instead of
+  0 and 1; grove at camera 10 and -10: 2.5 and -2.5 px instead of 3 and -2); `everyLayerGlidesWhileTheCameraMovesSideways` is new,
+  and the moon's pin now holds at fractional cameras, within 0.001 px. Desktop run (1280x720, a scripted walk right and left in
+  `forest-1-mob`, fixed 60 Hz steps, 200 frames, clouds stopped, the same 132 px camera path with both renderers): with the
+  scenery of factor 0 alone, the screen patch holding the moon differed from the first frame in 125 frames snapped and in none
+  unsnapped; snapped, a column of the clear colour showed at the left screen edge in 35 frames of the full scene, unsnapped in
+  none; no one-pixel seam line over 120 rows in either. Not run in a browser (`buildWeb` passes).
 - **Allocation:** the follow writes into one reused vector and the view height is cached (before: two `Vector2` made per frame).
 - **Tests:** `VerticalCameraFollowTest` (slack, ease without overshoot, 60 against 144 Hz, the range of the targets),
   `VerticalCameraTest` (in `forest-1-escalators`: room entry, a jump from the floor does not scroll, a pan holds the ease, a
