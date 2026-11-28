@@ -5249,3 +5249,13 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   moved with the new room.
 - **Evidence limit:** scripted heroes. Whether it is hard and fair to a person is judged in play.
 
+## D159. The menu frame budget takes the median of three windows (#464, 2026-11-28)
+
+- **Failure:** `AllocationBudgetTest.menuFrame` failed intermittently on GraalVM CE 25.0.2: the About rules page read 15.5 to
+  17.6 B/frame against its ceiling of 8 (2026-11-28: 2 of 10 isolated runs, 2 of 6 class runs, 0.0 in the others).
+- **Not the game:** `-Xint` measured 0.0 B/frame on every screen (2 runs). A JFR recording with `-XX:-UseTLAB` of a failing run
+  (16.0 B/frame) showed one burst under 1 ms in the measured loop, 476 objects, 19,224 B (238 Strings and their byte arrays), all
+  attributed to the compiled frame lambda at the line that only does integer arithmetic (`bci -1`). The same effect was seen in
+  `fallingPlatformsGiveWayThroughTheRealLevel`. What in the JVM allocates it was not identified.
+- **Change:** each menu screen is measured in three consecutive windows (300 warm-up, 1200 measured frames each) and the median
+  is held to the same ceiling of 8. A per-frame allocation shows in all three windows. The ceiling is not raised.
