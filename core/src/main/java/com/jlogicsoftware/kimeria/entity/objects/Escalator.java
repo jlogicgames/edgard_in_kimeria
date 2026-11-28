@@ -19,10 +19,15 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
      * Native sprite height (see the frame-size comment in the constructor).
      * The Tiled object's own height (16px) is the collision footprint, not
      * the sprite size -- stretching an 8px-tall frame to fill it distorted
-     * the art, so the sprite is drawn at its native size instead, centered
-     * in that footprint.
+     * the art, so the sprite is drawn at its native size instead, hung from
+     * the footprint's top by {@link #SURFACE_ROW}.
      */
     private static final float VISUAL_HEIGHT = 8f;
+    /**
+     * The frame's row, from its top, of the plank's top face (the straw walk cue). It is drawn on the footprint's top, the
+     * line a rider stands on, so the sprite starts this many px higher; centred in the footprint, the hero floated 6 px over it.
+     */
+    static final int SURFACE_ROW = 2;
 
     public final boolean isVertical;
     private final float offNeg, offPos;
@@ -148,7 +153,7 @@ public class Escalator extends Actor<Escalator.State> implements Collidable, Act
         Animation<TextureRegion> anim = animations.get(current);
         if (anim == null) return;
         TextureRegion frame = anim.getKeyFrame(stateTime);
-        float drawY = position.y + (size.y - VISUAL_HEIGHT) / 2f;
+        float drawY = position.y - SURFACE_ROW;
         float w = facingRight ? size.x : -size.x;
         float x = facingRight ? position.x : position.x + size.x;
         batch.draw(frame, x, drawY, w, VISUAL_HEIGHT);
