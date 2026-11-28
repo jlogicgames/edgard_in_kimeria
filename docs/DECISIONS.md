@@ -5293,3 +5293,117 @@ Times are pinned within 0.1 s by the tests; every route is well inside the 20 s 
   play now runs in slow motion together; before, only the hero (and the boss, projectiles and flights) did. At 20 fps and above
   nothing changes (D98).
 - **Gate:** `KimeriaGameLongFrameTest`.
+
+## D162. A tree with a big crown on every forest screen (#635, 2026-11-28)
+
+- **Status:** Accepted (author, 2026-11-28: crowns in round 3, the placement and its gaps). Built; the check in the running game is
+  a box of [#635](https://github.com/jlogicgames/edgard_in_kimeria/issues/635).
+- **Context:** the tier nearest the hero was thin: one tree every 1,500 to 4,000 px, two crowns in the whole forest, one 96×40
+  crown sprite hung so high that the camera hid its top rows. The author on round 1: the crowns were too small and too high, "trees
+  are not like that"; on round 2: the clumps did not read, "add volume". References for proportion and shape only (nothing traced):
+  the tree study of Slynyrd's Pixelblog 15 (a crown about half the tree, a few big clumps lit on top and shadowed under them, limbs
+  forking inside it), and the simple clusters of hernandack's side-view tree set (OpenGameArt).
+- **Decision:**
+  - **Three big crowns** replace #421's `crown`: `crown-droop` 208×160 (weeping), `crown-broad` 224×128 (broad dome),
+    `crown-round` 160×144 (tall round), each also mirrored, their leaves down to y 119 to 156; and a second trunk, `trunk-knot`.
+    The crown's object is its frame, at y 0, centred on its trunk (crown x = trunk x + 8 - width / 2). Each clump is lit from
+    above and shadowed under, and the crown is lit from the top as a whole: new keys `2e4030`, `35492f` and `141f14` on D120's
+    leaf green. Card: [ART_DIRECTION.md](ART_DIRECTION.md), "Trees and crowns".
+  - **About one tree per 500 to 650 px** in forest-0, forest-1 and forest-2: 26 crowns over 29 trunks, every new trunk crowned.
+    A crown keeps every opaque pixel 12 px from gameplay (objects, their travel and fall columns), off solid blocks and play tiles,
+    inside its room, and within the decor limits at every camera. Snags stay crownless.
+  - **Accepted gaps (author):** no tree in `forest-1-escalators`, `-climb`, `-route` and `forest-boss`; three
+    kept trunks crownless (the climbing tree's two, the hive's); crown edges over the moon at some cameras.
+  - **Big masses, not rows (author, round 4, after the running game):** one small clump in even rows read as roof tiles and the
+    three crowns alike. Each crown is now 9 to 12 leaf masses of different sizes and shapes with shadow gaps between them, lit on
+    top and shaded away from the moon, each kind with its own build, a contour round it and a dark seam inside its left edge.
+    The silhouettes are unchanged, so the placement holds; forest-2's broad crown at 976 lost its mirror so its seam faces the
+    round crown it overlaps, and the two read as two trees.
+  - **Both styles stay (author, 2026-11-28, after comparing them in the game: "I like both"):** the round-3 fine-clump drawing
+    returns as `crown-droop-fine`, `crown-broad-fine` and `crown-round-fine`, the art of the playtest build, with the same frames,
+    silhouettes and limbs as the big-mass kinds. 12 of the 26 crowns take the fine style, the big-mass and fine trees alternate
+    along each map, and in forest-walls the fine round crown stands behind the big-mass broad one (still unmirrored). No tree
+    moved. The wind lights both styles' leaf keys `m`, `l`, `n` (D163, limits unchanged).
+  - **The contrast gate measures a mirrored decor as drawn** (`Decor:<kind>-mirror`); before, it measured the authored frame.
+    This only tightens the gate.
+- **Changed while building (re-verified on `main` 48769ea6):** no opaque crown pixel may lie over a solid block or a play tile,
+  since the crowns are drawn after the play tiles. So `forest-0-platform` lost its tree (every fitting crown covered the ceiling
+  block at x 2448 to 2528), `forest-1` 2992 moved to 3000 and `forest-2` 3752 to 3768 (off the room's edge wall), and
+  `forest-2` 144 and 1424 took the round and broad crowns, which end above the floating block beside them.
+- **Re-verified on `main` 43ddf27a** (vertical camera D154, slopes, wolf leap routes, boss): every placement still clears
+  gameplay, solids and tiles. `forest-entry`'s tree moved from x 144 to 136: the new ground there brought its trunk's body to
+  0.077, under the 0.08 floor (0.082 at 136). The new `forest-ridge` (#689) has one tree at 6168 (broad crown); its other
+  trunk spots lie in the wolf's run and leap over its perches (rel 336 to 592) or behind the moon at every camera (rel 659
+  to 709: trunk outline 0.236 to 0.240 and body 0.253 to 0.265, crowns body 0.243 to 0.286; limit 0.20). When the camera rises (top 0 to 8) a crown shows up to 8 more
+  rows of leaves; its top edge is the room's top, so nothing is cut.
+- **Measured:** `check_contrast.py`, 2026-11-28, outline / body at worst, limits 0.20 / 0.08 to 0.20: `crown-droop` 0.153 / 0.199 (mirrored 0.104 / 0.173), `crown-broad` 0.105 / 0.168, `crown-round` 0.194 / 0.197 (0.158 / 0.195); fine style: `crown-droop-fine` 0.077 / 0.161, `crown-broad-fine` 0.147 / 0.194 (0.138 / 0.182), `crown-round-fine` 0.193 / 0.182 (0.136 / 0.178), `trunk` 0.156 / 0.180, `trunk-knot` 0.184 / 0.179; every trunk kind 0.026 from the terrain colours (minimum 0.02); the crowns' tightest spots are where an edge crosses the moon (forest-1 7320, forest-2 4888). No threshold changed.
+- **Tests and gates:** `DecorTest.everyShippedCrownHangsOverATrunkAndNoLeafCoversAGameplayObject` (opaque pixels, mirroring
+  included), `DecorTest.theTreesAndBushesAreSolidWithNoTranslucentPixelAndNoHole`, `TreeClimbTest`, `SpriteSheetContractsTest`,
+  `test_forest_trap_sprites.py`, `test_check_tiled_links.py`, `test_check_contrast.py` (mirrored decor), `check_tiled_links.py`,
+  `check_contrast.py`, `validateParallax`. The wind's glints light the leaf pixels of the crowns' typed `leaves` boxes (D163).
+
+## D163. Wind is shown as gust waves of light through the leaves; one shared wind model (#593, 2026-11-28)
+
+- **Status:** Accepted (author: no sway, 2026-11-25; the card, 2026-11-27; "strengthen now", 2026-11-28, after seeing the game).
+  Built; the check in the running game is a box of [#593](https://github.com/jlogicgames/edgard_in_kimeria/issues/593).
+- **Context:** nothing in the forest showed wind. The author ruled out sway, sprite distortion, animated crown frames and glints at
+  random spots: random flicker reads as sparkle, not wind. Wind is the Steppe's leading mechanic (D17, #108, #109, #400).
+- **Decision:**
+  - **Gust waves.** A soft band crosses the room left to right; leaves it passes lighten and fade behind it, with calm between.
+    No tree, bush or sprite moves. Particles only (`KIND_GLINT`), normal blending. The card is
+    [ART_DIRECTION.md](ART_DIRECTION.md#wind-in-the-crowns-d163-593).
+  - **All three depths** carry the wave: the decor crowns, the mid clusters and the grove spruces, each later and bluer.
+    Colours: leaf green with rare warm flecks near; blue-teal and grey-blue deeper, no fleck on the grove.
+  - **Deeper is not weaker (author, 2026-11-28).** The mid and grove glints stand out from their own leaves about as much as the
+    crowns' do (OKLab distance mid 0.109 to 0.178, grove 0.108 to 0.138, crown 0.109 to 0.158), because those layers are near
+    black. This replaces the "weaker" part of the first card and of #593's "Deeper layers take a weaker, bluer shift (D120)".
+  - **The calm is guaranteed:** the sweep ends 0.1 s after the slowest band has left the room, and a spot found too late to
+    finish within it stays dark, at any frame length.
+  - **Replaces the issue's proposal** of a 40 to 80 px/s front and a live cap of 6 to 8: the front runs at **180 px/s** with a
+    period of 8 to 12 s (inside the approved 6 to 12 s), which keeps a real calm; the caps are below.
+  - **No loose-leaf drop** from a gust, and no sound.
+  - **One model.** `world.Wind` holds the direction, the gust cycle and each front's position, width and envelope; it is
+    deterministic from (room, time), moves only with the world's update and allocates nothing. The forest reads it for looks only.
+    The Steppe gives it its own profile and reads the same front for forces, shelter and streaks, so the cue the player reads and
+    the force the player feels come from one source.
+  - **Spots are typed and baked,** not read from pixels at load: colour cannot separate leaves from trunks and undergrowth, so each
+    grid types `leaves` boxes and `tools/wind_spots.py` writes the patches; no second PNG decode, the same on desktop, web and tests.
+  - **Crown leaf keys** `m`, `l` and `n` only. D162's lit tops `p` and `o` would hide the glint (0.07 and 0.04 from it); the
+    contour and the shades `d` and `q` are too far under the fleck (0.17 to 0.23).
+  - **Overlapping crowns:** the patches of the crown drawn first that reach under the later crown's frame are dropped, so no glint
+    stands on another crown's shade (one pair today, in `forest-walls`: 39 patches of the fine round crown behind the broad one).
+- **Strengthened (2026-11-28).** The first build drew each glint as a square of 1 or 2 px. In the web build 1 to 4 crown glints
+  were alive at once, the mid and grove ones could hardly be seen, and a still view showed 1 to 4 s of a gust. Old value to new:
+
+  | | First build | Now |
+  | --- | --- | --- |
+  | One glint | 2x2 or 1x1 px | a ragged patch of leaf pixels: crown 27 to 38, mid 29 to 47, grove 9 to 24 px |
+  | Spots | 12 per 96 px of crown width, 6 per mid cluster, 4 per spruce | one per 150 crown leaf px, up to 7 per mid cluster and per spruce |
+  | Share that lights | 0.30 + 0.20 s | 0.45 + 0.30 s |
+  | Peak alpha | s | 0.5 + 0.5 s |
+  | Live caps (crown / mid / grove) | 8 / 5 / 3 | 64 / 24 / 16 (most seen alive 42 / 13 / 7) |
+  | Fleck | one 2x2 or 1x1 glint | the whole patch, still one glint in 8 |
+  | Mid leaf and fleck colour | `082c30`, `133228` | `0a343a`, `1a3626` |
+  | Grove colour | `1c343f` | `213d49` |
+  | Mid leaf keys | `5` to `9` | `4` to `9` (L 0.137 added, so a dithered cluster takes a solid patch) |
+  | Colour limit, mid | 0.16 | **0.18** (measured 0.109 to 0.178) |
+  | Colour limit, grove | 0.12 | **0.14** (measured 0.108 to 0.138) |
+  | Colour limit, crown | 0.17 | 0.17 (unchanged, measured 0.109 to 0.158) |
+
+  Why the two limits rose: patch size and count came first; the crowns needed nothing more, but with larger patches the mid and
+  grove ones were still hardly visible on their near-black art (largest channel difference 27 of 255 against the crowns' 49; now
+  36 for a grove-only room). Both limits stay far under the active floor of 0.28 (D76). A spot now also lights only within the
+  room, so no glint comes on a gust's first frame from beyond the edge or lives into the calm.
+- **Why:** a moving front of lit leaves is read as wind through a canopy without moving any art, so nothing competes with the trap
+  motion cues.
+- **Measured (2026-11-28, on D162's trees):** at the first, middle and last camera of every room each gust lights at least 11 crown
+  or mid glints, except in `forest-1-escalators` and `-climb` (no tree), where the grove lights at least 10. No full pool skips a
+  glint (ten seeds, three cameras). The skip ceiling is tightened from 16 %, set when the first build skipped 13.7 %, to 2 %.
+  Every crown patch pixel of the shipped rooms shows a leaf of a crown on screen (1,967 patches over the six crown kinds of D162,
+  mirrored ones included) and every mid and grove patch pixel (43,506) a leaf of its layer. Allocation of a windy room's wind,
+  glints and parallax back pass over whole gusts: 0.0 B/frame (ceiling 8). In the web build, captured before the fine crowns
+  returned, the changed area at a gust's peak went from 24 to 860 px of 640x360 in `forest-walls`, 27 to 1,106 in
+  `forest-1-spider` and 3 to 80 in `forest-1-escalators`; lit time per gust 2.8 to 3.9 s with crowns, 0.8 to 1.7 s without.
+- **Tests and gates:** `WindTest`, `CrownGlintFxTest`, `WindRoomsTest`, `KimeriaParticleSystemTest`,
+  `AllocationBudgetTest.windGustsAndCrownGlintsOverWholeGusts`, `tools/wind_spots.py --check` (`validateWindSpots`,
+  `test_wind_spots.py`).

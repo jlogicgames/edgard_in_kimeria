@@ -176,6 +176,22 @@ boughs) lays its root at least 3 px over the bark of a `Decor` trunk or snag on 
 a trunk stays decor (bark palette, not solid, drawn behind the play tiles). Placing or moving a branch means placing its tree: see
 `docs/ART_DIRECTION.md`, "A branch always grows from a trunk (D122)".
 
+## Trees and crowns (D162)
+
+The forest keeps about one tree per screen (500 to 650 px): a `Decor` trunk under a big crown (`crown-droop`, `-broad`, `-round`,
+each also in the `-fine` style, mirrorable) hung at y 0 and centred on it (crown x = trunk x + 8 - width / 2). No opaque crown pixel comes within 12 px of gameplay
+(objects, their travel and fall columns), lies over a solid block or a play tile, or leaves its room; snags stay crownless. The decor
+contrast limits hold at every camera, a mirrored crown measured as drawn. A new or rearranged room gets its tree or an accepted gap
+on the card (`docs/ART_DIRECTION.md`, "Trees and crowns"). Gates: `DecorTest`, `check_tiled_links.py`, `validateContrast`.
+
+## Wind in the crowns (D163)
+
+Wind is a wave of light through the leaves: no tree or sprite moves, and nothing glints in the calm. One model, `world.Wind` (the
+Steppe reuses it), drives `effects.CrownGlintFx` in maps with the property `wind`. Glints cover only leaf pixels, from typed `leaves`
+boxes in the crown, `mid` and `grove` grids; after a change to those grids, their boxes or a glint colour run
+`python3 tools/wind_spots.py` (`validateWindSpots` fails a stale file or a colour over its depth's limit). Deeper layers are later
+and bluer. Card: `docs/ART_DIRECTION.md`, "Wind in the crowns"; skill: `kimeria-particles`.
+
 ## Hints
 
 `Hud` draws two separate channels: the map-authored zone message (anchor at 45% down the zone,

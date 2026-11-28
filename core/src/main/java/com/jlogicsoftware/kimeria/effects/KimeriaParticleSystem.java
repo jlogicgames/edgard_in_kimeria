@@ -21,6 +21,9 @@ import com.badlogic.gdx.math.RandomXS128;
  * magenta, #397). World Y grows downward, so a
  * particle that rises has an end Y smaller than its start Y.
  *
+ * <p>{@link #KIND_GLINT} is the exception to the straight line: it stands still, a patch of native pixels with its own peak alpha
+ * (#593).
+ *
  * <p>Live particles are kept dense and in spawn order (index 0 is the oldest). Each system owns one
  * {@link RandomXS128}, the algorithm behind {@code MathUtils.random}, seeded in the constructor so a seed reproduces a run.
  */
@@ -66,6 +69,18 @@ public final class KimeriaParticleSystem {
     private static final float SPARK_SHRINK = 0.4f, SPARK_TAIL_PX = 5f, SPARK_TAIL_WIDTH = 0.7f;
     private static final float SPARK_FADE_FROM = 0.7f, SPARK_END_ALPHA = 0.45f;
 
+    /**
+     * Normal blending, a patch of light that stands still on the leaves while the wind's gust passes (#593, D163): rows of native
+     * pixels, each a run (dx, dy, width) from its position (its top-left, not centred), its alpha ramping from 0 to its own peak over
+     * the first {@code GLINT_FADE_IN} of its life, holding, then back to 0 over the last {@code GLINT_FADE_OUT}. Spawn it with
+     * {@link #spawnGlint}.
+     */
+    public static final byte KIND_GLINT = 8;
+
+    private static final float GLINT_FADE_IN = 0.3f, GLINT_FADE_OUT = 0.5f;
+    /** The numbers of one run of a glint's patch: dx, dy and width. */
+    public static final int GLINT_RUN = 3;
+    private static final int RUN_DY = 1, RUN_WIDTH = 2;
     private static final float ORBIT_EDGE = 0.25f;
     private static final float LEAF_EDGE = 0.12f, LEAF_PEAK_ALPHA = 0.85f;
     private static final float LEAF_SWAY_SECONDS = 3.4f, LEAF_TUMBLE_SECONDS = 2.2f, LEAF_FLAT_RATIO = 0.4f, LEAF_EDGE_ON = 0.15f;
@@ -79,9 +94,13 @@ public final class KimeriaParticleSystem {
     private final RandomXS128 random;
     private final float[] x, y, fromX, fromY, toX, toY, life, maxLife, size, r, g, b, swayAmp, swayPhase, rhoFrom, rhoTo;
     private final byte[] kind;
+    /** A glint's runs, shared with its owner and never written here; null for the other kinds. */
+    private final float[][] runs;
     private int count;
     /** The alpha multiplier of the render in progress; {@link #FULL} outside {@link #render}. */
     private float scale = FULL;
+    /** The offset added to every position of the render in progress, for particles kept in a layer's own coordinates; 0 otherwise. */
+    private float shiftX, shiftY;
 
     public KimeriaParticleSystem(int capacity, long seed) {
         if (capacity < 1) throw new IllegalArgumentException("capacity must be at least 1");
@@ -95,6 +114,7 @@ public final class KimeriaParticleSystem {
         swayAmp = new float[capacity]; swayPhase = new float[capacity];
         rhoFrom = new float[capacity]; rhoTo = new float[capacity];
         kind = new byte[capacity];
+        runs = new float[capacity][];
     }
 
     public RandomXS128 random() { return random; }
@@ -116,6 +136,7 @@ public final class KimeriaParticleSystem {
         size[i] = baseSize;
         r[i] = red; g[i] = green; b[i] = blue;
         swayAmp[i] = 0; swayPhase[i] = 0;
+        runs[i] = null;
     }
 
     /**
@@ -150,6 +171,21 @@ public final class KimeriaParticleSystem {
         if (kind[i] == KIND_ORBIT) placeOrbit(i, t);
     }
 
+    /**
+     * Adds a {@link #KIND_GLINT} whose top-left stays at ({@code leftX}, {@code topY}), reaching the alpha {@code peak} (0 to 1).
+     * {@code patch} holds its runs, {@link #GLINT_RUN} numbers each (dx, dy, width, one pixel high); the array is kept, not copied.
+     */
+    public void spawnGlint(float leftX, float topY, float lifeSeconds, float peak, float red, float green, float blue, float[] patch) {
+        spawn(KIND_GLINT, leftX, topY, leftX, topY, lifeSeconds, FULL, red, green, blue);
+        rhoFrom[count - 1] = peak; // a glint has no orbit radius: the slot carries its peak alpha
+        runs[count - 1] = patch;
+    }
+
+    /** The peak alpha a glint was spawned with, 0 for the other kinds; for tests. */
+    public float glintPeak(int i) { return kind[i] == KIND_GLINT ? rhoFrom[i] : 0; }
+    /** A glint's runs as spawned, null for the other kinds; for tests. */
+    public float[] glintRuns(int i) { return runs[i]; }
+
     private void placeOrbit(int i, float t) {
         float turn = swayPhase[i] + swayAmp[i] * t, rho = rhoFrom[i] + (rhoTo[i] - rhoFrom[i]) * t;
         x[i] = fromX[i] + MathUtils.cosDeg(DEGREES * turn) * toX[i] * rho;
@@ -172,6 +208,7 @@ public final class KimeriaParticleSystem {
         swayAmp[to] = swayAmp[from]; swayPhase[to] = swayPhase[from];
         rhoFrom[to] = rhoFrom[from]; rhoTo[to] = rhoTo[from];
         kind[to] = kind[from];
+        runs[to] = runs[from];
     }
 
     /** Ages every particle by {@code dt}, moves the live ones and drops the dead, keeping spawn order. */
@@ -184,6 +221,7 @@ public final class KimeriaParticleSystem {
             life[live] = remaining;
             float t = FULL - remaining / maxLife[live];
             if (kind[live] == KIND_ORBIT) { placeOrbit(live, t); live++; continue; }
+            if (kind[live] == KIND_GLINT) { live++; continue; } // stands exactly on its pixel, no float drift
             if (kind[live] == KIND_SPARK) t = brake(t);
             // Vector2.lerp's form, kept so positions match the pre-migration torch to the float.
             float rest = FULL - t;
@@ -249,7 +287,7 @@ public final class KimeriaParticleSystem {
     }
     public float drawSize(int i) {
         float t = FULL - life[i] / maxLife[i];
-        if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF || kind[i] == KIND_ORBIT) return size[i];
+        if (kind[i] == KIND_GRIT || kind[i] == KIND_LEAF || kind[i] == KIND_ORBIT || kind[i] == KIND_GLINT) return size[i];
         if (kind[i] == KIND_FLAME) return size[i] * (FULL - t);
         if (kind[i] == KIND_SPARK) return size[i] * (FULL - SPARK_SHRINK * t);
         return size[i] * (kind[i] == KIND_SMOKE ? (FULL + SMOKE_GROWTH * t) : (FULL - GLOW_SHRINK * t));
@@ -260,15 +298,24 @@ public final class KimeriaParticleSystem {
         if (kind[i] == KIND_SPARK)
             return FULL - (FULL - SPARK_END_ALPHA) * Math.max(0f, t - SPARK_FADE_FROM) / (FULL - SPARK_FADE_FROM);
         if (kind[i] == KIND_ORBIT) return Math.min(FULL, Math.min(t, FULL - t) / ORBIT_EDGE);
+        if (kind[i] == KIND_GLINT) return rhoFrom[i] * Math.min(FULL, Math.min(t / GLINT_FADE_IN, (FULL - t) / GLINT_FADE_OUT));
         if (kind[i] == KIND_LEAF) return LEAF_PEAK_ALPHA * Math.min(FULL, Math.min(t, FULL - t) / LEAF_EDGE);
         return (kind[i] == KIND_GLOW || kind[i] == KIND_DOME ? (FULL - t) * (FULL - t) : (FULL - t)) * PEAK_ALPHA;
     }
 
     /**
-     * Draws the normal-blended particles (smoke, grit, flame, leaves and sparks, behind), then the additive ones, and restores white and normal blending.
+     * Draws the normal-blended particles (smoke, grit, flame, leaves, sparks and glints, behind), then the additive ones, and restores white and normal blending.
      * One blend switch per pass, and none for a pass with nothing to draw.
      */
     public void render(Batch batch, TextureRegion region) { render(batch, region, FULL); }
+
+    /** As {@link #render(Batch, TextureRegion)} with every position moved by ({@code offsetX}, {@code offsetY}): particles kept in a parallax layer's own coordinates. */
+    public void render(Batch batch, TextureRegion region, float offsetX, float offsetY) {
+        shiftX = offsetX;
+        shiftY = offsetY;
+        render(batch, region, FULL);
+        shiftX = shiftY = 0;
+    }
 
     /** As {@link #render(Batch, TextureRegion)} with every alpha multiplied by {@code intensity} (0 to 1): a whole effect dims or brightens at once, with no respawn. */
     public void render(Batch batch, TextureRegion region, float intensity) {
@@ -292,19 +339,23 @@ public final class KimeriaParticleSystem {
             batch.setColor(r[i], g[i], b[i], alpha(i) * scale);
             if (kind[i] == KIND_LEAF) {
                 float w = drawWidth(i), h = drawHeight(i);
-                batch.draw(region, x[i] - w / 2f, y[i] - h / 2f, w / 2f, h / 2f, w, h, FULL, FULL, tilt(i));
+                batch.draw(region, x[i] + shiftX - w / 2f, y[i] + shiftY - h / 2f, w / 2f, h / 2f, w, h, FULL, FULL, tilt(i));
             } else if (kind[i] == KIND_DOME) {
                 // The region's upper half of V: its dense middle row falls on the rectangle's lower edge, the particle's y.
                 float s = drawSize(i), middle = (region.getV() + region.getV2()) * HALF;
-                batch.draw(region.getTexture(), x[i] - s * HALF, y[i] - s * HALF, s, s * HALF, region.getU(), region.getV(), region.getU2(), middle);
+                batch.draw(region.getTexture(), x[i] + shiftX - s * HALF, y[i] + shiftY - s * HALF, s, s * HALF, region.getU(), region.getV(), region.getU2(), middle);
             } else if (kind[i] == KIND_SPARK) {
-                float s = drawSize(i), tail = tailLength(i), w = tailWidth(i);
+                float s = drawSize(i), tail = tailLength(i), w = tailWidth(i), headX = x[i] + shiftX, headY = y[i] + shiftY;
                 // The streak ends in the head's centre and turns about it, so it points back along the line of flight.
-                if (tail > 0) batch.draw(region, x[i] - tail, y[i] - w * HALF, tail, w * HALF, tail, w, FULL, FULL, tilt(i));
-                batch.draw(region, x[i] - s * HALF, y[i] - s * HALF, s, s);
+                if (tail > 0) batch.draw(region, headX - tail, headY - w * HALF, tail, w * HALF, tail, w, FULL, FULL, tilt(i));
+                batch.draw(region, headX - s * HALF, headY - s * HALF, s, s);
+            } else if (kind[i] == KIND_GLINT) { // a patch of the art's pixels, row by row from its top-left
+                float[] patch = runs[i];
+                for (int k = 0; k + RUN_WIDTH < patch.length; k += GLINT_RUN)
+                    batch.draw(region, x[i] + shiftX + patch[k], y[i] + shiftY + patch[k + RUN_DY], patch[k + RUN_WIDTH], FULL);
             } else { // the other kinds do not rotate: the plain draw, as before #473
                 float s = drawSize(i);
-                batch.draw(region, x[i] - s / 2f, y[i] - s / 2f, s, s);
+                batch.draw(region, x[i] + shiftX - s / 2f, y[i] + shiftY - s / 2f, s, s);
             }
         }
     }

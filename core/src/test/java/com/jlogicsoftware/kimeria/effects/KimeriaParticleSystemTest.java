@@ -1,5 +1,6 @@
 package com.jlogicsoftware.kimeria.effects;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.jlogicsoftware.kimeria.testsupport.AllocationProbe;
 import com.jlogicsoftware.kimeria.testsupport.NoopBatch;
 import org.junit.jupiter.api.Test;
@@ -292,5 +293,45 @@ class KimeriaParticleSystemTest {
         s.update(STEP);
         assertEquals(10f, s.y(0), 1e-2f);
         assertEquals(-10f, s.x(1), 1e-2f, "the half turn orbit sits on the left");
+    }
+
+    /** #593: a glint stands with its top-left on its pixel, keeps its patch and ramps to its own peak over 30 % and out over the last 50 %. */
+    @Test void aGlintStandsStillAndFadesInHoldsAndFadesOutToItsPeak() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        float life = 1f, peak = .8f;
+        float[] patch = {0, 0, 3, 1, 1, 2};
+        s.spawnGlint(83, 31, life, peak, .1f, .2f, .3f, patch);
+        float[][] curve = {{0f, 0f}, {.15f, .4f}, {.3f, .8f}, {.4f, .8f}, {.5f, .8f}, {.75f, .4f}, {.9f, .16f}};
+        float t = 0;
+        for (float[] point : curve) {
+            if (point[0] > t) s.update((point[0] - t) * life);
+            t = point[0];
+            assertEquals(point[1], s.alpha(0), 1e-4f, "t = " + t);
+            assertSame(patch, s.glintRuns(0));
+            assertEquals(0f, s.tilt(0));
+            assertEquals(83f, s.x(0), 0f);
+            assertEquals(31f, s.y(0), 0f);
+        }
+        assertEquals(peak, s.glintPeak(0));
+        s.update(life);
+        assertEquals(0, s.count());
+    }
+
+    @Test void aGlintDrawsEveryRunFromItsTopLeftMovedByTheLayersOffsetAndTheOffsetDoesNotStay() {
+        KimeriaParticleSystem s = new KimeriaParticleSystem(CAPACITY, 1);
+        s.spawnGlint(10, 20, 1f, 1f, 1f, 1f, 1f, new float[]{0, 0, 3, 1, 1, 2});
+        NoopBatch batch = new NoopBatch();
+        batch.record(4);
+        TextureRegion region = new TextureRegion();
+        s.render(batch, region, -3.5f, 100);
+        s.render(batch, region);
+        assertEquals(4, batch.drawnCount());
+        float[][] expected = {{6.5f, 120, 3}, {7.5f, 121, 2}, {10, 20, 3}, {11, 21, 2}};
+        for (int i = 0; i < expected.length; i++) {
+            assertEquals(expected[i][0], batch.drawnX(i));
+            assertEquals(expected[i][1], batch.drawnY(i));
+            assertEquals(expected[i][2], batch.drawnWidth(i));
+        }
+        assertEquals(com.badlogic.gdx.graphics.GL20.GL_ONE_MINUS_SRC_ALPHA, batch.getBlendDstFunc());
     }
 }
